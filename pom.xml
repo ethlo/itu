@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.ethlo.time</groupId>
+	<artifactId>itu</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<name>Internet Time Utility</name>
+	<description>Internet Time Utility - RFC 3339 (ISO 8601 profile)</description>
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.easytesting</groupId>
+			<artifactId>fest-assert-core</artifactId>
+			<version>2.0M10</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+		</plugins>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh</artifactId>
+				<version>1.0</version>
+			</extension>
+		</extensions>
+	</build>
+	<distributionManagement>
+		<repository>
+			<id>ethlo-repo</id>
+			<url>scp://scp.domeneshop.no/home/3/e/ethlo/www/maven</url>
+		</repository>
+	</distributionManagement>
+	<scm>
+		<url>http://github.com:ethlo/itu</url>
+		<connection>scm:git:git@github.com:ethlo/itu.git</connection>
+		<developerConnection>scm:git:git@github.com:ethlo/itu.git</developerConnection>
+	</scm>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+</project>
