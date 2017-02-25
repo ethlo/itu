@@ -12,6 +12,7 @@ This projects aims to do one thing and to do it right:
 
 ## Build status
 [![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
+[![Coverage Status](https://coveralls.io/repos/github/ethlo/itu/badge.svg?branch=master)](https://coveralls.io/github/ethlo/itu?branch=master)
 
 ## Maven repository
 http://ethlo.com/maven
