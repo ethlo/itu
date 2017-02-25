@@ -8,7 +8,6 @@ This projects aims to do one thing and to do it right:
 * Configurable validator, formatter and parser within the boundaries of the specification
 * Correct time-zone handling
 * High test coverage
-* High performance
 
 ## Build status
 [![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)

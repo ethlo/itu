@@ -3,8 +3,10 @@ package com.ethlo.time;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
@@ -17,6 +19,9 @@ import java.util.stream.Collectors;
 public class InternetDateTimeUtil
 {
     private final FractionType fractions;
+    private List<String> validFormats;
+    private SimpleDateFormat format;
+    private List<SimpleDateFormat> formats;
     
     public enum FractionType
     {
@@ -38,17 +43,7 @@ public class InternetDateTimeUtil
         private int digits;
     }
     
-    public InternetDateTimeUtil()
-    {
-        fractions = FractionType.MILLISECONDS;
-    }
-    
-    public InternetDateTimeUtil(FractionType fractions)
-    {
-        this.fractions = fractions;
-    }
-    
-    private final String[] validFormatPatterns =
+    private final static String[] validFormatPatterns =
     {
         "yyyy-MM-dd'T'HH:mm:ssZZZZZ", 
         "yyyy-MM-dd'T'HH:mm:ss.*ZZZZZ",
@@ -58,6 +53,26 @@ public class InternetDateTimeUtil
         "yyyy-MM-dd'T'HH:mm:ss.*'Z'"
     };
 
+    
+    public InternetDateTimeUtil()
+    {
+        this(FractionType.MILLISECONDS);
+    }
+    
+    public InternetDateTimeUtil(FractionType fractions)
+    {
+        this.fractions = fractions;
+        
+        this.validFormats = Arrays.asList(validFormatPatterns)
+            .stream()
+            .map(f->{return f.replace("*", repeat('S', fractions.getDigits()));})
+            .collect(Collectors.toList());
+        
+        this.format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat('S', fractions.getDigits()) + "XX");
+        
+        this.formats = createFormats();
+    }
+    
     /**
      * Format the provided date with the defined time-zone
      * @param date The date to format
@@ -66,7 +81,6 @@ public class InternetDateTimeUtil
      */
     public String format(Date date, String timezone)
     {
-        final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat('S', fractions.getDigits()) + "XX");
         format.setTimeZone(TimeZone.getTimeZone(timezone));
         return format.format(date);
     }
@@ -100,7 +114,7 @@ public class InternetDateTimeUtil
             dateTimeStr = s.replace("Z", "+0000");
         }
 
-        for (SimpleDateFormat format : getFormats(this.fractions))
+        for (SimpleDateFormat format : formats)
         {
             try
             {
@@ -113,20 +127,16 @@ public class InternetDateTimeUtil
         }
 
         // All patterns failed
-        final String validFormats = Arrays.asList(validFormatPatterns)
-            .stream()
-            .map(f->{return f.replace("*", repeat('S', fractions.getDigits()));})
-            .collect(Collectors.joining(", "));
         throw new IllegalArgumentException("Invalid format of " + s + " according to RFC-3339. "
               + "Valid formats include " + validFormats);
     }
 
-    private SimpleDateFormat[] getFormats(FractionType type)
+    private List<SimpleDateFormat> createFormats()
     {
-        final SimpleDateFormat[] retVal = new SimpleDateFormat[validFormatPatterns.length];
-        for (int i = 0; i < retVal.length; i++)
+        final List<SimpleDateFormat> retVal = new ArrayList<>(this.validFormats.size());
+        for (String f : validFormats)
         {
-            retVal[i] = new SimpleDateFormat(validFormatPatterns[i].replace("*", repeat('S', type.getDigits())));
+            retVal.add(new SimpleDateFormat(f));
         }
         return retVal;
     }
