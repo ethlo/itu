@@ -17,7 +17,7 @@ This projects aims to do one thing and to do it right:
 http://ethlo.com/maven
 
 ## What is RFC-3339?
-[RFC-3339](https://www.ietf.org/rfc/rfc3339.txt) is a subset/profile defined by [W3C](https://www.w3.org/) of the formats defined in [ISO-8601(http://www.iso.org/iso/home/standards/iso8601.htm), to simplify date and time exhange in modern Internet protocols. 
+[RFC-3339](https://www.ietf.org/rfc/rfc3339.txt) is a subset/profile defined by [W3C](https://www.w3.org/) of the formats defined in [ISO-8601](http://www.iso.org/iso/home/standards/iso8601.htm), to simplify date and time exhange in modern Internet protocols. 
 
 Typical formats include: 
 * `2017-12-27T23:45:32Z` (No fractional seconds, UTC/Zulu time)
