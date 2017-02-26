@@ -1,7 +1,5 @@
 package com.ethlo.util;
 
-import com.ethlo.time.Assert;
-
 /**
  * 
  * @author mha

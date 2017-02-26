@@ -4,24 +4,38 @@ import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalField;
 import java.util.Date;
 
+import com.ethlo.util.Assert;
 import com.ethlo.util.CharArrayIntegerUtil;
 import com.ethlo.util.CharArrayUtil;
 
 public class FastInternetDateTimeUtil implements InternetDateTimeUtil
 {
+    private final StdJdkInternetDateTimeUtil delegate = new StdJdkInternetDateTimeUtil();
+    
     private static final char dateSep = '-';
     private static final char timeSep = ':';
     private static final char sep = 'T';
     private static final char fractionSep = '.';
     private static char zulu = 'Z';
     
+    @Override
     public OffsetDateTime parse(String s)
     {
         if (s == null || s.isEmpty())
         {
             return null;
+        }
+        
+        if (s.length() < 20)
+        {
+            throw new DateTimeException("Invalid date-time: " + s);
         }
         
         final char[] chars = s.toCharArray();
@@ -43,6 +57,7 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
         
         // From here the specification is more lenient
         final int remaining = chars.length - 19;
+        
         ZoneOffset offset = null;
         int fractions = 0;
         
@@ -100,6 +115,12 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
             assertNoMoreChars(chars, offset);
             return ZoneOffset.UTC;
         }
+        
+        if (left != 6)
+        {
+            throw new DateTimeException("Invalid offset: " + new String(chars, offset, left));
+        }
+        
         return ZoneOffset.of(new String(chars, offset, left));
     }
 
@@ -155,7 +176,20 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
     @Override
     public String format(Date date, String timezone)
     {
-        // TODO: Implement me
-        throw new UnsupportedOperationException();
+        return delegate.format(date, timezone);
+    }
+
+    @Override
+    public boolean isValid(String dateTime)
+    {
+        try
+        {
+            parse(dateTime);
+            return true;
+        }
+        catch (DateTimeException exc)
+        {
+            return false;
+        }
     }
 }

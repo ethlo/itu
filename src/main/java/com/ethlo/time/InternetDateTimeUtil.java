@@ -33,7 +33,25 @@ public interface InternetDateTimeUtil
      */
     OffsetDateTime parse(String s);
 
+    /**
+     * See {@link #formatUtc(OffsetDateTime)}
+     * @param date The date to format
+     * @return The formatted string
+     */
     String formatUtc(Date date);
 
+    /**
+     * See {@link #format(OffsetDateTime, String)}
+     * @param date The date to format
+     * @param timezone The time-zone
+     * @return the formatted string
+     */
     String format(Date date, String timezone);
+    
+    /**
+     * Check whether the string is a valid date-time according to RFC-3339 
+     * @param dateTime
+     * @return True if valid, false otherwise
+     */
+    boolean isValid(String dateTime);
 }

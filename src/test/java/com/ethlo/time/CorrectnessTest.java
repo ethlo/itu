@@ -4,6 +4,7 @@ import static org.fest.assertions.api.Assertions.assertThat;
 
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
+import java.util.Date;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -12,8 +13,17 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
 {
     private final String[] validFormats =
     { 
-      "2017-02-21T15:27:39.123", "2017-02-21T15:27:39.123456", "2017-02-21T15:27:39.123456789", 
-      "2017-02-21T15:27:39.123", "2017-02-21T15:27:39.123456", "2017-02-21T15:27:39.123456789"};
+        "2017-02-21T15:27:39Z", "2017-02-21T15:27:39.123Z", 
+        "2017-02-21T15:27:39.123456Z", "2017-02-21T15:27:39.123456789Z", 
+        "2017-02-21T15:27:39+00:00", "2017-02-21T15:27:39.123+00:00", 
+        "2017-02-21T15:27:39.123456+00:00", "2017-02-21T15:27:39.123456789+00:00"
+    };
+    
+    private final String[] invalidFormats = {
+            "2017-02-21T15:27:39", "2017-02-21T15:27:39.123", 
+            "2017-02-21T15:27:39.123456", "2017-02-21T15:27:39.123456789",
+            "2017-02-21T15:27:39+0000", "2017-02-21T15:27:39.123+0000", 
+            "2017-02-21T15:27:39.123456+0000", "2017-02-21T15:27:39.123456789+0000"};
     
     @Test(expected=DateTimeException.class)
     public void testFormat1()
@@ -32,7 +42,7 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
     @Test
     public void testFormat3()
     {
-        final String s = "2017-02-21T10:00:00.000+1200";
+        final String s = "2017-02-21T10:00:00.000+12:00";
         final OffsetDateTime date = instance.parse(s);
         assertThat(instance.formatUtc(date)).isEqualTo("2017-02-20T22:00:00.000Z");
     }
@@ -89,6 +99,44 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
         final OffsetDateTime dA = instance.parse(a);
         final OffsetDateTime dB = instance.parse(b);
         assertThat(instance.formatUtc(dA)).isEqualTo(instance.formatUtc(dB));
+    }
+    
+    @Test
+    public void testValid()
+    {
+        for (String f : this.validFormats)
+        {
+            if (! instance.isValid(f))
+            {
+                throw new DateTimeException(f + " is not valid");
+            }
+        }
+    }
+    
+    @Test
+    public void testInvalid()
+    {
+        for (String f : this.invalidFormats)
+        {
+            if (instance.isValid(f))
+            {
+                throw new DateTimeException(f + " is deemed valid");
+            }
+        }
+    }
+    
+    @Test
+    public void testMilitaryOffset()
+    {
+        final String s = "2017-02-21T15:27:39+0000";
+        assertThat(instance.isValid(s)).isFalse();
+    }
+    
+    @Test
+    public void testFormatWithNamedTimeZone()
+    {
+        // TODO: Add assertions
+        instance.format(new Date(), "EST");
     }
     
     @Override

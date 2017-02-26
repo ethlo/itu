@@ -1,19 +1,16 @@
 package com.ethlo.time;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
 
 /**
  * The recommendation for date-time exchange in modern APIs is to use RFC-3339, available at https://tools.ietf.org/html/rfc3339
@@ -23,8 +20,6 @@ import java.util.stream.Collectors;
  */
 public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
 {
-    private final FractionType fractions;
-    private List<String> validFormats;
     private SimpleDateFormat format;
     private DateTimeFormatter rfc3339formatter = new DateTimeFormatterBuilder()
         .appendValue(ChronoField.YEAR, 4)
@@ -64,25 +59,10 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
         .appendFraction(ChronoField.NANO_OF_SECOND, 3, 9, false)
         .optionalEnd()
         .optionalStart()
-        .appendOffset("+HHMM", "Z")
-        .optionalEnd()
-        .optionalStart()
         .appendOffset("+HH:MM", "Z")
         .optionalEnd()
         .toFormatter();
 
-    
-    private final static String[] validFormatPatterns =
-    {
-        "yyyy-MM-dd'T'HH:mm:ssZZZZZ", 
-        "yyyy-MM-dd'T'HH:mm:ss.*ZZZZZ",
-        "yyyy-MM-dd'T'HH:mm:ssX", 
-        "yyyy-MM-dd'T'HH:mm:ss.*X",
-        "yyyy-MM-dd'T'HH:mm:ss'Z'",
-        "yyyy-MM-dd'T'HH:mm:ss.*'Z'"
-    };
-
-    
     public StdJdkInternetDateTimeUtil()
     {
         this(FractionType.MILLISECONDS);
@@ -90,13 +70,6 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
     
     public StdJdkInternetDateTimeUtil(FractionType fractions)
     {
-        this.fractions = fractions;
-        
-        this.validFormats = Arrays.asList(validFormatPatterns)
-            .stream()
-            .map(f->{return f.replace("*", repeat('S', fractions.getDigits()));})
-            .collect(Collectors.toList());
-        
         this.format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat('S', fractions.getDigits()) + "XX");
     }
     
@@ -110,7 +83,7 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
     @Override
     public String formatUtc(Date date)
     {
-        return getUtcFormat().format(date);
+        return formatUtc(OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC));
     }
     
     @Override
@@ -131,13 +104,6 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
         return new String(chars);
     }
 
-    private DateFormat getUtcFormat()
-    {
-        final SimpleDateFormat utc = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat('S', fractions.getDigits()) + "+0000");
-        utc.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return utc;
-    }
-
     @Override
     public String format(OffsetDateTime date, String timezone)
     {
@@ -148,5 +114,19 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
     public String formatUtc(OffsetDateTime date)
     {
         return date.format(rfc3339formatter.withZone(ZoneOffset.UTC));
+    }
+    
+    @Override
+    public boolean isValid(String dateTime)
+    {
+        try
+        {
+            parse(dateTime);
+            return true;
+        }
+        catch (DateTimeException exc)
+        {
+            return false;
+        }
     }
 }
