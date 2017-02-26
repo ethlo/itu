@@ -14,6 +14,8 @@ Implementation | Parse | Format
 ---------------|---------|-----------
 StdJdkInternetDateTimeUtil |  692 650 | 1 960 673
 FastInternetDateTimeUtil   | 10 330 331    | 8 952 794
+Difference | 14.91x | 4.56x
+* Your milage may vary. The tests are included in this repository.
 
 ## Build status
 [![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
