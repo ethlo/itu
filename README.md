@@ -10,10 +10,10 @@ This projects aims to do one thing and to do it right:
 * High test coverage
 
 ## Performance
-Implementation | Elapsed | Parse Performance
+Implementation | Parse | Format 
 ---------------|---------|-----------
-StdJdkInternetDateTimeUtil | 43.55 sec   | 573,937
-FastInternetDateTimeUtil   | 3.56 sec    | 7,006,033
+StdJdkInternetDateTimeUtil |  594 509 | 1 746 165
+FastInternetDateTimeUtil   | 9 667 948    | 6 410 232
 
 ## Build status
 [![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
