@@ -11,6 +11,6 @@ public class StdJdkBenchmarkTest extends BenchmarkTest
     @Override
     protected long getRuns()
     {
-        return 50_000_000;
+        return 20_000_000;
     }
 }
