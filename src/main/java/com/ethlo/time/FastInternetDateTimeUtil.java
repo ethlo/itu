@@ -4,11 +4,6 @@ import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
-import java.time.temporal.TemporalField;
 import java.util.Date;
 
 import com.ethlo.util.Assert;
@@ -23,6 +18,8 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
     private static final char timeSep = ':';
     private static final char sep = 'T';
     private static final char fractionSep = '.';
+
+    private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
     private static char zulu = 'Z';
     
     @Override
@@ -75,10 +72,15 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
             {
                 // We have an end of fractions
                 final int len = idx - 20;
-                Assert.isTrue(len == 3 || len == 6 | len == 9);
                 fractions = CharArrayIntegerUtil.parsePositiveInt(chars, 10, 20, idx);
+                if (len == 1) {fractions = fractions * 100_000_000;}
+                if (len == 2) {fractions = fractions * 10_000_000;}
                 if (len == 3) {fractions = fractions * 1_000_000;}
+                if (len == 4) {fractions = fractions * 100_000;}
+                if (len == 5) {fractions = fractions * 10_000;}
                 if (len == 6) {fractions = fractions * 1_000;}
+                if (len == 7) {fractions = fractions * 100;}
+                if (len == 8) {fractions = fractions * 10;}
                 offset = parseTz(chars, idx);
             }
             else
@@ -132,7 +134,8 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
         }
     }
     
-    public String formatUtc(OffsetDateTime date)
+    @Override
+    public String formatUtc(OffsetDateTime date, int fractionDigits)
     {
         final LocalDateTime utc = LocalDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
         
@@ -154,11 +157,23 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
         CharArrayIntegerUtil.toString(utc.getMinute(), buf, 14, 2);
         buf[16] = timeSep;
         CharArrayIntegerUtil.toString(utc.getSecond(), buf, 17, 2);
-        buf[19] = fractionSep;
-        CharArrayIntegerUtil.toString(utc.getNano() / 1_000_000, buf, 20, 3);
-        buf[23] = zulu;
-        final int length = 24;
+        
+        final boolean hasFractionDigits = fractionDigits > 0;
+        if (hasFractionDigits)
+        {
+            buf[19] = fractionSep;
+            addFractions(buf, fractionDigits, utc.getNano());
+        }
+        
+        buf[(hasFractionDigits ? 20 + fractionDigits : 19)] = zulu;
+        final int length = hasFractionDigits ? 21 + fractionDigits : 20;
         return new String(buf, 0, length);
+    }
+
+    private void addFractions(char[] buf, int fractionDigits, int nano)
+    {
+        final double d = widths[fractionDigits - 1];
+        CharArrayIntegerUtil.toString((int)(nano / d), buf, 20, fractionDigits);
     }
 
     @Override
@@ -191,5 +206,29 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
         {
             return false;
         }
+    }
+
+    @Override
+    public String formatUtcMilli(OffsetDateTime date)
+    {
+        return formatUtc(date, 3);
+    }
+
+    @Override
+    public String formatUtcMicro(OffsetDateTime date)
+    {
+        return formatUtc(date, 6);
+    }
+
+    @Override
+    public String formatUtcNano(OffsetDateTime date)
+    {
+        return formatUtc(date, 9);
+    }
+    
+    @Override
+    public String formatUtc(OffsetDateTime date)
+    {
+        return formatUtc(date, 0);
     }
 }

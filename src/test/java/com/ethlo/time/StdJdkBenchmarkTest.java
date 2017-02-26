@@ -5,12 +5,12 @@ public class StdJdkBenchmarkTest extends BenchmarkTest
     @Override
     protected StdJdkInternetDateTimeUtil getInstance()
     {
-        return new StdJdkInternetDateTimeUtil(FractionType.MILLISECONDS);
+        return new StdJdkInternetDateTimeUtil();
     }
 
     @Override
     protected long getRuns()
     {
-        return 5_000_000;
+        return 50_000_000;
     }
 }

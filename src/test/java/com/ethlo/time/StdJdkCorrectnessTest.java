@@ -8,7 +8,7 @@ public class StdJdkCorrectnessTest extends CorrectnessTest
     @Override
     protected StdJdkInternetDateTimeUtil getInstance()
     {
-        return new StdJdkInternetDateTimeUtil(FractionType.MILLISECONDS);
+        return new StdJdkInternetDateTimeUtil();
     }
     
     @Override

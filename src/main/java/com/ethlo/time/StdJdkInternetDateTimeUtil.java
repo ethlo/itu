@@ -21,7 +21,8 @@ import java.util.TimeZone;
 public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
 {
     private SimpleDateFormat format;
-    private DateTimeFormatter rfc3339formatter = new DateTimeFormatterBuilder()
+    
+    private DateTimeFormatter rfc3339baseFormatter = new DateTimeFormatterBuilder()
         .appendValue(ChronoField.YEAR, 4)
         .appendLiteral('-')
         .appendValue(ChronoField.MONTH_OF_YEAR, 2)
@@ -33,14 +34,30 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
         .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
         .appendLiteral(':')
         .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
-        .optionalStart()
-        .appendLiteral('.')
-        .appendFraction(ChronoField.NANO_OF_SECOND, 3, 9, false)
-        .optionalEnd()
-        .optionalStart()
-        .appendOffset("+HHMM", "Z")
-        .optionalEnd()
         .toFormatter();
+        
+
+    private DateTimeFormatter getFormatter(int fractionDigits)
+    {
+        if (fractionDigits == 0)
+        {
+            return new DateTimeFormatterBuilder()
+                .append(rfc3339baseFormatter)
+                .appendOffset("+HH:MM", "Z")
+                .toFormatter()
+                .withZone(ZoneOffset.UTC);
+        }
+        
+        return new DateTimeFormatterBuilder()
+            .append(rfc3339baseFormatter)
+            .optionalStart()
+            .appendLiteral('.')
+            .appendFraction(ChronoField.NANO_OF_SECOND, fractionDigits, fractionDigits, false)
+            .optionalEnd()
+            .appendOffset("+HH:MM", "Z")
+            .toFormatter()
+            .withZone(ZoneOffset.UTC);
+    }
 
     private DateTimeFormatter rfc3339formatParser = new DateTimeFormatterBuilder()
         .appendValue(ChronoField.YEAR, 4)
@@ -56,7 +73,7 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
         .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
         .optionalStart()
         .appendLiteral('.')
-        .appendFraction(ChronoField.NANO_OF_SECOND, 3, 9, false)
+        .appendFraction(ChronoField.NANO_OF_SECOND, 1, 9, false)
         .optionalEnd()
         .optionalStart()
         .appendOffset("+HH:MM", "Z")
@@ -65,12 +82,7 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
 
     public StdJdkInternetDateTimeUtil()
     {
-        this(FractionType.MILLISECONDS);
-    }
-    
-    public StdJdkInternetDateTimeUtil(FractionType fractions)
-    {
-        this.format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat('S', fractions.getDigits()) + "XX");
+        this.format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat('S', 3) + "XX");
     }
     
     @Override
@@ -107,13 +119,13 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
     @Override
     public String format(OffsetDateTime date, String timezone)
     {
-        return date.format(rfc3339formatter.withZone(ZoneId.of(timezone)));
+        return date.format(getFormatter(3).withZone(ZoneId.of(timezone)));
     }
 
     @Override
     public String formatUtc(OffsetDateTime date)
     {
-        return date.format(rfc3339formatter.withZone(ZoneOffset.UTC));
+        return formatUtc(date, 0);
     }
     
     @Override
@@ -128,5 +140,29 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
         {
             return false;
         }
+    }
+
+    @Override
+    public String formatUtcMilli(OffsetDateTime date)
+    {
+        return formatUtc(date, 3);
+    }
+
+    @Override
+    public String formatUtcMicro(OffsetDateTime date)
+    {
+        return formatUtc(date, 6);
+    }
+
+    @Override
+    public String formatUtcNano(OffsetDateTime date)
+    {
+        return formatUtc(date, 9);
+    }
+
+    @Override
+    public String formatUtc(OffsetDateTime date, int fractionDigits)
+    {
+        return getFormatter(fractionDigits).format(date);
     }
 }

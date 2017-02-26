@@ -1,5 +1,6 @@
 package com.ethlo.time;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Date;
 
@@ -54,4 +55,12 @@ public interface InternetDateTimeUtil
      * @return True if valid, false otherwise
      */
     boolean isValid(String dateTime);
+
+    String formatUtcMilli(OffsetDateTime date);
+    
+    String formatUtcMicro(OffsetDateTime date);
+    
+    String formatUtcNano(OffsetDateTime date);
+
+    String formatUtc(OffsetDateTime date, int fractionDigits);
 }

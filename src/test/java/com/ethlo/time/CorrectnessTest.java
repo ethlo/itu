@@ -2,8 +2,10 @@ package com.ethlo.time;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.Date;
 
 import org.junit.Ignore;
@@ -16,14 +18,18 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
         "2017-02-21T15:27:39Z", "2017-02-21T15:27:39.123Z", 
         "2017-02-21T15:27:39.123456Z", "2017-02-21T15:27:39.123456789Z", 
         "2017-02-21T15:27:39+00:00", "2017-02-21T15:27:39.123+00:00", 
-        "2017-02-21T15:27:39.123456+00:00", "2017-02-21T15:27:39.123456789+00:00"
+        "2017-02-21T15:27:39.123456+00:00", "2017-02-21T15:27:39.123456789+00:00",
+        "2017-02-21T15:27:39.1+00:00", "2017-02-21T15:27:39.12+00:00",
+        "2017-02-21T15:27:39.123+00:00", "2017-02-21T15:27:39.1234+00:00",
+        "2017-02-21T15:27:39.112345+00:00", "2017-02-21T15:27:39.123456+00:00",
+        "2017-02-21T15:27:39.1234567+00:00", "2017-02-21T15:27:39.12345678+00:00"
     };
     
     private final String[] invalidFormats = {
             "2017-02-21T15:27:39", "2017-02-21T15:27:39.123", 
             "2017-02-21T15:27:39.123456", "2017-02-21T15:27:39.123456789",
             "2017-02-21T15:27:39+0000", "2017-02-21T15:27:39.123+0000", 
-            "2017-02-21T15:27:39.123456+0000", "2017-02-21T15:27:39.123456789+0000"};
+            "201702-21T15:27:39.123456+0000", "20170221T15:27:39.123456789+0000"};
     
     @Test(expected=DateTimeException.class)
     public void testFormat1()
@@ -44,7 +50,7 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
     {
         final String s = "2017-02-21T10:00:00.000+12:00";
         final OffsetDateTime date = instance.parse(s);
-        assertThat(instance.formatUtc(date)).isEqualTo("2017-02-20T22:00:00.000Z");
+        assertThat(instance.formatUtcMilli(date)).isEqualTo("2017-02-20T22:00:00.000Z");
     }
     
     @Ignore
@@ -54,8 +60,42 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
         final String s = "2017-02-21T15:00:00.123Z";
         final OffsetDateTime date = instance.parse(s);
         assertThat(instance.formatUtc(date)).isEqualTo("2017-02-21T15:00:00.123Z");
-        assertThat(instance.format(date, "CET")).isEqualTo("2017-02-21T16:00:00.123+0100");
-        assertThat(instance.format(date, "EST")).isEqualTo("2017-02-21T10:00:00.123-0500");
+        assertThat(instance.format(date, "CET")).isEqualTo("2017-02-21T16:00:00.123+01:00");
+        assertThat(instance.format(date, "EST")).isEqualTo("2017-02-21T10:00:00.123-05:00");
+    }
+    
+    @Test
+    public void testFormatUtc()
+    {
+        final String s = "2017-02-21T15:09:03.123456789Z";
+        final OffsetDateTime date = instance.parse(s);
+        final String expected = "2017-02-21T15:09:03Z";
+        final String actual = instance.formatUtc(date);
+        assertThat(actual).isEqualTo(expected);
+    }
+    
+    @Test
+    public void testFormatUtcMilli()
+    {
+        final String s = "2017-02-21T15:00:00.123456789Z";
+        final OffsetDateTime date = instance.parse(s);
+        assertThat(instance.formatUtcMilli(date)).isEqualTo("2017-02-21T15:00:00.123Z");
+    }
+    
+    @Test
+    public void testFormatUtcMicro()
+    {
+        final String s = "2017-02-21T15:00:00.123456789Z";
+        final OffsetDateTime date = instance.parse(s);
+        assertThat(instance.formatUtcMicro(date)).isEqualTo("2017-02-21T15:00:00.123456Z");
+    }
+    
+    @Test
+    public void testFormatUtcNano()
+    {
+        final String s = "2017-02-21T15:00:00.987654321Z";
+        final OffsetDateTime date = instance.parse(s);
+        assertThat(instance.formatUtcNano(date)).isEqualTo(s);
     }
 
     @Test(expected=DateTimeException.class)
@@ -70,7 +110,7 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
     {
         final String s = "2017-02-21T15:27:39.123+13:00";
         final OffsetDateTime date = instance.parse(s);
-        assertThat(instance.formatUtc(date)).isEqualTo("2017-02-21T02:27:39.123Z");
+        assertThat(instance.formatUtcMilli(date)).isEqualTo("2017-02-21T02:27:39.123Z");
     }
         
     @Test
@@ -106,10 +146,7 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
     {
         for (String f : this.validFormats)
         {
-            if (! instance.isValid(f))
-            {
-                throw new DateTimeException(f + " is not valid");
-            }
+            assertThat(instance.isValid(f)).isTrue();
         }
     }
     
