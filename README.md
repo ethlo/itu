@@ -12,8 +12,8 @@ This projects aims to do one thing and to do it right:
 ## Performance
 Implementation | Parse | Format 
 ---------------|---------|-----------
-StdJdkInternetDateTimeUtil |  594 509 | 1 746 165
-FastInternetDateTimeUtil   | 9 667 948    | 6 410 232
+StdJdkInternetDateTimeUtil |  692 650 | 1 960 673
+FastInternetDateTimeUtil   | 10 330 331    | 8 952 794
 
 ## Build status
 [![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
@@ -30,7 +30,7 @@ Typical formats include:
 * `2017-12-27T23:45:32.999Z` (Millisecond fractions, UTC/Zulu time)
 * `2017-12-27T23:45:32.999999Z`(microsecond fractions, UTC/Zulu time)
 * `2017-12-27T23:45:32.999999999Z` (nanosecond fractions, UTC/Zulu time)
-* `2017-12-27T18:45:32-0500` (No fractional seconds, EST time)
-* `2017-12-27T18:45:32.999-0500` (Millisecond fractions, EST time)
-* `2017-12-27T18:45:32.999999-0500`(microsecond fractions, EST time)
-* `2017-12-27T18:45:32.999999999-0500` (nanosecond fractions, EST time)
+* `2017-12-27T18:45:32-05:00` (No fractional seconds, EST time)
+* `2017-12-27T18:45:32.999-05:00` (Millisecond fractions, EST time)
+* `2017-12-27T18:45:32.999999-05:00`(microsecond fractions, EST time)
+* `2017-12-27T18:45:32.999999999-05:00` (nanosecond fractions, EST time)
