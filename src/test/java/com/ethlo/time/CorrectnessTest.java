@@ -2,10 +2,8 @@ package com.ethlo.time;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
-import java.nio.charset.StandardCharsets;
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.Date;
 
 import org.junit.Ignore;
