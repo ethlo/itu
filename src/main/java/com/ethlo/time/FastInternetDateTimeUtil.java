@@ -158,6 +158,7 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
         buf[16] = timeSep;
         CharArrayIntegerUtil.toString(utc.getSecond(), buf, 17, 2);
         
+        // Second fractions
         final boolean hasFractionDigits = fractionDigits > 0;
         if (hasFractionDigits)
         {
@@ -165,13 +166,25 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
             addFractions(buf, fractionDigits, utc.getNano());
         }
         
+        // Add time-zone 'Z'
         buf[(hasFractionDigits ? 20 + fractionDigits : 19)] = zulu;
         final int length = hasFractionDigits ? 21 + fractionDigits : 20;
+        
         return new String(buf, 0, length);
     }
 
     private void addFractions(char[] buf, int fractionDigits, int nano)
     {
+        if (fractionDigits < 0)
+        {
+            fractionDigits = 0;
+        }
+        
+        if (fractionDigits > 9)
+        {
+            fractionDigits = 9;
+        }
+        
         final double d = widths[fractionDigits - 1];
         CharArrayIntegerUtil.toString((int)(nano / d), buf, 20, fractionDigits);
     }
