@@ -78,7 +78,16 @@ public final class CharArrayIntegerUtil extends CharArrayNumberUtil
             l++;
         }
         final int srcPos = charPos;
-        System.arraycopy(buf, srcPos, buf, offset, padTo);
+        copy(buf, srcPos, offset, padTo);
         return offset + length;
-    }    
+    }
+
+    private static void copy(char[] buf, int srcPos, int offset, int length)
+    {
+        //System.arraycopy(buf, srcPos, buf, offset, length);
+        for (int i = 0; i < length; i++)
+        {
+            buf[offset + i] = buf[srcPos + i];
+        }
+    }
 }
