@@ -7,4 +7,10 @@ public class FastBenchmarkTest extends BenchmarkTest
     {
         return new FastInternetDateTimeUtil();
     }
+    
+    @Override
+    protected long getRuns()
+    {
+        return 100_000_000;
+    }
 }

@@ -12,13 +12,10 @@ import com.ethlo.util.CharArrayUtil;
 public class FastInternetDateTimeUtil implements InternetDateTimeUtil
 {
     private static final char dateSep = '-';
-    private static final char[] dateSepArr = new char[]{dateSep};
     private static final char timeSep = ':';
-    private static final char[] timeSepArr = new char[]{timeSep};
-    private static final char[] sepArr = new char[]{'T'};
+    private static final char sep = 'T';
     private static final char fractionSep = '.';
-    private static final char[] fractionSepArr = new char[]{fractionSep};
-    private static char[] zuluArr = new char[]{'Z'};
+    private static char zulu = 'Z';
     
     public OffsetDateTime parse(String s)
     {
@@ -97,41 +94,50 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
 
     private ZoneOffset parseTz(char[] chars, int offset)
     {
-        return ZoneOffset.of(new String(chars, offset, chars.length - offset));
+        final int left = chars.length - offset;
+        if (chars[offset] == 'Z' || chars[offset] == 'z')
+        {
+            assertNoMoreChars(chars, offset);
+            return ZoneOffset.UTC;
+        }
+        return ZoneOffset.of(new String(chars, offset, left));
     }
 
     private void assertNoMoreChars(char[] chars, int lastUsed)
     {
         if (chars.length > lastUsed + 1)
         {
-            throw new IllegalArgumentException("Trailing noise from offset " + lastUsed + 1);
+            throw new DateTimeException("Unparsed data from offset " + lastUsed + 1);
         }
     }
     
     public String formatUtc(OffsetDateTime date)
     {
         final LocalDateTime utc = LocalDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
-        return new String(CharArrayUtil.merge(
-            pad(CharArrayIntegerUtil.toString(utc.getYear()), 4),
-            dateSepArr,
-            pad(CharArrayIntegerUtil.toString(utc.getMonthValue()), 2),
-            dateSepArr,
-            pad(CharArrayIntegerUtil.toString(utc.getDayOfMonth()), 2),
-            sepArr,
-            pad(CharArrayIntegerUtil.toString(utc.getHour()), 2),
-            timeSepArr,
-            pad(CharArrayIntegerUtil.toString(utc.getMinute()), 2),
-            timeSepArr,
-            pad(CharArrayIntegerUtil.toString(utc.getSecond()), 2),
-            fractionSepArr,
-            pad(CharArrayIntegerUtil.toString(utc.getNano() / 1_000_000), 3),
-            zuluArr
-            ));
-    }
-    
-    private char[] pad(char[] val, int length)
-    {
-        return CharArrayUtil.zeroPad(val, length);
+        
+        final char[] buf = new char[64];
+        
+        // Date
+        CharArrayIntegerUtil.toString(utc.getYear(), buf, 0, 4);
+        buf[4] = dateSep;
+        CharArrayIntegerUtil.toString(utc.getMonthValue(), buf, 5, 2);
+        buf[7] = dateSep;
+        CharArrayIntegerUtil.toString(utc.getDayOfMonth(), buf, 8, 2);
+        
+        // T separator
+        buf[10] = sep;
+        
+        // Time
+        CharArrayIntegerUtil.toString(utc.getHour(), buf, 11, 2);
+        buf[13] = timeSep;
+        CharArrayIntegerUtil.toString(utc.getMinute(), buf, 14, 2);
+        buf[16] = timeSep;
+        CharArrayIntegerUtil.toString(utc.getSecond(), buf, 17, 2);
+        buf[19] = fractionSep;
+        CharArrayIntegerUtil.toString(utc.getNano() / 1_000_000, buf, 20, 3);
+        buf[23] = zulu;
+        final int length = 24;
+        return new String(buf, 0, length);
     }
 
     @Override

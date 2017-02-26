@@ -48,8 +48,39 @@ public final class CharArrayIntegerUtil extends CharArrayNumberUtil
 		return -result;
 	}
 
-    public static char[] toString(int i)
+    public static int toString(int i, char[] buf, int offset, int padTo)
     {
-        return Integer.toString(i).toCharArray();
+        return toString(i, 10, buf, offset, padTo);
     }
+
+    /**
+     * Handles only non-negative values
+     * @param value
+     * @param radix
+     * @param buf
+     * @param offset
+     * @return
+     */
+    public static int toString(int value, int radix, char[] buf, int offset, int padTo) 
+    {
+        int charPos = offset + 32;
+        value = -value;
+        while (value <= -radix) 
+        {
+            buf[charPos--] = RADIX36_DIGITS[-(value % radix)];
+            value = value / radix;
+        }
+        buf[charPos] = RADIX36_DIGITS[-value];
+        
+        final int length = ((32 + offset) - charPos) + 1;
+        int l = length;
+        while (l < padTo)
+        {
+            buf[--charPos] = '0';
+            l++;
+        }
+        final int srcPos = charPos;
+        System.arraycopy(buf, srcPos, buf, offset, padTo);
+        return offset + length;
+    }    
 }

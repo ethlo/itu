@@ -10,6 +10,11 @@ import org.junit.Test;
 
 public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
 {
+    private final String[] validFormats =
+    { 
+      "2017-02-21T15:27:39.123", "2017-02-21T15:27:39.123456", "2017-02-21T15:27:39.123456789", 
+      "2017-02-21T15:27:39.123", "2017-02-21T15:27:39.123456", "2017-02-21T15:27:39.123456789"};
+    
     @Test(expected=DateTimeException.class)
     public void testFormat1()
     {
@@ -47,8 +52,7 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
     public void testFormat4TrailingNoise()
     {
         final String s = "2017-02-21T15:00:00.123ZGGG";
-        final OffsetDateTime date = instance.parse(s);
-        System.out.println(date);
+        instance.parse(s);
     }
     
     @Test
@@ -85,5 +89,11 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
         final OffsetDateTime dA = instance.parse(a);
         final OffsetDateTime dB = instance.parse(b);
         assertThat(instance.formatUtc(dA)).isEqualTo(instance.formatUtc(dB));
+    }
+    
+    @Override
+    protected long getRuns()
+    {
+        return 1;
     }
 }

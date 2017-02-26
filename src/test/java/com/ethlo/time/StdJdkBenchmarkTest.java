@@ -7,4 +7,10 @@ public class StdJdkBenchmarkTest extends BenchmarkTest
     {
         return new StdJdkInternetDateTimeUtil(FractionType.MILLISECONDS);
     }
+
+    @Override
+    protected long getRuns()
+    {
+        return 5_000_000;
+    }
 }
