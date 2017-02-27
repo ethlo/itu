@@ -7,9 +7,6 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Date;
 
-import com.ethlo.util.CharArrayIntegerUtil;
-import com.ethlo.util.CharArrayUtil;
-
 /**
  * Extreme level of optimization to squeeze every CPU cycle. 
  * 
@@ -48,19 +45,19 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         final char[] chars = s.toCharArray();
         
         // Date portion
-        final int year = CharArrayIntegerUtil.parsePositiveInt(chars, 10, 0, 4);
+        final int year = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 0, 4);
         isTrue(chars, 4, dateSep);
-        final int month = CharArrayIntegerUtil.parsePositiveInt(chars, 10, 5, 7);
+        final int month = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 5, 7);
         isTrue(chars, 7, dateSep);
-        final int day = CharArrayIntegerUtil.parsePositiveInt(chars, 10, 8, 10);
+        final int day = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 8, 10);
         
         // Time starts
         isTrue(chars, 10, 'T', 't');
-        final int hour = CharArrayIntegerUtil.parsePositiveInt(chars, 10, 11, 13);
+        final int hour = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 11, 13);
         isTrue(chars, 13, timeSep);
-        final int minute = CharArrayIntegerUtil.parsePositiveInt(chars, 10, 14, 16);
+        final int minute = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 14, 16);
         isTrue(chars, 16, timeSep);
-        final int second = CharArrayIntegerUtil.parsePositiveInt(chars, 10, 17, 19);
+        final int second = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 17, 19);
         
         // From here the specification is more lenient
         final int remaining = chars.length - 19;
@@ -77,12 +74,12 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         else if (chars[19] == fractionSep)
         {
             // We have fractional seconds
-            final int idx = CharArrayUtil.indexOfNonDigit(chars, 20);
+            final int idx = LimitedCharArrayIntegerUtil.indexOfNonDigit(chars, 20);
             if (idx != -1)
             {
                 // We have an end of fractions
                 final int len = idx - 20;
-                fractions = CharArrayIntegerUtil.parsePositiveInt(chars, 10, 20, idx);
+                fractions = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 20, idx);
                 if (len == 1) {fractions = fractions * 100_000_000;}
                 if (len == 2) {fractions = fractions * 10_000_000;}
                 if (len == 3) {fractions = fractions * 1_000_000;}
@@ -151,8 +148,8 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         }
         
         final char sign = chars[offset];
-        int hours = CharArrayIntegerUtil.parsePositiveInt(chars, 10, offset + 1, offset + 3);
-        int minutes = CharArrayIntegerUtil.parsePositiveInt(chars, 10, offset + 4, offset + 4 + 2);
+        int hours = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, offset + 1, offset + 3);
+        int minutes = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, offset + 4, offset + 4 + 2);
         if (sign == '-')
         {
             hours = -hours;
@@ -190,21 +187,21 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         final char[] buf = new char[64];
         
         // Date
-        CharArrayIntegerUtil.toString(utc.getYear(), buf, 0, 4);
+        LimitedCharArrayIntegerUtil.toString(utc.getYear(), buf, 0, 4);
         buf[4] = dateSep;
-        CharArrayIntegerUtil.toString(utc.getMonthValue(), buf, 5, 2);
+        LimitedCharArrayIntegerUtil.toString(utc.getMonthValue(), buf, 5, 2);
         buf[7] = dateSep;
-        CharArrayIntegerUtil.toString(utc.getDayOfMonth(), buf, 8, 2);
+        LimitedCharArrayIntegerUtil.toString(utc.getDayOfMonth(), buf, 8, 2);
         
         // T separator
         buf[10] = sep;
         
         // Time
-        CharArrayIntegerUtil.toString(utc.getHour(), buf, 11, 2);
+        LimitedCharArrayIntegerUtil.toString(utc.getHour(), buf, 11, 2);
         buf[13] = timeSep;
-        CharArrayIntegerUtil.toString(utc.getMinute(), buf, 14, 2);
+        LimitedCharArrayIntegerUtil.toString(utc.getMinute(), buf, 14, 2);
         buf[16] = timeSep;
-        CharArrayIntegerUtil.toString(utc.getSecond(), buf, 17, 2);
+        LimitedCharArrayIntegerUtil.toString(utc.getSecond(), buf, 17, 2);
         
         // Second fractions
         final boolean hasFractionDigits = fractionDigits > 0;
@@ -224,7 +221,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
     private void addFractions(char[] buf, int fractionDigits, int nano)
     {
         final double d = widths[fractionDigits - 1];
-        CharArrayIntegerUtil.toString((int)(nano / d), buf, 20, fractionDigits);
+        LimitedCharArrayIntegerUtil.toString((int)(nano / d), buf, 20, fractionDigits);
     }
 
     @Override

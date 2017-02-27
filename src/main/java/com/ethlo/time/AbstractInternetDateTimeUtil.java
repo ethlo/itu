@@ -37,7 +37,7 @@ public abstract class AbstractInternetDateTimeUtil implements InternetDateTimeUt
     {
         if (fractionDigits > MAX_FRACTION_DIGITS )
         {
-            throw new DateTimeException("Maximum support number of fraction dicits in second is " + MAX_FRACTION_DIGITS + ", got " + fractionDigits);
+            throw new DateTimeException("Maximum support number of fraction digits in second is " + MAX_FRACTION_DIGITS + ", got " + fractionDigits);
         }
     }
 }
