@@ -34,8 +34,10 @@ There are an endless amount of APIs with non-standard date/time exchange, and th
 Some projects use epoch time-stamps for date-time exchange, and from a performance perspective this *may* make sense in *extreme* cases. With this project one can do-the-right-thing and maintain performance in date-time handling.
 
 * What is wrong with epoc timestamps?*
-* It is not human-readable, debugging is harder
-* Limited resolution and/or time-range available. 
+
+* It is not human-readable, so debugging and direct manipulation is harder
+* Limited resolution and/or time-range available
+* Unclear resolution and/or time-range
 
 ## Build status
 [![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
