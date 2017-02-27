@@ -33,7 +33,7 @@ There are an endless amount of APIs with non-standard date/time exchange, and th
 
 Some projects use epoch time-stamps for date-time exchange, and from a performance perspective this *may* make sense in *extreme* cases. With this project one can do-the-right-thing and maintain performance in date-time handling.
 
-* What is wrong with epoc timestamps?*
+*What is wrong with epoch timestamps?*
 
 * It is not human-readable, so debugging and direct manipulation is harder
 * Limited resolution and/or time-range available
