@@ -34,10 +34,10 @@ public final class CharArrayIntegerUtil extends CharArrayNumberUtil
 		return parsePositiveInt(strNum, radix, 0, strNum.length);
 	}
 	
-	public static int parsePositiveInt(char[] strNum, int radix, int offset, int length)
+	public static int parsePositiveInt(char[] strNum, int radix, int startInclusive, int endExclusive)
 	{
 		int result = 0;
-		for (int i = offset; i < length; i++)
+		for (int i = startInclusive; i < endExclusive; i++)
 		{
 			int digit = digit(strNum[i], radix);
 			result *= radix;

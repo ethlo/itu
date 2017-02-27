@@ -12,14 +12,6 @@ import java.util.Date;
 public interface InternetDateTimeUtil
 {
     /**
-     * Format the provided date with the defined time-zone
-     * @param date The date to format
-     * @param timezone The time zone to format the date-time according to
-     * @return The formatted date-time string
-     */
-    String format(OffsetDateTime date, String timezone);
-
-    /**
      * Format the {@link Date} as a UTC formatted date-time string
      * @param date The date to format
      * @return the formatted string
@@ -31,7 +23,7 @@ public interface InternetDateTimeUtil
      * @param dateTimeStr The date-time string to parse
      * @return The instant defined by the date-time in UTC time-zone 
      */
-    OffsetDateTime parse(String s);
+    OffsetDateTime parse(String dateTimeStr);
 
     /**
      * See {@link #formatUtc(OffsetDateTime)}
@@ -48,7 +40,7 @@ public interface InternetDateTimeUtil
     String formatUtcMilli(Date date);
 
     /**
-     * See {@link #format(OffsetDateTime, String)}
+     * Format a date in the given time-zone
      * @param date The date to format
      * @param timezone The time-zone
      * @return the formatted string
@@ -66,10 +58,10 @@ public interface InternetDateTimeUtil
     
     /**
      * Check whether the string is a valid date-time according to RFC-3339 
-     * @param dateTime
-     * @return True if valid, false otherwise
+     * @param dateTimeStr The date-time to validate
+     * @return True if valid date-time or null, false otherwise
      */
-    boolean isValid(String dateTime);
+    boolean isValid(String dateTimeStr);
 
     /**
      * Format the date as a date-time String  with millisecond resolution, for example 1999-12-31T16:48:36.123Z
@@ -95,6 +87,7 @@ public interface InternetDateTimeUtil
     /**
      * Format the date as a date-time String with specified resolution, aka 1999-12-31T16:48:36[.123456789]Z
      * @param date The date to format
+     * @param fractionDigits The number of fractional digits in the second
      * @return the formatted string
      */
     String formatUtc(OffsetDateTime date, int fractionDigits);

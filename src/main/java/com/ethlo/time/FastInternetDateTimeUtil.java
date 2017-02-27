@@ -4,9 +4,9 @@ import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Date;
 
-import com.ethlo.util.Assert;
 import com.ethlo.util.CharArrayIntegerUtil;
 import com.ethlo.util.CharArrayUtil;
 
@@ -55,7 +55,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         final int day = CharArrayIntegerUtil.parsePositiveInt(chars, 10, 8, 10);
         
         // Time starts
-        Assert.isTrue(chars[10] == 'T');
+        isTrue(chars, 10, 'T', 't');
         final int hour = CharArrayIntegerUtil.parsePositiveInt(chars, 10, 11, 13);
         isTrue(chars, 13, timeSep);
         final int minute = CharArrayIntegerUtil.parsePositiveInt(chars, 10, 14, 16);
@@ -115,7 +115,24 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
     {
         if (chars[offset] != expected)
         {
-            throw new DateTimeException("Expected character " + expected + " at position " + offset);
+            throw new DateTimeException("Expected character " + expected + " at position " + (offset + 1));
+        }
+    }
+    
+    private void isTrue(char[] chars, int offset, char... expected)
+    {
+        boolean found = false;
+        for (char e : expected)
+        {
+            if (chars[offset] == e)
+            {
+                found = true;
+                break;
+            }
+        }
+        if (! found)
+        {
+            throw new DateTimeException("Expected characters " + Arrays.toString(expected) + " at position " + (offset + 1));
         }
     }
 
@@ -130,7 +147,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         
         if (left != 6)
         {
-            throw new DateTimeException("Invalid offset: " + new String(chars, offset, left));
+            throw new DateTimeException("Invalid timezone offset: " + new String(chars, offset, left));
         }
         
         final char sign = chars[offset];
@@ -163,7 +180,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
             throw new DateTimeException("Unparsed data from offset " + lastUsed + 1);
         }
     }
-    
+
     @Override
     public String formatUtc(OffsetDateTime date, int fractionDigits)
     {
@@ -208,12 +225,6 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
     {
         final double d = widths[fractionDigits - 1];
         CharArrayIntegerUtil.toString((int)(nano / d), buf, 20, fractionDigits);
-    }
-
-    @Override
-    public String format(OffsetDateTime date, String timezone)
-    {
-        throw new UnsupportedOperationException();
     }
 
     @Override

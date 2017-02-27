@@ -4,6 +4,7 @@ import static org.fest.assertions.api.Assertions.assertThat;
 
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
 
 import org.junit.Ignore;
@@ -51,15 +52,21 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
         assertThat(instance.formatUtcMilli(date)).isEqualTo("2017-02-20T22:00:00.000Z");
     }
     
-    @Ignore
+    @Test(expected=DateTimeException.class)
+    public void testInvalidNothingAfterFractionalSeconds()
+    {
+        final String s = "2017-02-21T10:00:00.12345";
+        instance.parse(s);
+    }
+    
     @Test
     public void testFormat4()
     {
         final String s = "2017-02-21T15:00:00.123Z";
         final OffsetDateTime date = instance.parse(s);
-        assertThat(instance.formatUtc(date)).isEqualTo("2017-02-21T15:00:00.123Z");
-        assertThat(instance.format(date, "CET")).isEqualTo("2017-02-21T16:00:00.123+01:00");
-        assertThat(instance.format(date, "EST")).isEqualTo("2017-02-21T10:00:00.123-05:00");
+        assertThat(instance.formatUtcMilli(date)).isEqualTo("2017-02-21T15:00:00.123Z");
+        assertThat(instance.format(Date.from(date.atZoneSameInstant(ZoneOffset.UTC).toInstant()), "CET", 3)).isEqualTo("2017-02-21T16:00:00.123+01:00");
+        assertThat(instance.format(new Date(date.toInstant().toEpochMilli()), "EST", 3)).isEqualTo("2017-02-21T10:00:00.123-05:00");
     }
     
     @Test(expected=DateTimeException.class)
@@ -159,6 +166,27 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
         final OffsetDateTime dA = instance.parse(a);
         final OffsetDateTime dB = instance.parse(b);
         assertThat(instance.formatUtc(dA)).isEqualTo(instance.formatUtc(dB));
+    }
+    
+    @Test(expected=DateTimeException.class)
+    public void testBadSeparator()
+    {
+        final String a = "1994 11-05T08:15:30-05:00";
+        instance.parse(a);
+    }
+
+    @Test(expected=DateTimeException.class)
+    public void testInvalidDateTimeSeparator()
+    {
+        final String a = "1994-11-05X08:15:30-05:00";
+        instance.parse(a);
+    }
+    
+    @Test
+    public void testLowerCaseTseparator()
+    {
+        final String a = "1994-11-05t08:15:30z";
+        instance.parse(a);
     }
     
     @Test

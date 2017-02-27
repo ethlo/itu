@@ -3,7 +3,6 @@ package com.ethlo.time;
 import java.text.SimpleDateFormat;
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -64,7 +63,12 @@ public class StdJdkInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         .appendValue(ChronoField.MONTH_OF_YEAR, 2)
         .appendLiteral('-')
         .appendValue(ChronoField.DAY_OF_MONTH, 2)
+        .optionalStart()
         .appendLiteral('T')
+        .optionalEnd()
+        .optionalStart()
+        .appendLiteral('t')
+        .optionalEnd()
         .appendValue(ChronoField.HOUR_OF_DAY, 2)
         .appendLiteral(':')
         .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
@@ -114,12 +118,6 @@ public class StdJdkInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         final char[] chars = new char[repeats];
         Arrays.fill(chars, c);
         return new String(chars);
-    }
-
-    @Override
-    public String format(OffsetDateTime date, String timezone)
-    {
-        return date.format(getFormatter(3).withZone(ZoneId.of(timezone)));
     }
 
     @Override
