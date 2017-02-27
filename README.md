@@ -20,9 +20,9 @@ This project's goal it to do one thing and to do it right; make it easy to handl
 ## Performance
 Implementation | Parse | Format 
 ---------------|---------|-----------
-StdJdkInternetDateTimeUtil |  692 650 parse/sec| 1 960 673 format/sec
-FastInternetDateTimeUtil   | 10 330 331 parse/sec    | 8 952 794 format/sec
-Difference | 14.91x faster | 4.56x faster
+StdJdkInternetDateTimeUtil |  545 333 parse/sec| 2 101 431 format/sec
+FastInternetDateTimeUtil   | 12 707 717 parse/sec    | 9 071 824 format/sec
+Difference | 23.3x faster | 4.3x faster
 * Your milage may vary. The tests are included in this repository.
 
 ## Q & A
