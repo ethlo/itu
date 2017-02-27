@@ -13,14 +13,13 @@ import java.util.Date;
 import java.util.TimeZone;
 
 /**
- * The recommendation for date-time exchange in modern APIs is to use RFC-3339, available at https://tools.ietf.org/html/rfc3339
- * This class supports both validation, parsing and formatting of such date-times.
+ * Java 8 JDK classes. The safe and normally "efficient enough" choice.
  * 
- * @author Ethlo, Morten Haraldsen
+ * @author ethlo - Morten Haraldsen
  */
-public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
+public class StdJdkInternetDateTimeUtil extends AbstractInternetDateTimeUtil
 {
-    private SimpleDateFormat format;
+    private SimpleDateFormat[] formats = new SimpleDateFormat[9];
     
     private DateTimeFormatter rfc3339baseFormatter = new DateTimeFormatterBuilder()
         .appendValue(ChronoField.YEAR, 4)
@@ -78,18 +77,19 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
         .optionalStart()
         .appendOffset("+HH:MM", "Z")
         .optionalEnd()
+        .optionalStart()
+        .appendOffset("+HH:MM", "z")
+        .optionalEnd()
+
         .toFormatter();
 
     public StdJdkInternetDateTimeUtil()
     {
-        this.format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat('S', 3) + "XX");
-    }
-    
-    @Override
-    public String format(Date date, String timezone)
-    {
-        format.setTimeZone(TimeZone.getTimeZone(timezone));
-        return format.format(date);
+        super(false);
+        for (int i = 1; i < 9; i++)
+        {
+            this.formats[i] = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat('S', i) + "XXX");
+        }
     }
     
     @Override
@@ -163,6 +163,27 @@ public class StdJdkInternetDateTimeUtil implements InternetDateTimeUtil
     @Override
     public String formatUtc(OffsetDateTime date, int fractionDigits)
     {
+        assertMaxFractionDigits(fractionDigits);
         return getFormatter(fractionDigits).format(date);
+    }
+
+    @Override
+    public String formatUtcMilli(Date date)
+    {
+        return formatUtcMilli(OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC));
+    }
+
+    @Override
+    public String format(Date date, String timezone)
+    {
+        return format(date, timezone, 3);       
+    }
+    
+    @Override
+    public String format(Date date, String timezone, int fractionDigits)
+    {
+        final SimpleDateFormat formatter = (SimpleDateFormat)formats[fractionDigits].clone();
+        formatter.setTimeZone(TimeZone.getTimeZone(timezone));
+        return formatter.format(date);
     }
 }

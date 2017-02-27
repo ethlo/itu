@@ -1,12 +1,14 @@
 package com.ethlo.time;
 
+import java.time.DateTimeException;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class StdJdkCorrectnessTest extends CorrectnessTest
 {
     @Override
-    protected StdJdkInternetDateTimeUtil getInstance()
+    protected InternetDateTimeUtil getInstance()
     {
         return new StdJdkInternetDateTimeUtil();
     }
@@ -15,6 +17,14 @@ public class StdJdkCorrectnessTest extends CorrectnessTest
     @Test
     @Ignore
     public void testFormat4TrailingNoise()
+    {
+        
+    }
+    
+    @Override
+    @Test(expected=DateTimeException.class)
+    @Ignore
+    public void testParseUnknownLocalOffsetConvention()
     {
         
     }

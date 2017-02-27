@@ -19,7 +19,7 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
         "2017-02-21T15:27:39.123456+00:00", "2017-02-21T15:27:39.123456789+00:00",
         "2017-02-21T15:27:39.1+00:00", "2017-02-21T15:27:39.12+00:00",
         "2017-02-21T15:27:39.123+00:00", "2017-02-21T15:27:39.1234+00:00",
-        "2017-02-21T15:27:39.112345+00:00", "2017-02-21T15:27:39.123456+00:00",
+        "2017-02-21T15:27:39.12345+00:00", "2017-02-21T15:27:39.123456+00:00",
         "2017-02-21T15:27:39.1234567+00:00", "2017-02-21T15:27:39.12345678+00:00"
     };
     
@@ -62,6 +62,20 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
         assertThat(instance.format(date, "EST")).isEqualTo("2017-02-21T10:00:00.123-05:00");
     }
     
+    @Test(expected=DateTimeException.class)
+    public void testParseMoreThanNanoResolutionFails()
+    {
+        instance.parse("2017-02-21T15:00:00.1234567891Z");
+    }
+    
+    @Test(expected=DateTimeException.class)
+    public void testFormatMoreThanNanoResolutionFails()
+    {
+        final OffsetDateTime d = instance.parse("2017-02-21T15:00:00.123456789Z");
+        final int fractionDigits = 10;
+        instance.formatUtc(d, fractionDigits);
+    }
+    
     @Test
     public void testFormatUtc()
     {
@@ -78,6 +92,14 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
         final String s = "2017-02-21T15:00:00.123456789Z";
         final OffsetDateTime date = instance.parse(s);
         assertThat(instance.formatUtcMilli(date)).isEqualTo("2017-02-21T15:00:00.123Z");
+    }
+    
+    @Test
+    public void testFormatUtcMilliWithDate()
+    {
+        final String s = "2017-02-21T15:00:00.123456789Z";
+        final OffsetDateTime date = instance.parse(s);
+        assertThat(instance.formatUtcMilli(new Date(date.toInstant().toEpochMilli()))).isEqualTo("2017-02-21T15:00:00.123Z");
     }
     
     @Test
@@ -166,12 +188,37 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
         final String s = "2017-02-21T15:27:39+0000";
         assertThat(instance.isValid(s)).isFalse();
     }
+
+    @Test(expected=DateTimeException.class)
+    public void testParseUnknownLocalOffsetConvention()
+    {
+        final String s = "2017-02-21T15:27:39-00:00";
+        instance.parse(s);
+    }
+    
+    @Test
+    public void testParseLowercaseZ()
+    {
+        final String s = "2017-02-21T15:27:39.000z";
+        instance.parse(s);
+    }
+
+    @Test
+    public void testFormatWithNamedTimeZoneDate()
+    {
+        final String s = "2017-02-21T15:27:39.321+00:00";
+        final OffsetDateTime d = instance.parse(s);
+        final String formatted = instance.format(new Date(d.toInstant().toEpochMilli()), "EST");
+        assertThat(formatted).isEqualTo("2017-02-21T10:27:39.321-05:00");
+    }
     
     @Test
     public void testFormatWithNamedTimeZone()
     {
-        // TODO: Add assertions
-        instance.format(new Date(), "EST");
+        final String s = "2017-02-21T15:27:39.321+00:00";
+        final OffsetDateTime d = instance.parse(s);
+        final String formatted = instance.format(new Date(d.toInstant().toEpochMilli()), "EST", 3);
+        assertThat(formatted).isEqualTo("2017-02-21T10:27:39.321-05:00");
     }
     
     @Override

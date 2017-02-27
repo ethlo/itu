@@ -3,7 +3,7 @@ package com.ethlo.time;
 public class StdJdkBenchmarkTest extends BenchmarkTest
 {
     @Override
-    protected StdJdkInternetDateTimeUtil getInstance()
+    protected InternetDateTimeUtil getInstance()
     {
         return new StdJdkInternetDateTimeUtil();
     }

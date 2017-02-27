@@ -10,8 +10,18 @@ import com.ethlo.util.Assert;
 import com.ethlo.util.CharArrayIntegerUtil;
 import com.ethlo.util.CharArrayUtil;
 
-public class FastInternetDateTimeUtil implements InternetDateTimeUtil
+/**
+ * Extreme level of optimization to squeeze every CPU cycle. 
+ * 
+ * @author ethlo - Morten Haraldsen
+ */
+public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
 {
+    public FastInternetDateTimeUtil()
+    {
+        super(false);
+    }
+
     private final StdJdkInternetDateTimeUtil delegate = new StdJdkInternetDateTimeUtil();
     
     private static final char dateSep = '-';
@@ -95,7 +105,7 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
         }
         else
         {
-            throw new UnsupportedOperationException();
+            throw new DateTimeException("Unexpected character at offset 19:" + chars[19]);
         }
         
         return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset); 
@@ -123,7 +133,27 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
             throw new DateTimeException("Invalid offset: " + new String(chars, offset, left));
         }
         
-        return ZoneOffset.of(new String(chars, offset, left));
+        final char sign = chars[offset];
+        int hours = CharArrayIntegerUtil.parsePositiveInt(chars, 10, offset + 1, offset + 3);
+        int minutes = CharArrayIntegerUtil.parsePositiveInt(chars, 10, offset + 4, offset + 4 + 2);
+        if (sign == '-')
+        {
+            hours = -hours;
+        }
+        else if (sign != '+')
+        {
+            throw new DateTimeException("Invalid character starting at position " + offset);
+        }
+        
+        if (! allowUnknownLocalOffsetConvention())
+        {
+            if (sign == '-' && hours == 0 && minutes == 0)
+            {
+                super.failUnknownLocalOffsetConvention();
+            }
+        }
+        
+        return ZoneOffset.ofHoursMinutes(hours, minutes);
     }
 
     private void assertNoMoreChars(char[] chars, int lastUsed)
@@ -137,6 +167,7 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
     @Override
     public String formatUtc(OffsetDateTime date, int fractionDigits)
     {
+        assertMaxFractionDigits(fractionDigits);
         final LocalDateTime utc = LocalDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
         
         final char[] buf = new char[64];
@@ -175,16 +206,6 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
 
     private void addFractions(char[] buf, int fractionDigits, int nano)
     {
-        if (fractionDigits < 0)
-        {
-            fractionDigits = 0;
-        }
-        
-        if (fractionDigits > 9)
-        {
-            fractionDigits = 9;
-        }
-        
         final double d = widths[fractionDigits - 1];
         CharArrayIntegerUtil.toString((int)(nano / d), buf, 20, fractionDigits);
     }
@@ -198,7 +219,7 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
     @Override
     public String formatUtc(Date date)
     {
-        return formatUtc(OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC));
+        return formatUtc(OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC), 3);
     }
 
     @Override
@@ -243,5 +264,17 @@ public class FastInternetDateTimeUtil implements InternetDateTimeUtil
     public String formatUtc(OffsetDateTime date)
     {
         return formatUtc(date, 0);
+    }
+
+    @Override
+    public String formatUtcMilli(Date date)
+    {
+        return formatUtcMilli(OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC));
+    }
+
+    @Override
+    public String format(Date date, String timezone, int fractionDigits)
+    {
+        return delegate.format(date, timezone, fractionDigits);
     }
 }

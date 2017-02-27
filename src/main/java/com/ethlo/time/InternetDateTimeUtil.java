@@ -39,6 +39,13 @@ public interface InternetDateTimeUtil
      * @return The formatted string
      */
     String formatUtc(Date date);
+    
+    /**
+     * See {@link #formatUtcMilli(OffsetDateTime)}
+     * @param date The date to format
+     * @return The formatted string
+     */
+    String formatUtcMilli(Date date);
 
     /**
      * See {@link #format(OffsetDateTime, String)}
@@ -49,17 +56,48 @@ public interface InternetDateTimeUtil
     String format(Date date, String timezone);
     
     /**
+     * Format the date as a date-time String with specified resolution and time-zone offset, for example 1999-12-31T16:48:36[.123456789]-05:00
+     * @param date The date to format
+     * @param timezone The time-zone
+     * @param fractionDigits The number of fraction digits
+     * @return the formatted string
+     */
+    String format(Date date, String timezone, int fractionDigits);
+    
+    /**
      * Check whether the string is a valid date-time according to RFC-3339 
      * @param dateTime
      * @return True if valid, false otherwise
      */
     boolean isValid(String dateTime);
 
+    /**
+     * Format the date as a date-time String  with millisecond resolution, for example 1999-12-31T16:48:36.123Z
+     * @param date The date to format
+     * @return the formatted string
+     */
     String formatUtcMilli(OffsetDateTime date);
     
+    /**
+     * Format the date as a date-time String  with microsecond resolution, aka 1999-12-31T16:48:36.123456Z
+     * @param date The date to format
+     * @return the formatted string
+     */
     String formatUtcMicro(OffsetDateTime date);
     
+    /**
+     * Format the date as a date-time String  with nanosecond resolution, aka 1999-12-31T16:48:36.123456789Z
+     * @param date The date to format
+     * @return the formatted string
+     */
     String formatUtcNano(OffsetDateTime date);
 
+    /**
+     * Format the date as a date-time String with specified resolution, aka 1999-12-31T16:48:36[.123456789]Z
+     * @param date The date to format
+     * @return the formatted string
+     */
     String formatUtc(OffsetDateTime date, int fractionDigits);
+
+    boolean allowUnknownLocalOffsetConvention();
 }
