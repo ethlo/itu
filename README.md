@@ -1,5 +1,7 @@
 # Internet Time Utilty
 
+An extremely fast parser and formatter of standardized date-times.
+
 > Date and time formats cause a lot of confusion and interoperability problems on the Internet.
 This document addresses many of the problems encountered and makes recommendations to improve consistency and interoperability when representing and using date and time in Internet protocols.
 
@@ -33,9 +35,11 @@ There are an endless amount of APIs with non-standard date/time exchange, and th
 
 Some projects use epoch time-stamps for date-time exchange, and from a performance perspective this *may* make sense in *extreme* cases. With this project one can do-the-right-thing and maintain performance in date-time handling.
 
-* What is wrong with epoc timestamps?*
-* It is not human-readable, debugging is harder
-* Limited resolution and/or time-range available. 
+*What is wrong with epoch timestamps?*
+
+* It is not human-readable, so debugging and direct manipulation is harder
+* Limited resolution and/or time-range available
+* Unclear resolution and/or time-range
 
 ## Build status
 [![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
