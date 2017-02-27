@@ -11,7 +11,7 @@ This project's goal it to do one thing and to do it right; make it easy to handl
 
 ## Features
 * No external dependencies, minimalistic JAR
-* MIT licensed
+* Apache license
 * Configurable validator, formatter and parser within the boundaries of the specification
 * Correct time-zone handling
 * High test coverage
