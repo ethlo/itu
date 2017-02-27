@@ -213,6 +213,15 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
     }
     
     @Test
+    public void testFormatUtcDate()
+    {
+        final String s = "2017-02-21T15:27:39.321+00:00";
+        final OffsetDateTime d = instance.parse(s);
+        final String formatted = instance.formatUtc(new Date(d.toInstant().toEpochMilli()));
+        assertThat(formatted).isEqualTo("2017-02-21T15:27:39.321Z");
+    }
+    
+    @Test
     public void testFormatWithNamedTimeZone()
     {
         final String s = "2017-02-21T15:27:39.321+00:00";

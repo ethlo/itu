@@ -95,7 +95,7 @@ public class StdJdkInternetDateTimeUtil extends AbstractInternetDateTimeUtil
     @Override
     public String formatUtc(Date date)
     {
-        return formatUtc(OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC));
+        return formatUtc(OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC), 3);
     }
     
     @Override
