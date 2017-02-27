@@ -1,5 +1,7 @@
 # Internet Time Utilty
 
+An extremely fast parser and formatter of standardized date-times.
+
 > Date and time formats cause a lot of confusion and interoperability problems on the Internet.
 This document addresses many of the problems encountered and makes recommendations to improve consistency and interoperability when representing and using date and time in Internet protocols.
 
