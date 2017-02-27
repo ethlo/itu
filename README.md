@@ -1,11 +1,11 @@
 # Internet Time Utilty
+[![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
+[![Coverage Status](https://coveralls.io/repos/github/ethlo/itu/badge.svg)](https://coveralls.io/github/ethlo/itu)
 
 An extremely fast parser and formatter of standardized date-times.
 
 > Date and time formats cause a lot of confusion and interoperability problems on the Internet.
 This document addresses many of the problems encountered and makes recommendations to improve consistency and interoperability when representing and using date and time in Internet protocols.
-
--- https://www.ietf.org/rfc/rfc3339.txt
 
 This project's goal it to do one thing and to do it right; make it easy to handle [Date and Time on the Internet: Timestamps](https://www.ietf.org/rfc/rfc3339.txt) in Java.
 
@@ -20,9 +20,9 @@ This project's goal it to do one thing and to do it right; make it easy to handl
 ## Performance
 Implementation | Parse | Format 
 ---------------|---------|-----------
-StdJdkInternetDateTimeUtil |  692 650 | 1 960 673
-FastInternetDateTimeUtil   | 10 330 331    | 8 952 794
-Difference | 14.91x | 4.56x
+StdJdkInternetDateTimeUtil |  692 650 parse/sec| 1 960 673 format/sec
+FastInternetDateTimeUtil   | 10 330 331 parse/sec    | 8 952 794 format/sec
+Difference | 14.91x faster | 4.56x faster
 * Your milage may vary. The tests are included in this repository.
 
 ## Q & A
@@ -41,10 +41,6 @@ Some projects use epoch time-stamps for date-time exchange, and from a performan
 * Limited resolution and/or time-range available
 * Unclear resolution and/or time-range
 
-## Build status
-[![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
-[![Coverage Status](https://coveralls.io/repos/github/ethlo/itu/badge.svg?branch=master)](https://coveralls.io/github/ethlo/itu?branch=master)
-
 ## Maven repository
 http://ethlo.com/maven
 
@@ -60,3 +56,13 @@ Typical formats include:
 * `2017-12-27T18:45:32.999-05:00` (Millisecond fractions, EST time)
 * `2017-12-27T18:45:32.999999-05:00`(microsecond fractions, EST time)
 * `2017-12-27T18:45:32.999999999-05:00` (nanosecond fractions, EST time)
+
+## Limitations
+
+For the sake of avoiding data integrity issues, this library will not allow offset of `-00:00`. 
+Such offset is described in RFC3339 section 4.3., named "Unknown Local Offset Convention". Such offset is explicitly prohibited in ISO-8601 as well.
+
+>   If the time in UTC is known, but the offset to local time is unknown,
+   this can be represented with an offset of "-00:00".  This differs
+   semantically from an offset of "Z" or "+00:00", which imply that UTC
+   is the preferred reference point for the specified time.
