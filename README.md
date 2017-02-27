@@ -1,11 +1,11 @@
 # Internet Time Utilty
+[![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
+[![Coverage Status](https://coveralls.io/repos/github/ethlo/itu/badge.svg?branch=master)](https://coveralls.io/github/ethlo/itu?branch=master)
 
 An extremely fast parser and formatter of standardized date-times.
 
 > Date and time formats cause a lot of confusion and interoperability problems on the Internet.
 This document addresses many of the problems encountered and makes recommendations to improve consistency and interoperability when representing and using date and time in Internet protocols.
-
--- https://www.ietf.org/rfc/rfc3339.txt
 
 This project's goal it to do one thing and to do it right; make it easy to handle [Date and Time on the Internet: Timestamps](https://www.ietf.org/rfc/rfc3339.txt) in Java.
 
@@ -40,10 +40,6 @@ Some projects use epoch time-stamps for date-time exchange, and from a performan
 * It is not human-readable, so debugging and direct manipulation is harder
 * Limited resolution and/or time-range available
 * Unclear resolution and/or time-range
-
-## Build status
-[![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
-[![Coverage Status](https://coveralls.io/repos/github/ethlo/itu/badge.svg?branch=master)](https://coveralls.io/github/ethlo/itu?branch=master)
 
 ## Maven repository
 http://ethlo.com/maven
