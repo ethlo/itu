@@ -56,3 +56,13 @@ Typical formats include:
 * `2017-12-27T18:45:32.999-05:00` (Millisecond fractions, EST time)
 * `2017-12-27T18:45:32.999999-05:00`(microsecond fractions, EST time)
 * `2017-12-27T18:45:32.999999999-05:00` (nanosecond fractions, EST time)
+
+## Limitations
+
+For the sake of avoiding data integrity issues, this library will not allow offset of `-00:00`. 
+Such offset is described in RFC3339 section 4.3., named "Unknown Local Offset Convention". Such offset is explicitly prohibited in ISO-8601 as well.
+
+>   If the time in UTC is known, but the offset to local time is unknown,
+   this can be represented with an offset of "-00:00".  This differs
+   semantically from an offset of "Z" or "+00:00", which imply that UTC
+   is the preferred reference point for the specified time.
