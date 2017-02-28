@@ -8,7 +8,9 @@ import java.time.ZoneOffset;
 import java.util.Date;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(CorrectnessTest.class)
 public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
 {
     private final String[] validFormats =
@@ -173,6 +175,14 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
         final String a = "1994 11-05T08:15:30-05:00";
         instance.parse(a);
     }
+    
+    @Test(expected=DateTimeException.class)
+    public void testParseNonDigit()
+    {
+        final String a = "199g-11-05T08:15:30-05:00";
+        instance.parse(a);
+    }
+
 
     @Test(expected=DateTimeException.class)
     public void testInvalidDateTimeSeparator()
