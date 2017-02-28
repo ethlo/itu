@@ -1,9 +1,13 @@
 package com.ethlo.time;
 
 import java.time.DateTimeException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.Year;
+import java.time.YearMonth;
 import java.time.ZoneOffset;
+import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -12,22 +16,28 @@ import java.util.Date;
  * 
  * @author ethlo - Morten Haraldsen
  */
-public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
+public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil implements W3cDateTimeUtil
 {
     public FastInternetDateTimeUtil()
     {
         super(false);
     }
+    
+    private boolean allowMilitaryTimezone;
+    private boolean allowMissingTimezone;
 
     private final StdJdkInternetDateTimeUtil delegate = new StdJdkInternetDateTimeUtil();
-    
-    private static final char dateSep = '-';
-    private static final char timeSep = ':';
-    private static final char sep = 'T';
+    private static final char PLUS = '+';
+    private static final char MINUS = '-';
+    private static final char DATE_SEPARATOR = '-';
+    private static final char TIME_SEPARATOR = ':';
+    private static final char SEPARATOR_UPPER = 'T';
+    private static final char SEPARATOR_LOWER = 't';
     private static final char fractionSep = '.';
+    private static final char ZULU_UPPER = 'Z';
+    private static final char ZULU_LOWER = 'z';
 
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
-    private static char zulu = 'Z';
     
     @Override
     public OffsetDateTime parse(String s)
@@ -45,19 +55,19 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         final char[] chars = s.toCharArray();
         
         // Date portion
-        final int year = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 0, 4);
-        isTrue(chars, 4, dateSep);
-        final int month = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 5, 7);
-        isTrue(chars, 7, dateSep);
-        final int day = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 8, 10);
+        final int year = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 0, 4);
+        assertPositionContains(chars, 4, DATE_SEPARATOR);
+        final int month = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 5, 7);
+        assertPositionContains(chars, 7, DATE_SEPARATOR);
+        final int day = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 8, 10);
         
         // Time starts
-        isTrue(chars, 10, 'T', 't');
-        final int hour = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 11, 13);
-        isTrue(chars, 13, timeSep);
-        final int minute = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 14, 16);
-        isTrue(chars, 16, timeSep);
-        final int second = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 17, 19);
+        assertPositionContains(chars, 10, SEPARATOR_UPPER, SEPARATOR_LOWER);
+        final int hour = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 11, 13);
+        assertPositionContains(chars, 13, TIME_SEPARATOR);
+        final int minute = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 14, 16);
+        assertPositionContains(chars, 16, TIME_SEPARATOR);
+        final int second = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 17, 19);
         
         // From here the specification is more lenient
         final int remaining = chars.length - 19;
@@ -65,7 +75,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         ZoneOffset offset = null;
         int fractions = 0;
         
-        if (remaining == 1 && chars[19] == 'Z' || chars[19] == 'z')
+        if (remaining == 1 && chars[19] == ZULU_UPPER || chars[19] == ZULU_LOWER)
         {
             // Do nothing we are done
             offset = ZoneOffset.UTC;
@@ -79,7 +89,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
             {
                 // We have an end of fractions
                 final int len = idx - 20;
-                fractions = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, 20, idx);
+                fractions = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 20, idx);
                 if (len == 1) {fractions = fractions * 100_000_000;}
                 if (len == 2) {fractions = fractions * 10_000_000;}
                 if (len == 3) {fractions = fractions * 1_000_000;}
@@ -95,7 +105,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
                 offset = parseTz(chars, 20);
             }
         }
-        else if (chars[19] == '+' || chars[19] == '-')
+        else if (chars[19] == PLUS || chars[19] == MINUS)
         {
             // No fractional sections
             offset = parseTz(chars, 19);
@@ -108,15 +118,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset); 
     }
 
-    private void isTrue(char[] chars, int offset, char expected)
-    {
-        if (chars[offset] != expected)
-        {
-            throw new DateTimeException("Expected character " + expected + " at position " + (offset + 1));
-        }
-    }
-    
-    private void isTrue(char[] chars, int offset, char... expected)
+    private void assertPositionContains(char[] chars, int offset, char... expected)
     {
         boolean found = false;
         for (char e : expected)
@@ -129,14 +131,15 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         }
         if (! found)
         {
-            throw new DateTimeException("Expected characters " + Arrays.toString(expected) + " at position " + (offset + 1));
+            throw new DateTimeException("Expected character " + Arrays.toString(expected) 
+                + " at position " + (offset + 1) + " '" + new String(chars) + "'");
         }
     }
 
     private ZoneOffset parseTz(char[] chars, int offset)
     {
         final int left = chars.length - offset;
-        if (chars[offset] == 'Z' || chars[offset] == 'z')
+        if (chars[offset] == ZULU_UPPER || chars[offset] == ZULU_LOWER)
         {
             assertNoMoreChars(chars, offset);
             return ZoneOffset.UTC;
@@ -148,20 +151,20 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         }
         
         final char sign = chars[offset];
-        int hours = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, offset + 1, offset + 3);
-        int minutes = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 10, offset + 4, offset + 4 + 2);
-        if (sign == '-')
+        int hours = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, offset + 1, offset + 3);
+        int minutes = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, offset + 4, offset + 4 + 2);
+        if (sign == MINUS)
         {
             hours = -hours;
         }
-        else if (sign != '+')
+        else if (sign != PLUS)
         {
             throw new DateTimeException("Invalid character starting at position " + offset + 1);
         }
         
         if (! allowUnknownLocalOffsetConvention())
         {
-            if (sign == '-' && hours == 0 && minutes == 0)
+            if (sign == MINUS && hours == 0 && minutes == 0)
             {
                 super.failUnknownLocalOffsetConvention();
             }
@@ -181,6 +184,12 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
     @Override
     public String formatUtc(OffsetDateTime date, int fractionDigits)
     {
+        return formatUtc(date, Field.SECOND, fractionDigits);
+    }
+    
+    @Override
+    public String formatUtc(OffsetDateTime date, Field lastIncluded, int fractionDigits)
+    {
         assertMaxFractionDigits(fractionDigits);
         final LocalDateTime utc = LocalDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
         
@@ -188,19 +197,35 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         
         // Date
         LimitedCharArrayIntegerUtil.toString(utc.getYear(), buf, 0, 4);
-        buf[4] = dateSep;
+        if (lastIncluded == Field.YEAR)
+        {
+            return finish(buf, 4);  
+        }
+        buf[4] = DATE_SEPARATOR;
         LimitedCharArrayIntegerUtil.toString(utc.getMonthValue(), buf, 5, 2);
-        buf[7] = dateSep;
+        if (lastIncluded == Field.MONTH)
+        {
+            return finish(buf, 7);  
+        }
+        buf[7] = DATE_SEPARATOR;
         LimitedCharArrayIntegerUtil.toString(utc.getDayOfMonth(), buf, 8, 2);
+        if (lastIncluded == Field.DAY)
+        {
+            return finish(buf, 10);  
+        }
         
         // T separator
-        buf[10] = sep;
+        buf[10] = SEPARATOR_UPPER;
         
         // Time
         LimitedCharArrayIntegerUtil.toString(utc.getHour(), buf, 11, 2);
-        buf[13] = timeSep;
+        buf[13] = TIME_SEPARATOR;
         LimitedCharArrayIntegerUtil.toString(utc.getMinute(), buf, 14, 2);
-        buf[16] = timeSep;
+        if (lastIncluded == Field.MINUTE)
+        {
+            return finish(buf, 16);  
+        }
+        buf[16] = TIME_SEPARATOR;
         LimitedCharArrayIntegerUtil.toString(utc.getSecond(), buf, 17, 2);
         
         // Second fractions
@@ -212,9 +237,14 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         }
         
         // Add time-zone 'Z'
-        buf[(hasFractionDigits ? 20 + fractionDigits : 19)] = zulu;
+        buf[(hasFractionDigits ? 20 + fractionDigits : 19)] = ZULU_UPPER;
         final int length = hasFractionDigits ? 21 + fractionDigits : 20;
         
+        return finish(buf, length);
+    }
+
+    private String finish(char[] buf, int length)
+    {
         return new String(buf, 0, length);
     }
 
@@ -284,5 +314,139 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
     public String format(Date date, String timezone, int fractionDigits)
     {
         return delegate.format(date, timezone, fractionDigits);
+    }
+
+    @Override
+    public Temporal parseLenient(String s)
+    {
+        return doParseLenient(s, null);
+    }
+    
+    @Override
+    public <T extends Temporal> T parseLenient(String s, Class<T> type)
+    {
+        return type.cast(doParseLenient(s, type));
+    }
+    
+    public <T extends Temporal> Temporal doParseLenient(String s, Class<T> type)
+    {
+        if (s == null || s.isEmpty())
+        {
+            return null;
+        }
+        
+        final Field maxRequired = type == null ? null : Field.valueOf(type);
+        final char[] chars = s.toCharArray();
+
+        // Date portion
+        
+        // YEAR
+        final int year = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 0, 4);
+        if (maxRequired == Field.YEAR)
+        {
+            return Year.of(year);
+        }
+        
+        // MONTH
+        assertPositionContains(chars, 4, DATE_SEPARATOR);
+        final int month = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 5, 7);
+        if (maxRequired == Field.MONTH)
+        {
+            return type.cast(YearMonth.of(year, month));
+        }
+        
+        // DAY
+        assertPositionContains(chars, 7, DATE_SEPARATOR);
+        final int day = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 8, 10);
+        if (maxRequired == Field.DAY || chars.length == 10)
+        {
+            return LocalDate.of(year, month, day);
+        }
+        
+        // *** Time starts ***//
+
+        // HOURS
+        assertPositionContains(chars, 10, SEPARATOR_UPPER, SEPARATOR_LOWER);
+        final int hour = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 11, 13);
+        
+        // MINUTES
+        assertPositionContains(chars, 13, TIME_SEPARATOR);
+        final int minute = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 14, 16);
+        if (maxRequired == Field.MINUTE || chars.length == 16)
+        {
+            return LocalDate.of(year, month, day);
+        }
+        
+        // SECONDS or TIMEZONE
+        switch (chars[16])
+        {
+            // We have more granularity, keep going
+            case TIME_SEPARATOR:
+                return seconds(year, month, day, hour, minute, chars);
+                
+            case PLUS:
+            case MINUS:
+            case ZULU_UPPER:
+            case ZULU_LOWER:
+                final ZoneOffset zoneOffset = parseTz(chars, 16);
+                return OffsetDateTime.of(year, month, day, hour, minute, 0, 0, zoneOffset);
+                
+            default:
+              assertPositionContains(chars, 16, TIME_SEPARATOR, PLUS, MINUS, ZULU_UPPER);
+        }
+        throw new DateTimeException(new String(chars));
+    }
+    
+    private OffsetDateTime seconds(int year, int month, int day, int hour, int minute, char[] chars)
+    {
+        final int second = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 17, 19);
+        
+        // From here the specification is more lenient
+        final int remaining = chars.length - 19;
+        
+        ZoneOffset offset = null;
+        int fractions = 0;
+        
+        if (remaining == 1 && chars[19] == ZULU_UPPER || chars[19] == ZULU_LOWER)
+        {
+            // Do nothing we are done
+            offset = ZoneOffset.UTC;
+            assertNoMoreChars(chars, 19);
+        }
+        else if (chars[19] == fractionSep)
+        {
+            // We have fractional seconds
+            final int idx = LimitedCharArrayIntegerUtil.indexOfNonDigit(chars, 20);
+            if (idx != -1)
+            {
+                // We have an end of fractions
+                final int len = idx - 20;
+                fractions = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 20, idx);
+                if (len == 1) {fractions = fractions * 100_000_000;}
+                if (len == 2) {fractions = fractions * 10_000_000;}
+                if (len == 3) {fractions = fractions * 1_000_000;}
+                if (len == 4) {fractions = fractions * 100_000;}
+                if (len == 5) {fractions = fractions * 10_000;}
+                if (len == 6) {fractions = fractions * 1_000;}
+                if (len == 7) {fractions = fractions * 100;}
+                if (len == 8) {fractions = fractions * 10;}
+                offset = parseTz(chars, idx);
+            }
+            else
+            {
+                offset = parseTz(chars, 20);
+            }
+        }
+        else if (chars[19] == PLUS || chars[19] == MINUS)
+        {
+            // No fractional sections
+            offset = parseTz(chars, 19);
+        }
+        else
+        {
+            throw new DateTimeException("Unexpected character at offset 19:" + chars[19]);
+        }
+        
+        return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset);
     }
 }

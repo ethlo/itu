@@ -3,6 +3,7 @@ package com.ethlo.time;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 import java.time.DateTimeException;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;

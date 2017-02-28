@@ -12,8 +12,13 @@ public final class LimitedCharArrayIntegerUtil
     private final static char ZERO = '0';
     private final static char[] DIGITS = {'0' , '1' , '2' , '3' , '4' , '5', '6' , '7' , '8' , '9'};
     
-	public static int parsePositiveInt(char[] strNum, int radix, int startInclusive, int endExclusive)
+	public static int parsePositiveInt(char[] strNum, int startInclusive, int endExclusive)
 	{
+	    if (endExclusive > strNum.length)
+	    {
+	        throw new DateTimeException("Unexpected end of expression at position " + strNum.length + " '" + new String(strNum) + "'");
+	    }
+	    
 		int result = 0;
 		for (int i = startInclusive; i < endExclusive; i++)
 		{
@@ -21,8 +26,8 @@ public final class LimitedCharArrayIntegerUtil
 		    {
 		        throw new DateTimeException("Character " + strNum[i] + " is not a digit");
 		    }
-			int digit = digit(strNum[i], radix);
-			result *= radix;
+			int digit = digit(strNum[i], 10);
+			result *= 10;
 			result -= digit;
 		}
 		return -result;

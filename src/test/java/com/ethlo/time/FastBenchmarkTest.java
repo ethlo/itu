@@ -11,6 +11,6 @@ public class FastBenchmarkTest extends BenchmarkTest
     @Override
     protected long getRuns()
     {
-        return 300_000_000;
+        return 500_000_000;
     }
 }
