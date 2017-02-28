@@ -156,7 +156,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         }
         else if (sign != '+')
         {
-            throw new DateTimeException("Invalid character starting at position " + offset);
+            throw new DateTimeException("Invalid character starting at position " + offset + 1);
         }
         
         if (! allowUnknownLocalOffsetConvention())
@@ -184,7 +184,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil
         assertMaxFractionDigits(fractionDigits);
         final LocalDateTime utc = LocalDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
         
-        final char[] buf = new char[64];
+        final char[] buf = new char[30];
         
         // Date
         LimitedCharArrayIntegerUtil.toString(utc.getYear(), buf, 0, 4);
