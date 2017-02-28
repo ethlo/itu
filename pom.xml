@@ -20,6 +20,25 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<profiles>
+		<profile>
+			<id>benchmark</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>2.19.1</version>
+						<configuration>
+							<excludes>
+								<exclude>**/*CorrectnessTest.java</exclude>
+							</excludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 	<build>
 		<plugins>
 			<plugin>
@@ -43,11 +62,6 @@
 						</goals>
 					</execution>
 				</executions>
-				<configuration>
-					<excludes>
-						<exclude>com/ethlo/util/**/*</exclude>
-					</excludes>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.eluder.coveralls</groupId>
@@ -84,9 +98,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>2.10.4</version>
-				<configuration>
-					<excludePackageNames>com.ethlo.util</excludePackageNames>
-				</configuration>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -95,6 +106,9 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<show>public</show>
+				</configuration>
 			</plugin>
 		</plugins>
 		<extensions>
