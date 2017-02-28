@@ -1,6 +1,6 @@
 # Internet Time Utilty
 [![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
-[![Coverage Status](https://coveralls.io/repos/github/ethlo/itu/badge.svg)](https://coveralls.io/github/ethlo/itu)
+[![Coverage Status](https://coveralls.io/repos/github/ethlo/itu/badge.svg?1)](https://coveralls.io/github/ethlo/itu?1)
 
 An extremely fast parser and formatter of standardized date-times.
 
@@ -25,6 +25,20 @@ FastInternetDateTimeUtil   | 12 707 717 parse/sec    | 9 071 824 format/sec
 Difference | 23.3x faster | 4.3x faster
 * Your milage may vary. The tests are included in this repository.
 
+## Example use
+```java
+final FastInternetDateTimeUtil itu = new FastInternetDateTimeUtil();
+final String s = "2012-12-27T19:07:22.123456789-03:00";
+
+// Parse a string
+final OffsetDateTime dateTime = itu.parse(s);
+
+// Format with no fraction digits
+final String formattedMilli = itu.formatUtc(dateTime); // 2012-12-27T22:07:22Z
+
+// Format with microsecond precision
+final String formattedMilli = itu.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
+```
 ## Q & A
 
 *Why this little project?*
