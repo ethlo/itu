@@ -1,6 +1,7 @@
 # Internet Time Utilty
 [![Build Status](https://travis-ci.org/ethlo/itu.png?branch=master)](https://travis-ci.org/ethlo/itu)
 [![Coverage Status](https://coveralls.io/repos/github/ethlo/itu/badge.svg?1)](https://coveralls.io/github/ethlo/itu?1)
+[![Coverage Status](https://img.shields.io/badge/GreenCode-Approved-green.svg?style=flat)](http://greencode.io/p/itu)
 
 An extremely fast parser and formatter of standardized date-times.
 
