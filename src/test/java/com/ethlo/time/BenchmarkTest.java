@@ -9,7 +9,7 @@ public abstract class BenchmarkTest extends AbstractTest<InternetDateTimeUtil>
     @Test
     public void testParsePerformance()
     {
-        final String s = "2017-12-21T15:27:39.987654321Z";
+        final String s = "2017-12-21T15:27:39.987Z";
         perform(f->instance.parse(s), instance.getClass().getSimpleName() + " - parse");
     }
     

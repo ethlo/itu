@@ -11,7 +11,6 @@ import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
-import java.time.temporal.TemporalField;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

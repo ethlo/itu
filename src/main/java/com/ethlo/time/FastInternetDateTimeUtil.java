@@ -23,17 +23,18 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
         super(false);
     }
     
-    private boolean allowMilitaryTimezone;
-    private boolean allowMissingTimezone;
+    //private boolean allowMilitaryTimezone;
+    //private boolean allowMissingTimezone;
 
     private final StdJdkInternetDateTimeUtil delegate = new StdJdkInternetDateTimeUtil();
+    
     private static final char PLUS = '+';
     private static final char MINUS = '-';
     private static final char DATE_SEPARATOR = '-';
     private static final char TIME_SEPARATOR = ':';
     private static final char SEPARATOR_UPPER = 'T';
     private static final char SEPARATOR_LOWER = 't';
-    private static final char fractionSep = '.';
+    private static final char FRACTION_SEPARATOR = '.';
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
 
@@ -42,82 +43,9 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
     @Override
     public OffsetDateTime parse(String s)
     {
-        if (s == null || s.isEmpty())
-        {
-            return null;
-        }
-        
-        if (s.length() < 20)
-        {
-            throw new DateTimeException("Invalid date-time: " + s);
-        }
-        
-        final char[] chars = s.toCharArray();
-        
-        // Date portion
-        final int year = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 0, 4);
-        assertPositionContains(chars, 4, DATE_SEPARATOR);
-        final int month = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 5, 7);
-        assertPositionContains(chars, 7, DATE_SEPARATOR);
-        final int day = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 8, 10);
-        
-        // Time starts
-        assertPositionContains(chars, 10, SEPARATOR_UPPER, SEPARATOR_LOWER);
-        final int hour = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 11, 13);
-        assertPositionContains(chars, 13, TIME_SEPARATOR);
-        final int minute = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 14, 16);
-        assertPositionContains(chars, 16, TIME_SEPARATOR);
-        final int second = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 17, 19);
-        
-        // From here the specification is more lenient
-        final int remaining = chars.length - 19;
-        
-        ZoneOffset offset = null;
-        int fractions = 0;
-        
-        if (remaining == 1 && chars[19] == ZULU_UPPER || chars[19] == ZULU_LOWER)
-        {
-            // Do nothing we are done
-            offset = ZoneOffset.UTC;
-            assertNoMoreChars(chars, 19);
-        }
-        else if (chars[19] == fractionSep)
-        {
-            // We have fractional seconds
-            final int idx = LimitedCharArrayIntegerUtil.indexOfNonDigit(chars, 20);
-            if (idx != -1)
-            {
-                // We have an end of fractions
-                final int len = idx - 20;
-                fractions = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 20, idx);
-                if (len == 1) {fractions = fractions * 100_000_000;}
-                if (len == 2) {fractions = fractions * 10_000_000;}
-                if (len == 3) {fractions = fractions * 1_000_000;}
-                if (len == 4) {fractions = fractions * 100_000;}
-                if (len == 5) {fractions = fractions * 10_000;}
-                if (len == 6) {fractions = fractions * 1_000;}
-                if (len == 7) {fractions = fractions * 100;}
-                if (len == 8) {fractions = fractions * 10;}
-                offset = parseTz(chars, idx);
-            }
-            else
-            {
-                offset = parseTz(chars, 20);
-            }
-        }
-        else if (chars[19] == PLUS || chars[19] == MINUS)
-        {
-            // No fractional sections
-            offset = parseTz(chars, 19);
-        }
-        else
-        {
-            throw new DateTimeException("Unexpected character at offset 19:" + chars[19]);
-        }
-        
-        return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset); 
+        return OffsetDateTime.class.cast(doParseLenient(s, OffsetDateTime.class));
     }
-
+    
     private void assertPositionContains(char[] chars, int offset, char... expected)
     {
         boolean found = false;
@@ -193,7 +121,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
         assertMaxFractionDigits(fractionDigits);
         final LocalDateTime utc = LocalDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
         
-        final char[] buf = new char[30];
+        final char[] buf = new char[31];
         
         // Date
         LimitedCharArrayIntegerUtil.toString(utc.getYear(), buf, 0, 4);
@@ -232,7 +160,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
         final boolean hasFractionDigits = fractionDigits > 0;
         if (hasFractionDigits)
         {
-            buf[19] = fractionSep;
+            buf[19] = FRACTION_SEPARATOR;
             addFractions(buf, fractionDigits, utc.getNano());
         }
         
@@ -407,13 +335,13 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
         ZoneOffset offset = null;
         int fractions = 0;
         
-        if (remaining == 1 && chars[19] == ZULU_UPPER || chars[19] == ZULU_LOWER)
+        if (remaining == 1 && (chars[19] == ZULU_UPPER || chars[19] == ZULU_LOWER))
         {
             // Do nothing we are done
             offset = ZoneOffset.UTC;
             assertNoMoreChars(chars, 19);
         }
-        else if (chars[19] == fractionSep)
+        else if (remaining >= 1 && chars[19] == FRACTION_SEPARATOR)
         {
             // We have fractional seconds
             final int idx = LimitedCharArrayIntegerUtil.indexOfNonDigit(chars, 20);
@@ -437,14 +365,18 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
                 offset = parseTz(chars, 20);
             }
         }
-        else if (chars[19] == PLUS || chars[19] == MINUS)
+        else if (remaining >= 1 && (chars[19] == PLUS || chars[19] == MINUS))
         {
             // No fractional sections
             offset = parseTz(chars, 19);
         }
+        else if (remaining == 0)
+        {
+            throw new DateTimeException("Unexpected end of expression at position 19 '" + new String(chars) + "'");
+        }
         else
         {
-            throw new DateTimeException("Unexpected character at offset 19:" + chars[19]);
+            throw new DateTimeException("Unexpected character at position 19:" + chars[19]);
         }
         
         return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset);
