@@ -24,7 +24,7 @@ Implementation | Parse | Format
 java.util (Java 7) * |  742 850 parse/sec | 1 837 811 format/sec
 java.time (Java 8) |  545 333 parse/sec | 2 101 431 format/sec
 Apache FastDateUtils * |  1 076 995 parse/sec | 1 989 163 format/sec
-Internet Time Utililties   | 15 569 458 parse/sec    | 12 726 932 format/sec
+Internet Time Utility   | 15 569 458 parse/sec    | 12 726 932 format/sec
 
 * Single hard-coded format. Lenient parsing would require multiple patterns to be tested (4-6).
 
