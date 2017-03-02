@@ -21,10 +21,14 @@ This project's goal it to do one thing and to do it right; make it easy to handl
 ## Performance
 Implementation | Parse | Format 
 ---------------|---------:|-----------:
-StdJdkInternetDateTimeUtil |  545 333 parse/sec | 2 101 431 format/sec
-FastInternetDateTimeUtil   | 15 569 458 parse/sec    | 12 726 932 format/sec
-Difference | 28.6x faster | 6.05x faster
-* Your milage may vary. The tests are included in this repository.
+java.util (Java 7) * |  742 850 parse/sec | 1 837 811 format/sec
+java.time (Java 8) |  545 333 parse/sec | 2 101 431 format/sec
+Apache FastDateUtils * |  1 076 995 parse/sec | 1 989 163 format/sec
+Internet Time Utililties   | 15 569 458 parse/sec    | 12 726 932 format/sec
+
+* Single hard-coded format. Lenient parsing would require multiple patterns to be tested (4-6).
+
+Your milage may vary. The tests are included in this repository.
 
 ## Example use
 ```java
