@@ -70,7 +70,7 @@ public final class LimitedCharArrayIntegerUtil
             }
             return offset + charLength;
         }
-        
+
         int charPos = offset + MAX_INT_WIDTH;
         value = -value;
         int div;
@@ -110,8 +110,7 @@ public final class LimitedCharArrayIntegerUtil
     {
         for (int i = 0; i < length; i++)
         {
-            final int srcLoc = srcPos + i;  //TABLE_WIDTH - Math.min(TABLE_WIDTH, length)srcPos + i; 
-                                            //length < TABLE_WIDTH ? (srcPos + (i + (TABLE_WIDTH - length))) : srcPos + i;
+            final int srcLoc = srcPos + i; 
             target[offset + i] = buf[srcLoc];
         }
     }
@@ -130,11 +129,11 @@ public final class LimitedCharArrayIntegerUtil
     
     public static boolean isDigit(char c)
     {
-        return (c >= 48 && c <= 57);
+        return (c >= ZERO && c <= '9');
     }
     
     protected static int digit(char c, int radix) 
     {
-        return c - 48;
+        return c - ZERO;
     }
 }

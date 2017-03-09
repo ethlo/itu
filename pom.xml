@@ -5,7 +5,14 @@
 	<artifactId>itu</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<name>Internet Time Utility</name>
-	<description>Internet Time Utility - RFC 3339 (ISO 8601 profile)</description>
+	<description>Extremely fast internet date/time parser/formatter - RFC 3339 (ISO 8601 profile) and W3C format</description>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -17,6 +24,14 @@
 			<groupId>org.easytesting</groupId>
 			<artifactId>fest-assert-core</artifactId>
 			<version>2.0M10</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Candidates -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.5</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
