@@ -31,7 +31,7 @@ import java.time.temporal.Temporal;
  * </ul>   
  * <p>
  * where:
- *
+ *</p>
  * <ul>
  *  <li>YYYY = four-digit year</li>
  *  <li>MM = two-digit month (01=January, etc.)</li>
@@ -42,32 +42,31 @@ import java.time.temporal.Temporal;
  *  <li>S   = one or more digits representing a decimal fraction of a second</li>
  *  <li>TZD  = time zone designator (Z or +hh:mm or -hh:mm)</li>
  * </ul>
- * </p>
+ *
 */
 public interface W3cDateTimeUtil
 {
-
     /**
-     * 
-     * @param date
-     * @param lastIncluded
-     * @param fractionDigits
-     * @return
+     * Format the date/date-time in UTC format
+     * @param date The date to format
+     * @param lastIncluded The last included field
+     * @param fractionDigits The number of fraction digits, if applicable
+     * @return the formatted date/date-time
      */
     String formatUtc(OffsetDateTime date, Field lastIncluded, int fractionDigits);
 
     /**
-     * 
-     * @param s
-     * @param type
-     * @return
+     * Parse the format with an expected type, i.e sub-class of {@link Temporal}
+     * @param s The date/date-time to parse 
+     * @param type The type you expect
+     * @return The parsed date/date-time 
      */
     <T extends Temporal> T parseLenient(String s, Class<T> type);
 
     /**
-     * 
-     * @param s
-     * @return
+     * Parse the format and return it as a fitting sub-class of {@link Temporal}
+     * @param s The date/date-time to parse
+     * @return The parsed date/date-time
      */
     Temporal parseLenient(String s);
 }
