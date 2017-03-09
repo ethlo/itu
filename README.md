@@ -1,8 +1,9 @@
 # Internet Time Utility
 [![Maven Central](https://img.shields.io/maven-central/v/com.ethlo.time/itu.svg)]()
-[![Build Status](https://travis-ci.org/ethlo/itu.svg?branch=master)](https://travis-ci.org/ethlo/itu)
+[![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)]()
 [![Coverage Status](https://coveralls.io/repos/github/ethlo/itu/badge.svg?1)](https://coveralls.io/github/ethlo/itu?1)
 [![Coverage Status](https://img.shields.io/badge/greencode-✓-green.svg?style=flat)](http://greencode.io)
+[![Build Status](https://travis-ci.org/ethlo/itu.svg?branch=master)](https://travis-ci.org/ethlo/itu)
 
 An extremely fast parser and formatter of standardized date-times.
 
