@@ -165,6 +165,44 @@
 					<useAgent>false</useAgent>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<version>1.12</version>
+				<configuration>
+					<verbose>false</verbose>
+					<addSvnKeyWords>true</addSvnKeyWords>
+				</configuration>
+				<executions>
+					<execution>
+						<id>first</id>
+						<goals>
+							<goal>update-file-header</goal>
+						</goals>
+						<phase>process-sources</phase>
+						<configuration>
+							<licenseName>apache_v2</licenseName>
+							<inceptionYear>2017</inceptionYear>
+							<organizationName>Morten Haraldsen (ethlo)</organizationName>
+							<addSvnKeyWords>false</addSvnKeyWords>
+							<roots>
+								<root>src/main/java</root>
+								<root>src/test</root>
+							</roots>
+						</configuration>
+					</execution>
+					<execution>
+						<id>add-third-party</id>
+						<goals>
+							<goal>add-third-party</goal>
+						</goals>
+						<phase>process-sources</phase>
+						<configuration>
+							<excludedScopes>test</excludedScopes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 		<extensions>
 			<extension>
