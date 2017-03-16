@@ -38,14 +38,6 @@ import java.util.Date;
  */
 public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil implements W3cDateTimeUtil
 {
-    public FastInternetDateTimeUtil()
-    {
-        super(false);
-    }
-    
-    //private boolean allowMilitaryTimezone;
-    //private boolean allowMissingTimezone;
-
     private final StdJdkInternetDateTimeUtil delegate = new StdJdkInternetDateTimeUtil();
     
     private static final char PLUS = '+';
@@ -57,8 +49,16 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
     private static final char FRACTION_SEPARATOR = '.';
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
-
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
+
+    //private boolean allowMilitaryTimezone;
+    //private boolean allowMissingTimezone;
+
+    
+    public FastInternetDateTimeUtil()
+    {
+        super(false);
+    }
     
     @Override
     public OffsetDateTime parse(String s)
