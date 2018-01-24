@@ -46,6 +46,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
     private static final char TIME_SEPARATOR = ':';
     private static final char SEPARATOR_UPPER = 'T';
     private static final char SEPARATOR_LOWER = 't';
+    private static final char SEPARATOR_SPACE = ' ';
     private static final char FRACTION_SEPARATOR = '.';
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
@@ -314,7 +315,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
         // *** Time starts ***//
 
         // HOURS
-        assertPositionContains(chars, 10, SEPARATOR_UPPER, SEPARATOR_LOWER);
+        assertPositionContains(chars, 10, SEPARATOR_UPPER, SEPARATOR_LOWER, SEPARATOR_SPACE);
         final int hour = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 11, 13);
         
         // MINUTES

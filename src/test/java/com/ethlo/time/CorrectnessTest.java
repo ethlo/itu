@@ -219,6 +219,13 @@ public abstract class CorrectnessTest extends AbstractTest<InternetDateTimeUtil>
     }
     
     @Test
+    public void testSpaceAsSeparator()
+    {
+        final String a = "1994-11-05 08:15:30z";
+        instance.parse(a);
+    }
+    
+    @Test
     public void testValid()
     {
         for (String f : this.validFormats)
