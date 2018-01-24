@@ -4,6 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/ethlo/itu/badge.svg?1)](https://coveralls.io/github/ethlo/itu?1)
 [![Coverage Status](https://img.shields.io/badge/greencode-✓-green.svg?style=flat)](http://greencode.io)
 [![Build Status](https://travis-ci.org/ethlo/itu.svg?branch=master)](https://travis-ci.org/ethlo/itu)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/598913bc1fe9405c82be73d9a4f105c8)](https://www.codacy.com/app/ethlo/itu?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ethlo/itu&amp;utm_campaign=Badge_Grade)
 
 An extremely fast parser and formatter of standardized date-times.
 
