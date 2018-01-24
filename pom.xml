@@ -33,8 +33,6 @@
 			<version>2.0M10</version>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- Candidates -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>

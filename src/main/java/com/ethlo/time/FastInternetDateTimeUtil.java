@@ -52,10 +52,6 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
     private static final char ZULU_LOWER = 'z';
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
 
-    //private boolean allowMilitaryTimezone;
-    //private boolean allowMissingTimezone;
-
-    
     public FastInternetDateTimeUtil()
     {
         super(false);
