@@ -25,7 +25,7 @@ import java.time.ZoneOffset;
 
 import org.junit.Test;
 
-public abstract class BenchmarkTest extends AbstractTest<InternetDateTimeUtil>
+public abstract class BenchmarkTest extends AbstractTest<Rfc3339>
 {
     private final OffsetDateTime d = OffsetDateTime.of(2017, 12,21,15,27,39, 987, ZoneOffset.UTC);
 
@@ -33,7 +33,7 @@ public abstract class BenchmarkTest extends AbstractTest<InternetDateTimeUtil>
     public void testParsePerformance()
     {
         final String s = "2017-12-21T15:27:39.987Z";
-        perform(f->instance.parse(s), instance.getClass().getSimpleName() + " - parse");
+        perform(f->instance.parseDateTime(s), instance.getClass().getSimpleName() + " - parse");
     }
     
     @Test

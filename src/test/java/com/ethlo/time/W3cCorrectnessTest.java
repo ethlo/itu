@@ -36,7 +36,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(CorrectnessTest.class)
-public class W3cCorrectnessTest extends AbstractTest<InternetDateTimeUtil>
+public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
 {
     private W3cDateTimeUtil w3cDateUtil;
 
@@ -44,7 +44,7 @@ public class W3cCorrectnessTest extends AbstractTest<InternetDateTimeUtil>
     public void testParseEmptyString()
     {
         final String s = "";
-        final OffsetDateTime date = instance.parse(s);
+        final OffsetDateTime date = instance.parseDateTime(s);
         assertThat(date).isNull();
     }
     
@@ -57,12 +57,29 @@ public class W3cCorrectnessTest extends AbstractTest<InternetDateTimeUtil>
     }
     
     @Test
+    public void testParseYearStringLenient()
+    {
+        final String s = "2012";
+        final Temporal date = w3cDateUtil.parseLenient(s);
+        assertThat(date.get(ChronoField.YEAR)).isEqualTo(2012);
+    }
+    
+    @Test
     public void testParseYearMonthString()
     {
         final String s = "2012-10";
         final YearMonth date = w3cDateUtil.parseLenient(s, YearMonth.class);
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonthValue()).isEqualTo(10);
+    }
+    
+    @Test
+    public void testParseYearMonthStringLenient()
+    {
+        final String s = "2012-10";
+        final Temporal date = w3cDateUtil.parseLenient(s);
+        assertThat(date.get(ChronoField.YEAR)).isEqualTo(2012);
+        assertThat(date.get(ChronoField.MONTH_OF_YEAR)).isEqualTo(10);
     }
     
     @Test
@@ -77,24 +94,19 @@ public class W3cCorrectnessTest extends AbstractTest<InternetDateTimeUtil>
     public void testParseBestEffort1DigitMinute()
     {
         final String s = "2012-03-29T23:1";
-        final Temporal date = w3cDateUtil.parseLenient(s);
-        assertThat(date.get(ChronoField.YEAR)).isEqualTo(2012);
-        assertThat(date.get(ChronoField.MONTH_OF_YEAR)).isEqualTo(3);
-        assertThat(date.get(ChronoField.DAY_OF_MONTH)).isEqualTo(29);
-        assertThat(date.get(ChronoField.HOUR_OF_DAY)).isEqualTo(23);
-        assertThat(date.get(ChronoField.MINUTE_OF_HOUR)).isEqualTo(19);
+        w3cDateUtil.parseLenient(s);
     }
     
     @Test
     public void testParseNull()
     {
         final String s = null;
-        final OffsetDateTime date = instance.parse(s);
+        final OffsetDateTime date = instance.parseDateTime(s);
         assertThat(date).isNull();
     }
 
     @Override
-    protected InternetDateTimeUtil getInstance()
+    protected Rfc3339 getInstance()
     {
         final FastInternetDateTimeUtil retVal = new FastInternetDateTimeUtil();
         this.w3cDateUtil = retVal; 

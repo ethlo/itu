@@ -31,12 +31,7 @@ import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.Date;
 
-/**
- * Extreme level of optimization to squeeze every CPU cycle. 
- * 
- * @author ethlo - Morten Haraldsen
- */
-public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil implements W3cDateTimeUtil
+public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDateTimeUtil
 {
     private final StdJdkInternetDateTimeUtil delegate = new StdJdkInternetDateTimeUtil();
     
@@ -51,20 +46,29 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
-
-    public FastInternetDateTimeUtil()
-    {
-        super(false);
-    }
     
     @Override
-    public OffsetDateTime parse(String s)
+    public OffsetDateTime parseDateTime(String s)
     {
-        return OffsetDateTime.class.cast(doParseLenient(s, OffsetDateTime.class));
+        final Temporal t = doParseLenient(s, OffsetDateTime.class);
+        if (t == null)
+        {
+            return null;
+        }
+        else if (t instanceof OffsetDateTime)
+        {
+            return OffsetDateTime.class.cast(t);
+        }
+        throw new DateTimeException("Invalid RFC-3339 date-time: " + s);
     }
     
     private void assertPositionContains(char[] chars, int offset, char... expected)
     {
+        if (offset >= chars.length)
+        {
+            throw new DateTimeException("Abrupt end of input: " + new String(chars));
+        }
+        
         boolean found = false;
         for (char e : expected)
         {
@@ -107,12 +111,9 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
             throw new DateTimeException("Invalid character starting at position " + offset + 1);
         }
         
-        if (! allowUnknownLocalOffsetConvention())
+        if (sign == MINUS && hours == 0 && minutes == 0)
         {
-            if (sign == MINUS && hours == 0 && minutes == 0)
-            {
-                super.failUnknownLocalOffsetConvention();
-            }
+            throw new DateTimeException("Unknown 'Local Offset Convention' date-time not allowed");
         }
         
         return ZoneOffset.ofHoursMinutes(hours, minutes);
@@ -216,7 +217,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
     {
         try
         {
-            parse(dateTime);
+            parseDateTime(dateTime);
             return true;
         }
         catch (DateTimeException exc)
@@ -287,7 +288,7 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
         
         // YEAR
         final int year = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 0, 4);
-        if (maxRequired == Field.YEAR)
+        if (maxRequired == Field.YEAR || chars.length == 4)
         {
             return Year.of(year);
         }
@@ -295,9 +296,9 @@ public class FastInternetDateTimeUtil extends AbstractInternetDateTimeUtil imple
         // MONTH
         assertPositionContains(chars, 4, DATE_SEPARATOR);
         final int month = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 5, 7);
-        if (maxRequired == Field.MONTH)
+        if (maxRequired == Field.MONTH || chars.length == 7)
         {
-            return type.cast(YearMonth.of(year, month));
+            return YearMonth.of(year, month);
         }
         
         // DAY

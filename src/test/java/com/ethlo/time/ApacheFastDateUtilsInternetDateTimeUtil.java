@@ -28,7 +28,7 @@ import java.util.Date;
 
 import org.apache.commons.lang3.time.FastDateFormat;
 
-public class ApacheFastDateUtilsInternetDateTimeUtil implements InternetDateTimeUtil
+public class ApacheFastDateUtilsInternetDateTimeUtil implements Rfc3339
 {
     private final FastDateFormat parser = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
     
@@ -39,7 +39,7 @@ public class ApacheFastDateUtilsInternetDateTimeUtil implements InternetDateTime
     }
 
     @Override
-    public OffsetDateTime parse(String dateTimeStr)
+    public OffsetDateTime parseDateTime(String dateTimeStr)
     {
         try
         {
@@ -112,12 +112,4 @@ public class ApacheFastDateUtilsInternetDateTimeUtil implements InternetDateTime
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public boolean allowUnknownLocalOffsetConvention()
-    {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
 }

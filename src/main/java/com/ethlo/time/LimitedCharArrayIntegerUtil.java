@@ -23,11 +23,6 @@ package com.ethlo.time;
 import java.time.DateTimeException;
 import java.util.Arrays;
 
-/**
- * 
- * @author mha
- *
- */
 public final class LimitedCharArrayIntegerUtil
 {
     private static final char ZERO = '0';
@@ -37,6 +32,8 @@ public final class LimitedCharArrayIntegerUtil
     private static final int MAX_INT_WIDTH = 10;
     private static final int TABLE_SIZE = (int)Math.pow(RADIX, TABLE_WIDTH);
     private static final char[] INT_CONVERSION_CACHE = new char[(TABLE_SIZE * TABLE_WIDTH) + MAX_INT_WIDTH];
+    
+    private LimitedCharArrayIntegerUtil(){}
     
     static
     {
@@ -62,7 +59,7 @@ public final class LimitedCharArrayIntegerUtil
 		    {
 		        throw new DateTimeException("Character " + strNum[i] + " is not a digit");
 		    }
-			int digit = digit(strNum[i], RADIX);
+			int digit = digit(strNum[i]);
 			result *= RADIX;
 			result -= digit;
 		}
@@ -152,7 +149,7 @@ public final class LimitedCharArrayIntegerUtil
         return (c >= ZERO && c <= '9');
     }
     
-    protected static int digit(char c, int radix) 
+    protected static int digit(char c) 
     {
         return c - ZERO;
     }

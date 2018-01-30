@@ -28,7 +28,7 @@ import org.junit.Test;
 public class StdJdkCorrectnessTest extends CorrectnessTest
 {
     @Override
-    protected InternetDateTimeUtil getInstance()
+    protected Rfc3339 getInstance()
     {
         return new StdJdkInternetDateTimeUtil();
     }

@@ -23,7 +23,7 @@ package com.ethlo.time;
 public class ApacheFastDateUtilsBenchmarkTest extends BenchmarkTest
 {
     @Override
-    protected InternetDateTimeUtil getInstance()
+    protected Rfc3339 getInstance()
     {
         return new ApacheFastDateUtilsInternetDateTimeUtil();
     }

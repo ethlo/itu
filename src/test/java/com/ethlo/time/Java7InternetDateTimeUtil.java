@@ -28,7 +28,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 
-public class Java7InternetDateTimeUtil implements InternetDateTimeUtil
+public class Java7InternetDateTimeUtil implements Rfc3339
 {
     private final DateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
     
@@ -39,7 +39,7 @@ public class Java7InternetDateTimeUtil implements InternetDateTimeUtil
     }
 
     @Override
-    public OffsetDateTime parse(String dateTimeStr)
+    public OffsetDateTime parseDateTime(String dateTimeStr)
     {
         try
         {
@@ -112,12 +112,4 @@ public class Java7InternetDateTimeUtil implements InternetDateTimeUtil
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public boolean allowUnknownLocalOffsetConvention()
-    {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
 }

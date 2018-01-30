@@ -22,27 +22,9 @@ package com.ethlo.time;
 
 import java.time.DateTimeException;
 
-public abstract class AbstractInternetDateTimeUtil implements InternetDateTimeUtil
+public abstract class AbstractRfc3339 implements Rfc3339
 {
-    private static final int MAX_FRACTION_DIGITS = 9;
-    
-    private final boolean unknownLocalOffsetConvention;
-
-    public AbstractInternetDateTimeUtil(boolean unknownLocalOffsetConvention)
-    {
-        this.unknownLocalOffsetConvention = unknownLocalOffsetConvention;
-    }
-
-    @Override
-    public boolean allowUnknownLocalOffsetConvention()
-    {
-        return unknownLocalOffsetConvention;
-    }
-    
-    protected void failUnknownLocalOffsetConvention()
-    {
-        throw new DateTimeException("Unknown Local Offset Convention date-times not allowed");
-    }
+    public static final int MAX_FRACTION_DIGITS = 9;
 
     protected void assertMaxFractionDigits(int fractionDigits)
     {

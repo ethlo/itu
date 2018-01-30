@@ -36,9 +36,9 @@ import java.util.TimeZone;
  * 
  * @author ethlo - Morten Haraldsen
  */
-public class StdJdkInternetDateTimeUtil extends AbstractInternetDateTimeUtil
+public class StdJdkInternetDateTimeUtil extends AbstractRfc3339
 {
-    private SimpleDateFormat[] formats = new SimpleDateFormat[9];
+    private SimpleDateFormat[] formats = new SimpleDateFormat[MAX_FRACTION_DIGITS];
     
     private DateTimeFormatter rfc3339baseFormatter = new DateTimeFormatterBuilder()
         .appendValue(ChronoField.YEAR, 4)
@@ -112,8 +112,7 @@ public class StdJdkInternetDateTimeUtil extends AbstractInternetDateTimeUtil
 
     public StdJdkInternetDateTimeUtil()
     {
-        super(false);
-        for (int i = 1; i < 9; i++)
+        for (int i = 1; i < MAX_FRACTION_DIGITS; i++)
         {
             this.formats[i] = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat('S', i) + "XXX");
         }
@@ -126,7 +125,7 @@ public class StdJdkInternetDateTimeUtil extends AbstractInternetDateTimeUtil
     }
     
     @Override
-    public OffsetDateTime parse(final String s)
+    public OffsetDateTime parseDateTime(final String s)
     {
         if (s == null || s.isEmpty())
         {
@@ -154,7 +153,7 @@ public class StdJdkInternetDateTimeUtil extends AbstractInternetDateTimeUtil
     {
         try
         {
-            parse(dateTime);
+            parseDateTime(dateTime);
             return true;
         }
         catch (DateTimeException exc)

@@ -29,7 +29,7 @@ import java.util.Date;
  * 
  * @author Ethlo, Morten Haraldsen
  */
-public interface InternetDateTimeUtil
+public interface Rfc3339
 {
     /**
      * Format the {@link Date} as a UTC formatted date-time string
@@ -39,11 +39,11 @@ public interface InternetDateTimeUtil
     String formatUtc(OffsetDateTime date);
 
     /**
-     * Parse the date-time and return it as a {@link Date} in UTC time-zone.
+     * Parse the date-time and return it as a {@link OffsetDateTime}.
      * @param dateTimeStr The date-time string to parse
      * @return The instant defined by the date-time in UTC time-zone 
      */
-    OffsetDateTime parse(String dateTimeStr);
+    OffsetDateTime parseDateTime(String dateTimeStr);
 
     /**
      * See {@link #formatUtc(OffsetDateTime)}
@@ -111,16 +111,4 @@ public interface InternetDateTimeUtil
      * @return the formatted string
      */
     String formatUtc(OffsetDateTime date, int fractionDigits);
-
-    /**
-     * RFC 3339 - 4.3. Unknown Local Offset Convention
-     *
-     * <p>If the time in UTC is known, but the offset to local time is unknown,
-     * this can be represented with an offset of "-00:00".  This differs
-     * semantically from an offset of "Z" or "+00:00", which imply that UTC
-     * is the preferred reference point for the specified time.</p>
-     *
-     * @return True if allowed, otherwise false
-     */
-    boolean allowUnknownLocalOffsetConvention();
 }
