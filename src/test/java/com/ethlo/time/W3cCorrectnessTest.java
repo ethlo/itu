@@ -63,7 +63,7 @@ public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
     @Test
     public void testFormatYearMonthDay()
     {
-        assertThat(w3cDateUtil.format(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.MONTH)).isEqualTo("2012-01-14");
+        assertThat(w3cDateUtil.format(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.DAY)).isEqualTo("2012-01-14");
     }
 
     @Test
