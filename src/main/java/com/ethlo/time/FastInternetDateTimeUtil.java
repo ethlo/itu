@@ -132,6 +132,12 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
     {
         return formatUtc(date, Field.SECOND, fractionDigits);
     }
+
+    @Override
+    public String format(OffsetDateTime date, Field lastIncluded)
+    {
+        return formatUtc(date, lastIncluded, 0);
+    }
     
     @Override
     public String formatUtc(OffsetDateTime date, Field lastIncluded, int fractionDigits)

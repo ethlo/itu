@@ -114,7 +114,7 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
         final String actual = instance.formatUtc(date);
         assertThat(actual).isEqualTo(expected);
     }
-    
+
     @Test
     public void testFormatUtcMilli()
     {

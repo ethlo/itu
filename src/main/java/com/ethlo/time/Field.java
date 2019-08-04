@@ -29,19 +29,7 @@ import java.time.temporal.Temporal;
 public enum Field
 {
     // 2000-12-31T16:11:34.123456
-    YEAR(4), MONTH(7), DAY(10), MINUTE(16), SECOND(19);
-    
-    private int len;
-    
-    private Field(int len)
-    {
-        this.len = len;
-    }
-    
-    public int getLength()
-    {
-        return this.len;
-    }
+    YEAR, MONTH, DAY, MINUTE, SECOND;
 
     public static Field valueOf(Class<? extends Temporal> type)
     {

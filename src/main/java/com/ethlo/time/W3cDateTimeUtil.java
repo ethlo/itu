@@ -90,4 +90,6 @@ public interface W3cDateTimeUtil
      * @return The parsed date/date-time
      */
     Temporal parseLenient(String s);
+
+    String format(OffsetDateTime parse, Field year);
 }

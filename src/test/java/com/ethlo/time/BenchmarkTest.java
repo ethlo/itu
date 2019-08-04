@@ -40,8 +40,11 @@ public abstract class BenchmarkTest extends AbstractTest<Rfc3339>
     public void testParseLenient()
     {
         final String s = "2017-12-21T12:20Z";
-        final W3cDateTimeUtil w3cUtil = (W3cDateTimeUtil) instance;
-        perform(f->w3cUtil.parseLenient(s), instance.getClass().getSimpleName() + " - parseLenient");
+        if (instance instanceof W3cDateTimeUtil)
+        {
+            final W3cDateTimeUtil w3cUtil = (W3cDateTimeUtil) instance;
+            perform(f -> w3cUtil.parseLenient(s), instance.getClass().getSimpleName() + " - parseLenient");
+        }
     }
     
     @Test

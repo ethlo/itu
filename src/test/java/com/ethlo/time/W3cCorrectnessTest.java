@@ -47,7 +47,25 @@ public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
         final OffsetDateTime date = instance.parseDateTime(s);
         assertThat(date).isNull();
     }
-    
+
+    @Test
+    public void testFormatYear()
+    {
+        assertThat(w3cDateUtil.format(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.YEAR)).isEqualTo("2012");
+    }
+
+    @Test
+    public void testFormatYearMonth()
+    {
+        assertThat(w3cDateUtil.format(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.MONTH)).isEqualTo("2012-01");
+    }
+
+    @Test
+    public void testFormatYearMonthDay()
+    {
+        assertThat(w3cDateUtil.format(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.MONTH)).isEqualTo("2012-01-14");
+    }
+
     @Test
     public void testParseYearString()
     {
