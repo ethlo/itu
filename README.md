@@ -34,7 +34,7 @@ Your milage may vary. The tests are included in this repository.
 ## Example use
 ```java
 // Parse a string
-final OffsetDateTime dateTime = ITU.parse("2012-12-27T19:07:22.123456789-03:00");
+final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
 
 // Format with no fraction digits
 final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
