@@ -57,7 +57,7 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
         }
         else if (t instanceof OffsetDateTime)
         {
-            return OffsetDateTime.class.cast(t);
+            return (OffsetDateTime) t;
         }
         throw new DateTimeException("Invalid RFC-3339 date-time: " + s);
     }
@@ -145,54 +145,61 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
         assertMaxFractionDigits(fractionDigits);
         final LocalDateTime utc = LocalDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
         
-        final char[] buf = new char[31];
-        
-        // Date
-        LimitedCharArrayIntegerUtil.toString(utc.getYear(), buf, 0, 4);
-        if (lastIncluded == Field.YEAR)
+        final char[] buffer = new char[31];
+
+        if (handleDatePart(lastIncluded, buffer, utc.getYear(), 0, 4, Field.YEAR))
         {
-            return finish(buf, 4);  
+            return finish(buffer, 4);
         }
-        buf[4] = DATE_SEPARATOR;
-        LimitedCharArrayIntegerUtil.toString(utc.getMonthValue(), buf, 5, 2);
-        if (lastIncluded == Field.MONTH)
+
+        buffer[4] = DATE_SEPARATOR;
+        if (handleDatePart(lastIncluded, buffer, utc.getMonthValue(), 5, 2, Field.MONTH))
         {
-            return finish(buf, 7);  
+            return finish(buffer, 7);
         }
-        buf[7] = DATE_SEPARATOR;
-        LimitedCharArrayIntegerUtil.toString(utc.getDayOfMonth(), buf, 8, 2);
-        if (lastIncluded == Field.DAY)
+
+        buffer[7] = DATE_SEPARATOR;
+        if (handleDatePart(lastIncluded, buffer, utc.getDayOfMonth(), 8, 2, Field.DAY))
         {
-            return finish(buf, 10);  
+            return finish(buffer, 10);
         }
-        
+
         // T separator
-        buf[10] = SEPARATOR_UPPER;
+        buffer[10] = SEPARATOR_UPPER;
         
         // Time
-        LimitedCharArrayIntegerUtil.toString(utc.getHour(), buf, 11, 2);
-        buf[13] = TIME_SEPARATOR;
-        LimitedCharArrayIntegerUtil.toString(utc.getMinute(), buf, 14, 2);
-        if (lastIncluded == Field.MINUTE)
+        LimitedCharArrayIntegerUtil.toString(utc.getHour(), buffer, 11, 2);
+        buffer[13] = TIME_SEPARATOR;
+        if (handleDatePart(lastIncluded, buffer, utc.getMinute(), 14, 2, Field.MINUTE))
         {
-            return finish(buf, 16);  
+            return finish(buffer, 16);
         }
-        buf[16] = TIME_SEPARATOR;
-        LimitedCharArrayIntegerUtil.toString(utc.getSecond(), buf, 17, 2);
+        buffer[16] = TIME_SEPARATOR;
+        LimitedCharArrayIntegerUtil.toString(utc.getSecond(), buffer, 17, 2);
         
         // Second fractions
         final boolean hasFractionDigits = fractionDigits > 0;
         if (hasFractionDigits)
         {
-            buf[19] = FRACTION_SEPARATOR;
-            addFractions(buf, fractionDigits, utc.getNano());
+            buffer[19] = FRACTION_SEPARATOR;
+            addFractions(buffer, fractionDigits, utc.getNano());
         }
-        
-        // Add time-zone 'Z'
+
+        final int length = addUtcTimezone(fractionDigits, buffer, hasFractionDigits);
+
+        return finish(buffer, length);
+    }
+
+    private int addUtcTimezone(final int fractionDigits, final char[] buf, final boolean hasFractionDigits)
+    {
         buf[(hasFractionDigits ? 20 + fractionDigits : 19)] = ZULU_UPPER;
-        final int length = hasFractionDigits ? 21 + fractionDigits : 20;
-        
-        return finish(buf, length);
+        return hasFractionDigits ? 21 + fractionDigits : 20;
+    }
+
+    private boolean handleDatePart(final Field lastIncluded, final char[] buffer, final int value, final int offset, final int length, final Field field)
+    {
+        LimitedCharArrayIntegerUtil.toString(value, buffer, offset, length);
+        return lastIncluded == field;
     }
 
     private String finish(char[] buf, int length)
@@ -356,7 +363,7 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
         // From here the specification is more lenient
         final int remaining = chars.length - 19;
         
-        ZoneOffset offset = null;
+        ZoneOffset offset;
         int fractions = 0;
         
         if (remaining == 1 && (chars[19] == ZULU_UPPER || chars[19] == ZULU_LOWER))

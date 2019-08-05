@@ -73,8 +73,9 @@ public final class LimitedCharArrayIntegerUtil
         toString(value, buf, offset, padTo, true);
     }
 
-    private static void toString(int value, char[] buf, int offset, int charLength, boolean useTable)
+    private static void toString(final int val, final char[] buf, final int offset, final int charLength, final boolean useTable)
     {
+        int value = val;
         if (useTable && value < TABLE_SIZE)
         {
             final int length = Math.min(TABLE_WIDTH, charLength);
