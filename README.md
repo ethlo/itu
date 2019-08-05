@@ -34,13 +34,13 @@ Your milage may vary. The tests are included in this repository.
 ## Example use
 ```java
 // Parse a string
-final OffsetDateTime dateTime = itu.parse("2012-12-27T19:07:22.123456789-03:00");
+final OffsetDateTime dateTime = ITU.parse("2012-12-27T19:07:22.123456789-03:00");
 
 // Format with no fraction digits
-final String formatted = itu.formatUtc(dateTime); // 2012-12-27T22:07:22Z
+final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
 
 // Format with microsecond precision
-final String formattedMicro = itu.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
+final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
 ```
 ## Q & A
 
