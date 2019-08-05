@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ import java.util.Date;
 public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDateTimeUtil
 {
     private final StdJdkInternetDateTimeUtil delegate = new StdJdkInternetDateTimeUtil();
-    
+
     private static final char PLUS = '+';
     private static final char MINUS = '-';
     private static final char DATE_SEPARATOR = '-';
@@ -46,7 +46,7 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
-    
+
     @Override
     public OffsetDateTime parseDateTime(String s)
     {
@@ -61,14 +61,14 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
         }
         throw new DateTimeException("Invalid RFC-3339 date-time: " + s);
     }
-    
+
     private void assertPositionContains(char[] chars, int offset, char... expected)
     {
         if (offset >= chars.length)
         {
             throw new DateTimeException("Abrupt end of input: " + new String(chars));
         }
-        
+
         boolean found = false;
         for (char e : expected)
         {
@@ -78,10 +78,10 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
                 break;
             }
         }
-        if (! found)
+        if (!found)
         {
-            throw new DateTimeException("Expected character " + Arrays.toString(expected) 
-                + " at position " + (offset + 1) + " '" + new String(chars) + "'");
+            throw new DateTimeException("Expected character " + Arrays.toString(expected)
+                    + " at position " + (offset + 1) + " '" + new String(chars) + "'");
         }
     }
 
@@ -93,12 +93,12 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
             assertNoMoreChars(chars, offset);
             return ZoneOffset.UTC;
         }
-        
+
         if (left != 6)
         {
             throw new DateTimeException("Invalid timezone offset: " + new String(chars, offset, left));
         }
-        
+
         final char sign = chars[offset];
         int hours = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, offset + 1, offset + 3);
         int minutes = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, offset + 4, offset + 4 + 2);
@@ -110,12 +110,12 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
         {
             throw new DateTimeException("Invalid character starting at position " + offset + 1);
         }
-        
+
         if (sign == MINUS && hours == 0 && minutes == 0)
         {
             throw new DateTimeException("Unknown 'Local Offset Convention' date-time not allowed");
         }
-        
+
         return ZoneOffset.ofHoursMinutes(hours, minutes);
     }
 
@@ -138,13 +138,13 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
     {
         return formatUtc(date, lastIncluded, 0);
     }
-    
+
     @Override
     public String formatUtc(OffsetDateTime date, Field lastIncluded, int fractionDigits)
     {
         assertMaxFractionDigits(fractionDigits);
         final LocalDateTime utc = LocalDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
-        
+
         final char[] buffer = new char[31];
 
         if (handleDatePart(lastIncluded, buffer, utc.getYear(), 0, 4, Field.YEAR))
@@ -166,7 +166,7 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
 
         // T separator
         buffer[10] = SEPARATOR_UPPER;
-        
+
         // Time
         LimitedCharArrayIntegerUtil.toString(utc.getHour(), buffer, 11, 2);
         buffer[13] = TIME_SEPARATOR;
@@ -176,7 +176,7 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
         }
         buffer[16] = TIME_SEPARATOR;
         LimitedCharArrayIntegerUtil.toString(utc.getSecond(), buffer, 17, 2);
-        
+
         // Second fractions
         final boolean hasFractionDigits = fractionDigits > 0;
         if (hasFractionDigits)
@@ -210,7 +210,7 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
     private void addFractions(char[] buf, int fractionDigits, int nano)
     {
         final double d = widths[fractionDigits - 1];
-        LimitedCharArrayIntegerUtil.toString((int)(nano / d), buf, 20, fractionDigits);
+        LimitedCharArrayIntegerUtil.toString((int) (nano / d), buf, 20, fractionDigits);
     }
 
     @Override
@@ -256,7 +256,7 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
     {
         return formatUtc(date, 9);
     }
-    
+
     @Override
     public String formatUtc(OffsetDateTime date)
     {
@@ -280,32 +280,32 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
     {
         return doParseLenient(s, null);
     }
-    
+
     @Override
     public <T extends Temporal> T parseLenient(String s, Class<T> type)
     {
         return type.cast(doParseLenient(s, type));
     }
-    
+
     public <T extends Temporal> Temporal doParseLenient(String s, Class<T> type)
     {
         if (s == null || s.isEmpty())
         {
             return null;
         }
-        
+
         final Field maxRequired = type == null ? null : Field.valueOf(type);
         final char[] chars = s.toCharArray();
 
         // Date portion
-        
+
         // YEAR
         final int year = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 0, 4);
         if (maxRequired == Field.YEAR || chars.length == 4)
         {
             return Year.of(year);
         }
-        
+
         // MONTH
         assertPositionContains(chars, 4, DATE_SEPARATOR);
         final int month = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 5, 7);
@@ -313,7 +313,7 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
         {
             return YearMonth.of(year, month);
         }
-        
+
         // DAY
         assertPositionContains(chars, 7, DATE_SEPARATOR);
         final int day = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 8, 10);
@@ -321,13 +321,13 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
         {
             return LocalDate.of(year, month, day);
         }
-        
+
         // *** Time starts ***//
 
         // HOURS
         assertPositionContains(chars, 10, SEPARATOR_UPPER, SEPARATOR_LOWER, SEPARATOR_SPACE);
         final int hour = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 11, 13);
-        
+
         // MINUTES
         assertPositionContains(chars, 13, TIME_SEPARATOR);
         final int minute = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 14, 16);
@@ -335,37 +335,37 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
         {
             return LocalDate.of(year, month, day);
         }
-        
+
         // SECONDS or TIMEZONE
         switch (chars[16])
         {
             // We have more granularity, keep going
             case TIME_SEPARATOR:
                 return seconds(year, month, day, hour, minute, chars);
-                
+
             case PLUS:
             case MINUS:
             case ZULU_UPPER:
             case ZULU_LOWER:
                 final ZoneOffset zoneOffset = parseTz(chars, 16);
                 return OffsetDateTime.of(year, month, day, hour, minute, 0, 0, zoneOffset);
-                
+
             default:
-              assertPositionContains(chars, 16, TIME_SEPARATOR, PLUS, MINUS, ZULU_UPPER);
+                assertPositionContains(chars, 16, TIME_SEPARATOR, PLUS, MINUS, ZULU_UPPER);
         }
         throw new DateTimeException(new String(chars));
     }
-    
+
     private OffsetDateTime seconds(int year, int month, int day, int hour, int minute, char[] chars)
     {
         final int second = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 17, 19);
-        
+
         // From here the specification is more lenient
         final int remaining = chars.length - 19;
-        
+
         ZoneOffset offset;
         int fractions = 0;
-        
+
         if (remaining == 1 && (chars[19] == ZULU_UPPER || chars[19] == ZULU_LOWER))
         {
             // Do nothing we are done
@@ -380,15 +380,7 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
             {
                 // We have an end of fractions
                 final int len = idx - 20;
-                fractions = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 20, idx);
-                if (len == 1) {fractions = fractions * 100_000_000;}
-                if (len == 2) {fractions = fractions * 10_000_000;}
-                if (len == 3) {fractions = fractions * 1_000_000;}
-                if (len == 4) {fractions = fractions * 100_000;}
-                if (len == 5) {fractions = fractions * 10_000;}
-                if (len == 6) {fractions = fractions * 1_000;}
-                if (len == 7) {fractions = fractions * 100;}
-                if (len == 8) {fractions = fractions * 10;}
+                fractions = getFractions(chars, idx, len);
                 offset = parseTz(chars, idx);
             }
             else
@@ -409,7 +401,34 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
         {
             throw new DateTimeException("Unexpected character at position 19:" + chars[19]);
         }
-        
+
         return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset);
+    }
+
+    private int getFractions(final char[] chars, final int idx, final int len)
+    {
+        final int fractions;
+        fractions = LimitedCharArrayIntegerUtil.parsePositiveInt(chars, 20, idx);
+        switch (len)
+        {
+            case 1:
+                return fractions * 100_000_000;
+            case 2:
+                return fractions * 10_000_000;
+            case 3:
+                return fractions * 1_000_000;
+            case 4:
+                return fractions * 100_000;
+            case 5:
+                return fractions * 10_000;
+            case 6:
+                return fractions * 1_000;
+            case 7:
+                return fractions * 100;
+            case 8:
+                return fractions * 10;
+            default:
+                return fractions;
+        }
     }
 }
