@@ -33,11 +33,8 @@ Your milage may vary. The tests are included in this repository.
 
 ## Example use
 ```java
-final FastInternetDateTimeUtil itu = new FastInternetDateTimeUtil();
-final String s = "2012-12-27T19:07:22.123456789-03:00";
-
 // Parse a string
-final OffsetDateTime dateTime = itu.parse(s);
+final OffsetDateTime dateTime = itu.parse("2012-12-27T19:07:22.123456789-03:00");
 
 // Format with no fraction digits
 final String formatted = itu.formatUtc(dateTime); // 2012-12-27T22:07:22Z
