@@ -39,7 +39,7 @@ public abstract class BenchmarkTest extends AbstractTest<Rfc3339>
     @Test
     public void testParseLenient()
     {
-        final String s = "2017-12-21T12:20Z";
+        final String s = "2017-12-21T12:20:45.987Z";
         if (instance instanceof W3cDateTimeUtil)
         {
             final W3cDateTimeUtil w3cUtil = (W3cDateTimeUtil) instance;

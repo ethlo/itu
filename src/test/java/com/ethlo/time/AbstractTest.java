@@ -58,7 +58,7 @@ public abstract class AbstractTest<T>
         }
         final long end = System.nanoTime();
         final double secs = (end - start) / 1_000_000_000D;
-        System.out.println(msg + ": " + getElapsedFormatter().format(secs) + " sec elapsed. " + getPerformanceFormatter().format((getRuns() / secs))  + " iterations/sec. " + getRuns() + " total iterations");        
+        System.out.println(msg + ": " + getElapsedFormatter().format(secs) + " sec elapsed. " + getPerformanceFormatter().format((getRuns() / secs))  + " iterations/sec. " + getRuns() + " total iterations");
     }
     
     protected DecimalFormat getPerformanceFormatter()

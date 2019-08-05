@@ -194,36 +194,35 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     public void testBadSeparator()
     {
         final String a = "1994 11-05T08:15:30-05:00";
-        instance.parseDateTime(a);
+        assertThat(instance.parseDateTime(a)).isNotNull();
     }
     
     @Test(expected=DateTimeException.class)
     public void testParseNonDigit()
     {
         final String a = "199g-11-05T08:15:30-05:00";
-        instance.parseDateTime(a);
+        assertThat(instance.parseDateTime(a)).isNotNull();
     }
-
 
     @Test(expected=DateTimeException.class)
     public void testInvalidDateTimeSeparator()
     {
         final String a = "1994-11-05X08:15:30-05:00";
-        instance.parseDateTime(a);
+        assertThat(instance.parseDateTime(a)).isNotNull();
     }
     
     @Test
     public void testLowerCaseTseparator()
     {
         final String a = "1994-11-05t08:15:30z";
-        instance.parseDateTime(a);
+        assertThat(instance.parseDateTime(a)).isNotNull();
     }
     
     @Test
     public void testSpaceAsSeparator()
     {
         final String a = "1994-11-05 08:15:30z";
-        instance.parseDateTime(a);
+        assertThat(instance.parseDateTime(a)).isNotNull();
     }
     
     @Test

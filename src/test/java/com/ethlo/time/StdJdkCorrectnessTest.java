@@ -38,14 +38,14 @@ public class StdJdkCorrectnessTest extends CorrectnessTest
     @Ignore
     public void testFormat4TrailingNoise()
     {
-        
+        // For ignore marker only
     }
     
     @Override
-    @Test(expected=DateTimeException.class)
+    @Test
     @Ignore
     public void testParseUnknownLocalOffsetConvention()
     {
-        
+        // For ignore marker only
     }
 }
