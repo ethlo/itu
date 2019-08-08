@@ -24,15 +24,11 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.time.MonthDay;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
-import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -408,11 +404,18 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
             throw new DateTimeException("Unexpected character at position 19:" + chars[19]);
         }
 
-        // Do not fall over trying to parse leap seconds
-        if (second == LEAP_SECOND_SECONDS && (month == Month.DECEMBER.getValue() && day == 31 || month == Month.JUNE.getValue() && day == 30))
+        if (second == LEAP_SECOND_SECONDS)
         {
-            // Consider it a leap second
-            return OffsetDateTime.of(year, month, day, hour, minute, 59, fractions, offset).plusSeconds(1);
+            // Do not fall over trying to parse leap seconds
+            final int utcHour = hour - (offset.getTotalSeconds() / 3_600);
+            final int utcMinute = minute - ((offset.getTotalSeconds() % 3_600) / 60);
+            if (((month == Month.DECEMBER.getValue() && day == 31) || (month == Month.JUNE.getValue() && day == 30))
+                    && utcHour == 23
+                    && utcMinute == 59)
+            {
+                // Consider it a leap second
+                return OffsetDateTime.of(year, month, day, hour, minute, 59, fractions, offset).plusSeconds(1);
+            }
         }
         return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset);
     }
