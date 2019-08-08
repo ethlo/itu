@@ -23,16 +23,22 @@ package com.ethlo.time;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.MonthDay;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Date;
 
 public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDateTimeUtil
 {
+    public static final int LEAP_SECOND_SECONDS = 60;
     private final StdJdkInternetDateTimeUtil delegate = new StdJdkInternetDateTimeUtil();
 
     private static final char PLUS = '+';
@@ -402,6 +408,12 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
             throw new DateTimeException("Unexpected character at position 19:" + chars[19]);
         }
 
+        // Do not fall over trying to parse leap seconds
+        if (second == LEAP_SECOND_SECONDS && (month == Month.DECEMBER.getValue() && day == 31 || month == Month.JUNE.getValue() && day == 30))
+        {
+            // Consider it a leap second
+            return OffsetDateTime.of(year, month, day, hour, minute, 59, fractions, offset).plusSeconds(1);
+        }
         return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset);
     }
 
