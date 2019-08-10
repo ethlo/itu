@@ -20,7 +20,10 @@ package com.ethlo.time;
  * #L%
  */
 
+import static org.fest.assertions.api.Assertions.assertThat;
+
 import java.time.DateTimeException;
+import java.time.OffsetDateTime;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -45,6 +48,39 @@ public class StdJdkCorrectnessTest extends CorrectnessTest
     @Test
     @Ignore
     public void testParseUnknownLocalOffsetConvention()
+    {
+        // For ignore marker only
+    }
+
+
+    @Override
+    @Test
+    @Ignore
+    public void testParseLeapSecondUTC()
+    {
+        // For ignore marker only
+    }
+
+    @Override
+    @Test
+    @Ignore
+    public void testParseLeapSecondPST()
+    {
+        // For ignore marker only
+    }
+
+    @Override
+    @Test
+    @Ignore
+    public void testParseLeapSecondUTCJune()
+    {
+        // For ignore marker only
+    }
+
+    @Override
+    @Test
+    @Ignore
+    public void testParseLeapSecondPSTJune()
     {
         // For ignore marker only
     }

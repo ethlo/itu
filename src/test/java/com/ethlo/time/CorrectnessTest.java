@@ -51,7 +51,39 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
             "2017-02-21T15:27:39.123456", "2017-02-21T15:27:39.123456789",
             "2017-02-21T15:27:39+0000", "2017-02-21T15:27:39.123+0000", 
             "201702-21T15:27:39.123456+0000", "20170221T15:27:39.123456789+0000"};
-    
+
+    @Test
+    public void testParseLeapSecondUTC()
+    {
+        final String leapSecondUTC = "1990-12-31T23:59:60Z";
+        final OffsetDateTime result = instance.parseDateTime(leapSecondUTC);
+        assertThat(instance.formatUtc(result)).isEqualTo("1991-01-01T00:00:00Z");
+    }
+
+    @Test
+    public void testParseLeapSecondPST()
+    {
+        final String leapSecondPST = "1990-12-31T15:59:60-08:00";
+        final OffsetDateTime result = instance.parseDateTime(leapSecondPST);
+        assertThat(instance.formatUtc(result)).isEqualTo("1991-01-01T00:00:00Z");
+    }
+
+    @Test
+    public void testParseLeapSecondUTCJune()
+    {
+        final String leapSecondUTC = "1992-06-30T23:59:60Z";
+        final OffsetDateTime result = instance.parseDateTime(leapSecondUTC);
+        assertThat(instance.formatUtc(result)).isEqualTo("1992-07-01T00:00:00Z");
+    }
+
+    @Test
+    public void testParseLeapSecondPSTJune()
+    {
+        final String leapSecondPST = "1992-06-30T15:59:60-08:00";
+        final OffsetDateTime result = instance.parseDateTime(leapSecondPST);
+        assertThat(instance.formatUtc(result)).isEqualTo("1992-07-01T00:00:00Z");
+    }
+
     @Test(expected=DateTimeException.class)
     public void testFormat1()
     {
