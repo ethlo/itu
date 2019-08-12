@@ -91,7 +91,5 @@ Such offset is described in RFC3339 section 4.3., named "Unknown Local Offset Co
    is the preferred reference point for the specified time.
 
 ### Leap second parsing
-Since Java's `java.time` classes do not support storing leap seconds, it is not obvious how to support this. 
-
-ITU will parse the date-time correctly, however storing such values is not possible (in a `java.time.OffsetDateTime`), the `60` is therefore abandoned and the date-time will use `59` instead of `60`. 
+Since Java's `java.time` classes do not support storing leap seconds, ITU will throw a `LeapSecondException` if one is encountered to signal that this is a leap second. The exception can then be queried for the second-value. Storing such values is not possible in a `java.time.OffsetDateTime`, the `60` is therefore abandoned and the date-time will use `59` instead of `60`. 
 
