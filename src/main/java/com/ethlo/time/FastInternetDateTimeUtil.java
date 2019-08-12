@@ -23,6 +23,7 @@ package com.ethlo.time;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
@@ -33,8 +34,7 @@ import java.util.Date;
 
 public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDateTimeUtil
 {
-    private final StdJdkInternetDateTimeUtil delegate = new StdJdkInternetDateTimeUtil();
-
+    public static final int LEAP_SECOND_SECONDS = 60;
     private static final char PLUS = '+';
     private static final char MINUS = '-';
     private static final char DATE_SEPARATOR = '-';
@@ -46,6 +46,7 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
+    private final StdJdkInternetDateTimeUtil delegate = new StdJdkInternetDateTimeUtil();
 
     @Override
     public OffsetDateTime parseDateTime(String s)
@@ -402,6 +403,19 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
             throw new DateTimeException("Unexpected character at position 19:" + chars[19]);
         }
 
+        if (second == LEAP_SECOND_SECONDS)
+        {
+            // Do not fall over trying to parse leap seconds
+            final int utcHour = hour - (offset.getTotalSeconds() / 3_600);
+            final int utcMinute = minute - ((offset.getTotalSeconds() % 3_600) / 60);
+            if (((month == Month.DECEMBER.getValue() && day == 31) || (month == Month.JUNE.getValue() && day == 30))
+                    && utcHour == 23
+                    && utcMinute == 59)
+            {
+                // Consider it a leap second
+                throw new LeapSecondException(OffsetDateTime.of(year, month, day, hour, minute, 59, fractions, offset).plusSeconds(1), second);
+            }
+        }
         return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset);
     }
 

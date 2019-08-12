@@ -33,17 +33,14 @@ Your milage may vary. The tests are included in this repository.
 
 ## Example use
 ```java
-final FastInternetDateTimeUtil itu = new FastInternetDateTimeUtil();
-final String s = "2012-12-27T19:07:22.123456789-03:00";
-
 // Parse a string
-final OffsetDateTime dateTime = itu.parse(s);
+final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
 
 // Format with no fraction digits
-final String formatted = itu.formatUtc(dateTime); // 2012-12-27T22:07:22Z
+final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
 
 // Format with microsecond precision
-final String formattedMicro = itu.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
+final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
 ```
 ## Q & A
 
@@ -84,6 +81,7 @@ Typical formats include:
 
 ## Limitations
 
+### Local offset
 For the sake of avoiding data integrity issues, this library will not allow offset of `-00:00`. 
 Such offset is described in RFC3339 section 4.3., named "Unknown Local Offset Convention". Such offset is explicitly prohibited in ISO-8601 as well.
 
@@ -91,3 +89,9 @@ Such offset is described in RFC3339 section 4.3., named "Unknown Local Offset Co
    this can be represented with an offset of "-00:00".  This differs
    semantically from an offset of "Z" or "+00:00", which imply that UTC
    is the preferred reference point for the specified time.
+
+### Leap second parsing
+Since Java's `java.time` classes do not support storing leap seconds, it is not obvious how to support this. 
+
+ITU will parse the date-time correctly, however storing such values is not possible (in a `java.time.OffsetDateTime`), the `60` is therefore abandoned and the date-time will use `59` instead of `60`. 
+
