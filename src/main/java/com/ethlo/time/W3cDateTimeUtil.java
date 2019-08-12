@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,10 +23,11 @@ package com.ethlo.time;
 import java.time.OffsetDateTime;
 import java.time.temporal.Temporal;
 
-/** This class deals with the formats mentioned in W3C - NOTE-datetime: https://www.w3.org/TR/NOTE-datetime
- * 
+/**
+ * This class deals with the formats mentioned in W3C - NOTE-datetime: https://www.w3.org/TR/NOTE-datetime
+ *
  * <ul>
- * <li>Year:<br> 
+ * <li>Year:<br>
  *     YYYY (eg 1997)
  * </li>
  * <li>
@@ -48,10 +49,10 @@ import java.time.temporal.Temporal;
  *     Complete date plus hours, minutes, seconds and a decimal fraction of a second<br>
  *     YYYY-MM-DDThh:mm:ss.STZD (eg 1997-07-16T19:20:30.45+01:00)
  * </li>
- * </ul>   
+ * </ul>
  * <p>
  * where:
- *</p>
+ * </p>
  * <ul>
  *  <li>YYYY = four-digit year</li>
  *  <li>MM = two-digit month (01=January, etc.)</li>
@@ -62,14 +63,14 @@ import java.time.temporal.Temporal;
  *  <li>S   = one or more digits representing a decimal fraction of a second</li>
  *  <li>TZD  = time zone designator (Z or +hh:mm or -hh:mm)</li>
  * </ul>
- *
-*/
+ */
 public interface W3cDateTimeUtil
 {
     /**
      * Format the date/date-time in UTC format
-     * @param date The date to format
-     * @param lastIncluded The last included field
+     *
+     * @param date           The date to format
+     * @param lastIncluded   The last included field
      * @param fractionDigits The number of fraction digits, if applicable
      * @return the formatted date/date-time
      */
@@ -77,15 +78,17 @@ public interface W3cDateTimeUtil
 
     /**
      * Parse the format with an expected type, i.e sub-class of {@link Temporal}
-     * @param s The date/date-time to parse 
+     *
+     * @param s    The date/date-time to parse
      * @param type The type you expect
-     * @param <T> The expected type
-     * @return The parsed date/date-time 
+     * @param <T>  The expected type
+     * @return The parsed date/date-time
      */
     <T extends Temporal> T parseLenient(String s, Class<T> type);
 
     /**
      * Parse the format and return it as a fitting sub-class of {@link Temporal}
+     *
      * @param s The date/date-time to parse
      * @return The parsed date/date-time
      */

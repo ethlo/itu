@@ -33,10 +33,6 @@ public final class LimitedCharArrayIntegerUtil
     private static final int TABLE_SIZE = (int) Math.pow(RADIX, TABLE_WIDTH);
     private static final char[] INT_CONVERSION_CACHE = new char[(TABLE_SIZE * TABLE_WIDTH) + MAX_INT_WIDTH];
 
-    private LimitedCharArrayIntegerUtil()
-    {
-    }
-
     static
     {
         int offset = 0;
@@ -45,6 +41,10 @@ public final class LimitedCharArrayIntegerUtil
             toString(i, INT_CONVERSION_CACHE, offset, TABLE_WIDTH, false);
             offset += TABLE_WIDTH;
         }
+    }
+
+    private LimitedCharArrayIntegerUtil()
+    {
     }
 
     public static int parsePositiveInt(char[] strNum, int startInclusive, int endExclusive)

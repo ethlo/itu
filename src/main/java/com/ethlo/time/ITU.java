@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,14 +33,16 @@ public class ITU
 {
     private static final FastInternetDateTimeUtil delegate = new FastInternetDateTimeUtil();
     private static final ZoneId GMT_ZONE = ZoneId.of("GMT");
-    
-    private ITU(){}
+
+    private ITU()
+    {
+    }
 
     public static OffsetDateTime parseDateTime(String s)
     {
         return delegate.parseDateTime(s);
     }
-    
+
     public static String formatUtc(OffsetDateTime date, int fractionDigits)
     {
         return delegate.formatUtc(date, fractionDigits);
@@ -110,23 +112,23 @@ public class ITU
     {
         if (temporal instanceof Instant)
         {
-            return ((Instant)temporal).toEpochMilli();
+            return ((Instant) temporal).toEpochMilli();
         }
         else if (temporal instanceof OffsetDateTime)
         {
-            return toEpochMillis(((OffsetDateTime)temporal).toInstant());
+            return toEpochMillis(((OffsetDateTime) temporal).toInstant());
         }
         else if (temporal instanceof LocalDate)
         {
-            return toEpochMillis(((LocalDate)temporal).atStartOfDay(GMT_ZONE).toInstant());
+            return toEpochMillis(((LocalDate) temporal).atStartOfDay(GMT_ZONE).toInstant());
         }
         else if (temporal instanceof YearMonth)
         {
-            return toEpochMillis(((YearMonth)temporal).atDay(1));
+            return toEpochMillis(((YearMonth) temporal).atDay(1));
         }
         else if (temporal instanceof Year)
         {
-            return toEpochMillis(((Year)temporal).atDay(1));
+            return toEpochMillis(((Year) temporal).atDay(1));
         }
         throw new IllegalArgumentException("Unhandled type " + temporal.getClass());
     }

@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,15 +27,15 @@ import org.junit.Test;
 
 public abstract class BenchmarkTest extends AbstractTest<Rfc3339>
 {
-    private final OffsetDateTime d = OffsetDateTime.of(2017, 12,21,15,27,39, 987, ZoneOffset.UTC);
+    private final OffsetDateTime d = OffsetDateTime.of(2017, 12, 21, 15, 27, 39, 987, ZoneOffset.UTC);
 
     @Test
     public void testParsePerformance()
     {
         final String s = "2017-12-21T15:27:39.987Z";
-        perform(f->instance.parseDateTime(s), instance.getClass().getSimpleName() + " - parse");
+        perform(f -> instance.parseDateTime(s), instance.getClass().getSimpleName() + " - parse");
     }
-    
+
     @Test
     public void testParseLenient()
     {
@@ -46,10 +46,10 @@ public abstract class BenchmarkTest extends AbstractTest<Rfc3339>
             perform(f -> w3cUtil.parseLenient(s), instance.getClass().getSimpleName() + " - parseLenient");
         }
     }
-    
+
     @Test
     public void testFormatPerformance()
     {
-        perform(f->instance.formatUtc(d), instance.getClass().getSimpleName() + " - formatUtc");
+        perform(f -> instance.formatUtc(d), instance.getClass().getSimpleName() + " - formatUtc");
     }
 }

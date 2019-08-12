@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -73,7 +73,7 @@ public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
         final Year date = w3cDateUtil.parseLenient(s, Year.class);
         assertThat(date.getValue()).isEqualTo(2012);
     }
-    
+
     @Test
     public void testParseYearStringLenient()
     {
@@ -81,7 +81,7 @@ public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
         final Temporal date = w3cDateUtil.parseLenient(s);
         assertThat(date.get(ChronoField.YEAR)).isEqualTo(2012);
     }
-    
+
     @Test
     public void testParseYearMonthString()
     {
@@ -90,7 +90,7 @@ public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonthValue()).isEqualTo(10);
     }
-    
+
     @Test
     public void testParseYearMonthStringLenient()
     {
@@ -99,7 +99,7 @@ public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
         assertThat(date.get(ChronoField.YEAR)).isEqualTo(2012);
         assertThat(date.get(ChronoField.MONTH_OF_YEAR)).isEqualTo(10);
     }
-    
+
     @Test
     public void testParseDateString()
     {
@@ -107,14 +107,14 @@ public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
         final LocalDate date = w3cDateUtil.parseLenient(s, LocalDate.class);
         assertThat(instance.formatUtc(OffsetDateTime.of(date, LocalTime.MIN, ZoneOffset.UTC))).isEqualTo("2012-03-29T00:00:00Z");
     }
-    
-    @Test(expected=DateTimeException.class)
+
+    @Test(expected = DateTimeException.class)
     public void testParseBestEffort1DigitMinute()
     {
         final String s = "2012-03-29T23:1";
         w3cDateUtil.parseLenient(s);
     }
-    
+
     @Test
     public void testParseNull()
     {
@@ -127,7 +127,7 @@ public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
     protected Rfc3339 getInstance()
     {
         final FastInternetDateTimeUtil retVal = new FastInternetDateTimeUtil();
-        this.w3cDateUtil = retVal; 
+        this.w3cDateUtil = retVal;
         return retVal;
     }
 
