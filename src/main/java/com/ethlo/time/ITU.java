@@ -26,13 +26,14 @@ import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 import java.util.Date;
 
 public class ITU
 {
     private static final EthloITU delegate = new EthloITU();
-    private static final ZoneId GMT_ZONE = ZoneId.of("GMT");
+    private static final ZoneId GMT_ZONE = ZoneOffset.UTC;
 
     private ITU()
     {
