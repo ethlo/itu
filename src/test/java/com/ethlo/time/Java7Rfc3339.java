@@ -28,9 +28,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 
-public class Java7InternetDateTimeUtil implements Rfc3339
+public class Java7Rfc3339 implements Rfc3339
 {
-    private final DateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    private final DateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+    private final DateFormat fractionParser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     @Override
     public String formatUtc(OffsetDateTime date)
@@ -43,11 +44,18 @@ public class Java7InternetDateTimeUtil implements Rfc3339
     {
         try
         {
-            return OffsetDateTime.ofInstant(parser.parse(dateTimeStr).toInstant(), ZoneOffset.UTC);
+            return OffsetDateTime.ofInstant(fractionParser.parse(dateTimeStr).toInstant(), ZoneOffset.UTC);
         }
-        catch (ParseException exc)
+        catch (ParseException fractionExc)
         {
-            throw new DateTimeException(exc.getMessage(), exc);
+            try
+            {
+                return OffsetDateTime.ofInstant(parser.parse(dateTimeStr).toInstant(), ZoneOffset.UTC);
+            }
+            catch (ParseException exc)
+            {
+                throw new DateTimeException(exc.getMessage(), exc);
+            }
         }
     }
 

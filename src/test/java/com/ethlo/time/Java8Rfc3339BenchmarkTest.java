@@ -20,17 +20,17 @@ package com.ethlo.time;
  * #L%
  */
 
-public class Java7BenchmarkTest extends BenchmarkTest
+public class Java8Rfc3339BenchmarkTest extends BenchmarkTest
 {
     @Override
-    protected Rfc3339 getInstance()
+    protected Rfc3339 getParser()
     {
-        return new Java7InternetDateTimeUtil();
+        return new Java8Rfc3339();
     }
 
     @Override
-    protected long getRuns()
+    protected Rfc3339Formatter getFormatter()
     {
-        return 10_000_000;
+        return new Java8Rfc3339();
     }
 }

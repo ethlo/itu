@@ -20,16 +20,16 @@ package com.ethlo.time;
  * #L%
  */
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.OffsetDateTime;
 import java.time.YearMonth;
 import java.util.Date;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
-@Category(CorrectnessTest.class)
+@Tag("CorrectnessTest")
 public class ITUTest
 {
     private static final OffsetDateTime VALID_DATETIME = OffsetDateTime.parse("2017-05-01T16:23:12Z");

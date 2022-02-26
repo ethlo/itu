@@ -4,7 +4,7 @@ package com.ethlo.time;
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 - 2019 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 Morten Haraldsen (ethlo)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,26 +20,17 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.time.OffsetDateTime;
-
-public class LeapSecondException extends RuntimeException
+public class EthloITUCorrectnessTest extends CorrectnessTest
 {
-    private final int secondsInMinute;
-    private final OffsetDateTime nearestDateTime;
-
-    public LeapSecondException(OffsetDateTime nearestDateTime, int secondsInMinute)
+    @Override
+    protected Rfc3339 getParser()
     {
-        this.nearestDateTime = nearestDateTime;
-        this.secondsInMinute = secondsInMinute;
+        return new EthloITU();
     }
 
-    public int getSecondsInMinute()
+    @Override
+    protected Rfc3339Formatter getFormatter()
     {
-        return secondsInMinute;
-    }
-
-    public OffsetDateTime getNearestDateTime()
-    {
-        return nearestDateTime;
+        return new EthloITU();
     }
 }

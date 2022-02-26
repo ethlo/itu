@@ -32,7 +32,7 @@ import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.Date;
 
-public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDateTimeUtil
+public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 {
     public static final int LEAP_SECOND_SECONDS = 60;
     private static final char PLUS = '+';
@@ -46,7 +46,7 @@ public class FastInternetDateTimeUtil extends AbstractRfc3339 implements W3cDate
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
-    private final StdJdkInternetDateTimeUtil delegate = new StdJdkInternetDateTimeUtil();
+    private final Java8Rfc3339 delegate = new Java8Rfc3339();
 
     @Override
     public OffsetDateTime parseDateTime(String s)

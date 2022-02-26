@@ -20,17 +20,17 @@ package com.ethlo.time;
  * #L%
  */
 
-public class ApacheFastDateUtilsBenchmarkTest extends BenchmarkTest
+public class GoogleDateTimeRfc3339BenchmarkTest extends BenchmarkTest
 {
     @Override
-    protected Rfc3339 getInstance()
+    protected Rfc3339Parser getParser()
     {
-        return new ApacheFastDateUtilsInternetDateTimeUtil();
+        return new GoogleDateTimeRfc3339();
     }
 
     @Override
-    protected long getRuns()
+    protected Rfc3339Formatter getFormatter()
     {
-        return 10_000_000;
+        return null;
     }
 }

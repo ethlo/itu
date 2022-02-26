@@ -20,64 +20,43 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
-import java.util.Locale;
-import java.util.function.Consumer;
+import org.junit.jupiter.api.BeforeEach;
 
-import org.junit.Before;
-
-public abstract class AbstractTest<T>
+public abstract class AbstractTest
 {
-    protected T instance;
+    protected Rfc3339Parser parser;
+    protected Rfc3339Formatter formatter;
 
-    protected abstract T getInstance();
+    protected abstract Rfc3339Parser getParser();
+    protected abstract Rfc3339Formatter getFormatter();
 
     protected abstract long getRuns();
 
-    @Before
+    @BeforeEach
     public void setup()
     {
-        this.instance = getInstance();
+        this.parser = getParser();
+        this.formatter = getFormatter();
     }
 
-    protected final void perform(Consumer<Void> func, String msg)
+    protected final void unsupported(final Chronograph chronograph, String msg)
+    {
+        chronograph.timed(msg + " - unsupported!", () -> {
+        });
+    }
+
+    protected final void perform(final Chronograph chronograph, final Runnable func, final String msg)
     {
         // Warm-up
         for (int i = 0; i < getRuns(); i++)
         {
-            func.accept(null);
+            func.run();
         }
 
         // Benchmark
-        final long start = System.nanoTime();
         for (int i = 0; i < getRuns(); i++)
         {
-            func.accept(null);
+            chronograph.timed(msg, func);
         }
-        final long end = System.nanoTime();
-        final double secs = (end - start) / 1_000_000_000D;
-        System.out.println(msg + ": " + getElapsedFormatter().format(secs) + " sec elapsed. " + getPerformanceFormatter().format((getRuns() / secs)) + " iterations/sec. " + getRuns() + " total iterations");
-    }
-
-    protected DecimalFormat getPerformanceFormatter()
-    {
-        DecimalFormat formatter = (DecimalFormat) NumberFormat.getInstance(Locale.US);
-        DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();
-        symbols.setGroupingSeparator(' ');
-        formatter.setMaximumFractionDigits(0);
-        formatter.setDecimalFormatSymbols(symbols);
-        return formatter;
-    }
-
-    protected DecimalFormat getElapsedFormatter()
-    {
-        DecimalFormat formatter = (DecimalFormat) NumberFormat.getInstance(Locale.US);
-        DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();
-        symbols.setGroupingSeparator(' ');
-        formatter.setMaximumFractionDigits(2);
-        formatter.setDecimalFormatSymbols(symbols);
-        return formatter;
     }
 }

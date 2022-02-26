@@ -20,17 +20,17 @@ package com.ethlo.time;
  * #L%
  */
 
-public class StdJdkBenchmarkTest extends BenchmarkTest
+public class EthloITUBenchmarkTest extends BenchmarkTest
 {
     @Override
-    protected Rfc3339 getInstance()
+    protected Rfc3339 getParser()
     {
-        return new StdJdkInternetDateTimeUtil();
+        return new EthloITU();
     }
 
     @Override
-    protected long getRuns()
+    protected Rfc3339Formatter getFormatter()
     {
-        return 10_000_000;
+        return new EthloITU();
     }
 }

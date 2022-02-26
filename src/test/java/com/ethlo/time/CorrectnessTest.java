@@ -20,18 +20,19 @@ package com.ethlo.time;
  * #L%
  */
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
-@Category(CorrectnessTest.class)
-public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
+@Tag("CorrectnessTest")
+public abstract class CorrectnessTest extends AbstractTest
 {
     private final String[] validFormats =
             {
@@ -57,7 +58,7 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     {
         final String leapSecondUTC = "1990-12-31T23:59:60Z";
         final LeapSecondException exc = getLeapSecondsException(leapSecondUTC);
-        assertThat(instance.formatUtc(exc.getNearestDateTime())).isEqualTo("1991-01-01T00:00:00Z");
+        assertThat(formatter.formatUtc(exc.getNearestDateTime())).isEqualTo("1991-01-01T00:00:00Z");
         assertThat(exc.getSecondsInMinute()).isEqualTo(60);
     }
 
@@ -66,7 +67,7 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     {
         final String leapSecondPST = "1990-12-31T15:59:60-08:00";
         final LeapSecondException exc = getLeapSecondsException(leapSecondPST);
-        assertThat(instance.formatUtc(exc.getNearestDateTime())).isEqualTo("1991-01-01T00:00:00Z");
+        assertThat(formatter.formatUtc(exc.getNearestDateTime())).isEqualTo("1991-01-01T00:00:00Z");
         assertThat(exc.getSecondsInMinute()).isEqualTo(60);
     }
 
@@ -75,7 +76,7 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     {
         final String leapSecondUTC = "1992-06-30T23:59:60Z";
         final LeapSecondException exc = getLeapSecondsException(leapSecondUTC);
-        assertThat(instance.formatUtc(exc.getNearestDateTime())).isEqualTo("1992-07-01T00:00:00Z");
+        assertThat(formatter.formatUtc(exc.getNearestDateTime())).isEqualTo("1992-07-01T00:00:00Z");
         assertThat(exc.getSecondsInMinute()).isEqualTo(60);
     }
 
@@ -84,7 +85,7 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     {
         final String leapSecondPST = "1992-06-30T15:59:60-08:00";
         final LeapSecondException exc = getLeapSecondsException(leapSecondPST);
-        assertThat(instance.formatUtc(exc.getNearestDateTime())).isEqualTo("1992-07-01T00:00:00Z");
+        assertThat(formatter.formatUtc(exc.getNearestDateTime())).isEqualTo("1992-07-01T00:00:00Z");
         assertThat(exc.getSecondsInMinute()).isEqualTo(60);
     }
 
@@ -92,7 +93,7 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     {
         try
         {
-            instance.parseDateTime(dateTime);
+            parser.parseDateTime(dateTime);
             throw new IllegalArgumentException("Should have thrown LeapSecondException");
         }
         catch (LeapSecondException exc)
@@ -101,66 +102,66 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
         }
     }
 
-    @Test(expected = DateTimeException.class)
+    @Test
     public void testFormat1()
     {
         final String s = "2017-02-21T15:27:39.0000000";
-        instance.parseDateTime(s);
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
     }
 
-    @Test(expected = DateTimeException.class)
+    @Test
     public void testFormat2()
     {
         final String s = "2017-02-21T15:27:39.000+30:00";
-        instance.parseDateTime(s);
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
     }
 
     @Test
     public void testFormat3()
     {
         final String s = "2017-02-21T10:00:00.000+12:00";
-        final OffsetDateTime date = instance.parseDateTime(s);
-        assertThat(instance.formatUtcMilli(date)).isEqualTo("2017-02-20T22:00:00.000Z");
+        final OffsetDateTime date = parser.parseDateTime(s);
+        assertThat(formatter.formatUtcMilli(date)).isEqualTo("2017-02-20T22:00:00.000Z");
     }
 
-    @Test(expected = DateTimeException.class)
+    @Test
     public void testInvalidNothingAfterFractionalSeconds()
     {
         final String s = "2017-02-21T10:00:00.12345";
-        instance.parseDateTime(s);
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
     }
 
     @Test
     public void testFormat4()
     {
         final String s = "2017-02-21T15:00:00.123Z";
-        final OffsetDateTime date = instance.parseDateTime(s);
-        assertThat(instance.formatUtcMilli(date)).isEqualTo("2017-02-21T15:00:00.123Z");
-        assertThat(instance.format(Date.from(date.atZoneSameInstant(ZoneOffset.UTC).toInstant()), "CET", 3)).isEqualTo("2017-02-21T16:00:00.123+01:00");
-        assertThat(instance.format(new Date(date.toInstant().toEpochMilli()), "EST", 3)).isEqualTo("2017-02-21T10:00:00.123-05:00");
+        final OffsetDateTime date = parser.parseDateTime(s);
+        assertThat(formatter.formatUtcMilli(date)).isEqualTo("2017-02-21T15:00:00.123Z");
+        assertThat(formatter.format(Date.from(date.atZoneSameInstant(ZoneOffset.UTC).toInstant()), "CET", 3)).isEqualTo("2017-02-21T16:00:00.123+01:00");
+        assertThat(formatter.format(new Date(date.toInstant().toEpochMilli()), "EST", 3)).isEqualTo("2017-02-21T10:00:00.123-05:00");
     }
 
-    @Test(expected = DateTimeException.class)
+    @Test
     public void testParseMoreThanNanoResolutionFails()
     {
-        instance.parseDateTime("2017-02-21T15:00:00.1234567891Z");
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-02-21T15:00:00.1234567891Z"));
     }
 
-    @Test(expected = DateTimeException.class)
+    @Test
     public void testFormatMoreThanNanoResolutionFails()
     {
-        final OffsetDateTime d = instance.parseDateTime("2017-02-21T15:00:00.123456789Z");
+        final OffsetDateTime d = parser.parseDateTime("2017-02-21T15:00:00.123456789Z");
         final int fractionDigits = 10;
-        instance.formatUtc(d, fractionDigits);
+        assertThrows(DateTimeException.class, () -> formatter.formatUtc(d, fractionDigits));
     }
 
     @Test
     public void testFormatUtc()
     {
         final String s = "2017-02-21T15:09:03.123456789Z";
-        final OffsetDateTime date = instance.parseDateTime(s);
+        final OffsetDateTime date = parser.parseDateTime(s);
         final String expected = "2017-02-21T15:09:03Z";
-        final String actual = instance.formatUtc(date);
+        final String actual = formatter.formatUtc(date);
         assertThat(actual).isEqualTo(expected);
     }
 
@@ -168,54 +169,54 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     public void testFormatUtcMilli()
     {
         final String s = "2017-02-21T15:00:00.123456789Z";
-        final OffsetDateTime date = instance.parseDateTime(s);
-        assertThat(instance.formatUtcMilli(date)).isEqualTo("2017-02-21T15:00:00.123Z");
+        final OffsetDateTime date = parser.parseDateTime(s);
+        assertThat(formatter.formatUtcMilli(date)).isEqualTo("2017-02-21T15:00:00.123Z");
     }
 
     @Test
     public void testFormatUtcMilliWithDate()
     {
         final String s = "2017-02-21T15:00:00.123456789Z";
-        final OffsetDateTime date = instance.parseDateTime(s);
-        assertThat(instance.formatUtcMilli(new Date(date.toInstant().toEpochMilli()))).isEqualTo("2017-02-21T15:00:00.123Z");
+        final OffsetDateTime date = parser.parseDateTime(s);
+        assertThat(formatter.formatUtcMilli(new Date(date.toInstant().toEpochMilli()))).isEqualTo("2017-02-21T15:00:00.123Z");
     }
 
     @Test
     public void testFormatUtcMicro()
     {
         final String s = "2017-02-21T15:00:00.123456789Z";
-        final OffsetDateTime date = instance.parseDateTime(s);
-        assertThat(instance.formatUtcMicro(date)).isEqualTo("2017-02-21T15:00:00.123456Z");
+        final OffsetDateTime date = parser.parseDateTime(s);
+        assertThat(formatter.formatUtcMicro(date)).isEqualTo("2017-02-21T15:00:00.123456Z");
     }
 
     @Test
     public void testFormatUtcNano()
     {
         final String s = "2017-02-21T15:00:00.987654321Z";
-        final OffsetDateTime date = instance.parseDateTime(s);
-        assertThat(instance.formatUtcNano(date)).isEqualTo(s);
+        final OffsetDateTime date = parser.parseDateTime(s);
+        assertThat(formatter.formatUtcNano(date)).isEqualTo(s);
     }
 
-    @Test(expected = DateTimeException.class)
+    @Test
     public void testFormat4TrailingNoise()
     {
         final String s = "2017-02-21T15:00:00.123ZGGG";
-        instance.parseDateTime(s);
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
     }
 
     @Test
     public void testFormat5()
     {
         final String s = "2017-02-21T15:27:39.123+13:00";
-        final OffsetDateTime date = instance.parseDateTime(s);
-        assertThat(instance.formatUtcMilli(date)).isEqualTo("2017-02-21T02:27:39.123Z");
+        final OffsetDateTime date = parser.parseDateTime(s);
+        assertThat(formatter.formatUtcMilli(date)).isEqualTo("2017-02-21T02:27:39.123Z");
     }
 
     @Test
     public void testParseEmptyString()
     {
         final String s = "";
-        final OffsetDateTime date = instance.parseDateTime(s);
+        final OffsetDateTime date = parser.parseDateTime(s);
         assertThat(date).isNull();
     }
 
@@ -223,7 +224,7 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     public void testParseNull()
     {
         final String s = null;
-        final OffsetDateTime date = instance.parseDateTime(s);
+        final OffsetDateTime date = parser.parseDateTime(s);
         assertThat(date).isNull();
     }
 
@@ -234,44 +235,44 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
         // 1994-11-05T13:15:30Z corresponds to the same instant.
         final String a = "1994-11-05T08:15:30-05:00";
         final String b = "1994-11-05T13:15:30Z";
-        final OffsetDateTime dA = instance.parseDateTime(a);
-        final OffsetDateTime dB = instance.parseDateTime(b);
-        assertThat(instance.formatUtc(dA)).isEqualTo(instance.formatUtc(dB));
+        final OffsetDateTime dA = parser.parseDateTime(a);
+        final OffsetDateTime dB = parser.parseDateTime(b);
+        assertThat(formatter.formatUtc(dA)).isEqualTo(formatter.formatUtc(dB));
     }
 
-    @Test(expected = DateTimeException.class)
+    @Test
     public void testBadSeparator()
     {
         final String a = "1994 11-05T08:15:30-05:00";
-        assertThat(instance.parseDateTime(a)).isNotNull();
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
     }
 
-    @Test(expected = DateTimeException.class)
+    @Test
     public void testParseNonDigit()
     {
         final String a = "199g-11-05T08:15:30-05:00";
-        assertThat(instance.parseDateTime(a)).isNotNull();
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
     }
 
-    @Test(expected = DateTimeException.class)
+    @Test
     public void testInvalidDateTimeSeparator()
     {
         final String a = "1994-11-05X08:15:30-05:00";
-        assertThat(instance.parseDateTime(a)).isNotNull();
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
     }
 
     @Test
     public void testLowerCaseTseparator()
     {
         final String a = "1994-11-05t08:15:30z";
-        assertThat(instance.parseDateTime(a)).isNotNull();
+        assertThat(parser.parseDateTime(a)).isNotNull();
     }
 
     @Test
     public void testSpaceAsSeparator()
     {
         final String a = "1994-11-05 08:15:30z";
-        assertThat(instance.parseDateTime(a)).isNotNull();
+        assertThat(parser.parseDateTime(a)).isNotNull();
     }
 
     @Test
@@ -279,7 +280,7 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     {
         for (String f : this.validFormats)
         {
-            assertThat(instance.isValid(f)).overridingErrorMessage("Expecting to be valid <%s>", f).isTrue();
+            assertThat(parser.isValid(f)).overridingErrorMessage("Expecting to be valid <%s>", f).isTrue();
         }
     }
 
@@ -288,7 +289,7 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     {
         for (String f : this.invalidFormats)
         {
-            if (instance.isValid(f))
+            if (parser.isValid(f))
             {
                 throw new DateTimeException(f + " is deemed valid");
             }
@@ -299,29 +300,29 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     public void testMilitaryOffset()
     {
         final String s = "2017-02-21T15:27:39+0000";
-        assertThat(instance.isValid(s)).isFalse();
+        assertThat(parser.isValid(s)).isFalse();
     }
 
-    @Test(expected = DateTimeException.class)
+    @Test
     public void testParseUnknownLocalOffsetConvention()
     {
         final String s = "2017-02-21T15:27:39-00:00";
-        instance.parseDateTime(s);
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
     }
 
     @Test
     public void testParseLowercaseZ()
     {
         final String s = "2017-02-21T15:27:39.000z";
-        instance.parseDateTime(s);
+        parser.parseDateTime(s);
     }
 
     @Test
     public void testFormatWithNamedTimeZoneDate()
     {
         final String s = "2017-02-21T15:27:39.321+00:00";
-        final OffsetDateTime d = instance.parseDateTime(s);
-        final String formatted = instance.format(new Date(d.toInstant().toEpochMilli()), "EST");
+        final OffsetDateTime d = parser.parseDateTime(s);
+        final String formatted = formatter.format(new Date(d.toInstant().toEpochMilli()), "EST");
         assertThat(formatted).isEqualTo("2017-02-21T10:27:39.321-05:00");
     }
 
@@ -329,8 +330,8 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     public void testFormatUtcDate()
     {
         final String s = "2017-02-21T15:27:39.321+00:00";
-        final OffsetDateTime d = instance.parseDateTime(s);
-        final String formatted = instance.formatUtc(new Date(d.toInstant().toEpochMilli()));
+        final OffsetDateTime d = parser.parseDateTime(s);
+        final String formatted = formatter.formatUtc(new Date(d.toInstant().toEpochMilli()));
         assertThat(formatted).isEqualTo("2017-02-21T15:27:39.321Z");
     }
 
@@ -338,8 +339,8 @@ public abstract class CorrectnessTest extends AbstractTest<Rfc3339>
     public void testFormatWithNamedTimeZone()
     {
         final String s = "2017-02-21T15:27:39.321+00:00";
-        final OffsetDateTime d = instance.parseDateTime(s);
-        final String formatted = instance.format(new Date(d.toInstant().toEpochMilli()), "EST", 3);
+        final OffsetDateTime d = parser.parseDateTime(s);
+        final String formatted = formatter.format(new Date(d.toInstant().toEpochMilli()), "EST", 3);
         assertThat(formatted).isEqualTo("2017-02-21T10:27:39.321-05:00");
     }
 

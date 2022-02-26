@@ -20,20 +20,27 @@ package com.ethlo.time;
  * #L%
  */
 
-import org.junit.Ignore;
-import org.junit.Test;
 
-public class StdJdkCorrectnessTest extends CorrectnessTest
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+public class Java8Rfc3339CorrectnessTest extends CorrectnessTest
 {
     @Override
-    protected Rfc3339 getInstance()
+    protected Rfc3339 getParser()
     {
-        return new StdJdkInternetDateTimeUtil();
+        return new Java8Rfc3339();
+    }
+
+    @Override
+    protected Rfc3339 getFormatter()
+    {
+        return new Java8Rfc3339();
     }
 
     @Override
     @Test
-    @Ignore
+    @Disabled
     public void testFormat4TrailingNoise()
     {
         // For ignore marker only
@@ -41,7 +48,7 @@ public class StdJdkCorrectnessTest extends CorrectnessTest
 
     @Override
     @Test
-    @Ignore
+    @Disabled
     public void testParseUnknownLocalOffsetConvention()
     {
         // For ignore marker only
@@ -50,7 +57,7 @@ public class StdJdkCorrectnessTest extends CorrectnessTest
 
     @Override
     @Test
-    @Ignore
+    @Disabled
     public void testParseLeapSecondUTC()
     {
         // For ignore marker only
@@ -58,7 +65,7 @@ public class StdJdkCorrectnessTest extends CorrectnessTest
 
     @Override
     @Test
-    @Ignore
+    @Disabled
     public void testParseLeapSecondPST()
     {
         // For ignore marker only
@@ -66,7 +73,7 @@ public class StdJdkCorrectnessTest extends CorrectnessTest
 
     @Override
     @Test
-    @Ignore
+    @Disabled
     public void testParseLeapSecondUTCJune()
     {
         // For ignore marker only
@@ -74,7 +81,7 @@ public class StdJdkCorrectnessTest extends CorrectnessTest
 
     @Override
     @Test
-    @Ignore
+    @Disabled
     public void testParseLeapSecondPSTJune()
     {
         // For ignore marker only

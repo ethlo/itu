@@ -31,7 +31,7 @@ import java.util.Date;
 
 public class ITU
 {
-    private static final FastInternetDateTimeUtil delegate = new FastInternetDateTimeUtil();
+    private static final EthloITU delegate = new EthloITU();
     private static final ZoneId GMT_ZONE = ZoneId.of("GMT");
 
     private ITU()

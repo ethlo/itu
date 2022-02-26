@@ -20,7 +20,7 @@ package com.ethlo.time;
  * #L%
  */
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -32,11 +32,12 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
-@Category(CorrectnessTest.class)
-public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
+@Tag("CorrectnessTest")
+public class W3cCorrectnessTest extends AbstractTest
 {
     private W3cDateTimeUtil w3cDateUtil;
 
@@ -44,7 +45,7 @@ public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
     public void testParseEmptyString()
     {
         final String s = "";
-        final OffsetDateTime date = instance.parseDateTime(s);
+        final OffsetDateTime date = parser.parseDateTime(s);
         assertThat(date).isNull();
     }
 
@@ -105,30 +106,36 @@ public class W3cCorrectnessTest extends AbstractTest<Rfc3339>
     {
         final String s = "2012-03-29";
         final LocalDate date = w3cDateUtil.parseLenient(s, LocalDate.class);
-        assertThat(instance.formatUtc(OffsetDateTime.of(date, LocalTime.MIN, ZoneOffset.UTC))).isEqualTo("2012-03-29T00:00:00Z");
+        assertThat(formatter.formatUtc(OffsetDateTime.of(date, LocalTime.MIN, ZoneOffset.UTC))).isEqualTo("2012-03-29T00:00:00Z");
     }
 
-    @Test(expected = DateTimeException.class)
+    @Test
     public void testParseBestEffort1DigitMinute()
     {
         final String s = "2012-03-29T23:1";
-        w3cDateUtil.parseLenient(s);
+        Assertions.assertThrows(DateTimeException.class, () -> w3cDateUtil.parseLenient(s));
     }
 
     @Test
     public void testParseNull()
     {
         final String s = null;
-        final OffsetDateTime date = instance.parseDateTime(s);
+        final OffsetDateTime date = parser.parseDateTime(s);
         assertThat(date).isNull();
     }
 
     @Override
-    protected Rfc3339 getInstance()
+    protected Rfc3339 getParser()
     {
-        final FastInternetDateTimeUtil retVal = new FastInternetDateTimeUtil();
+        final EthloITU retVal = new EthloITU();
         this.w3cDateUtil = retVal;
         return retVal;
+    }
+
+    @Override
+    protected Rfc3339Formatter getFormatter()
+    {
+        return new EthloITU();
     }
 
     @Override

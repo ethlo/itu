@@ -36,7 +36,7 @@ import java.util.TimeZone;
  *
  * @author ethlo - Morten Haraldsen
  */
-public class StdJdkInternetDateTimeUtil extends AbstractRfc3339
+public class Java8Rfc3339 extends AbstractRfc3339
 {
     private SimpleDateFormat[] formats = new SimpleDateFormat[MAX_FRACTION_DIGITS];
 
@@ -86,7 +86,7 @@ public class StdJdkInternetDateTimeUtil extends AbstractRfc3339
 
             .toFormatter();
 
-    public StdJdkInternetDateTimeUtil()
+    public Java8Rfc3339()
     {
         for (int i = 1; i < MAX_FRACTION_DIGITS; i++)
         {

@@ -20,7 +20,7 @@ package com.ethlo.time;
  * #L%
  */
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -28,10 +28,11 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
-@Category(CorrectnessTest.class)
+@Tag("CorrectnessTest")
 public class FieldTest
 {
     @Test
@@ -43,9 +44,9 @@ public class FieldTest
         assertThat(Field.valueOf(OffsetDateTime.class)).isEqualTo(Field.SECOND);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testGetUnknown()
     {
-        Field.valueOf(Temporal.class);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> Field.valueOf(Temporal.class));
     }
 }

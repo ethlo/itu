@@ -20,11 +20,20 @@ package com.ethlo.time;
  * #L%
  */
 
-public class FastCorrectnessTest extends CorrectnessTest
+import org.junit.jupiter.api.Disabled;
+
+@Disabled("Not returning correct results")
+public class ApacheFastDateFormatRfc3339BenchmarkTest extends BenchmarkTest
 {
     @Override
-    protected Rfc3339 getInstance()
+    protected Rfc3339 getParser()
     {
-        return new FastInternetDateTimeUtil();
+        return new ApacheFastDateFormatRfc3339();
+    }
+
+    @Override
+    protected Rfc3339Formatter getFormatter()
+    {
+        return new ApacheFastDateFormatRfc3339();
     }
 }

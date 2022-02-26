@@ -28,9 +28,10 @@ import java.util.Date;
 
 import org.apache.commons.lang3.time.FastDateFormat;
 
-public class ApacheFastDateUtilsInternetDateTimeUtil implements Rfc3339
+public class ApacheFastDateFormatRfc3339 implements Rfc3339
 {
-    private final FastDateFormat parser = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    private final FastDateFormat fractionParser = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    private final FastDateFormat parser = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ssXXX");
 
     @Override
     public String formatUtc(OffsetDateTime date)
@@ -43,18 +44,25 @@ public class ApacheFastDateUtilsInternetDateTimeUtil implements Rfc3339
     {
         try
         {
-            return OffsetDateTime.ofInstant(parser.parse(dateTimeStr).toInstant(), ZoneOffset.UTC);
+            return OffsetDateTime.ofInstant(fractionParser.parse(dateTimeStr).toInstant(), ZoneOffset.UTC);
         }
-        catch (ParseException exc)
+        catch (ParseException fractionExc)
         {
-            throw new DateTimeException(exc.getMessage(), exc);
+            try
+            {
+                return OffsetDateTime.ofInstant(parser.parse(dateTimeStr).toInstant(), ZoneOffset.UTC);
+            }
+            catch (ParseException exc)
+            {
+                throw new DateTimeException(exc.getMessage(), exc);
+            }
         }
     }
 
     @Override
     public String formatUtc(Date date)
     {
-        return parser.format(date);
+        return fractionParser.format(date);
     }
 
     @Override

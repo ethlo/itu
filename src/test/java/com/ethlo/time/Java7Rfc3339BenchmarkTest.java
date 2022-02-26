@@ -1,5 +1,7 @@
 package com.ethlo.time;
 
+import org.junit.jupiter.api.Disabled;
+
 /*-
  * #%L
  * Internet Time Utility
@@ -19,18 +21,18 @@ package com.ethlo.time;
  * limitations under the License.
  * #L%
  */
-
-public class FastBenchmarkTest extends BenchmarkTest
+@Disabled("Not returning correct results")
+public class Java7Rfc3339BenchmarkTest extends BenchmarkTest
 {
     @Override
-    protected Rfc3339 getInstance()
+    protected Rfc3339 getParser()
     {
-        return new FastInternetDateTimeUtil();
+        return new Java7Rfc3339();
     }
 
     @Override
-    protected long getRuns()
+    protected Rfc3339Formatter getFormatter()
     {
-        return 100_000_000;
+        return new Java7Rfc3339();
     }
 }
