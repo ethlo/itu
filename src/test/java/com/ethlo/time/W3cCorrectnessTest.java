@@ -21,6 +21,7 @@ package com.ethlo.time;
  */
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -44,9 +45,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseEmptyString()
     {
-        final String s = "";
-        final OffsetDateTime date = parser.parseDateTime(s);
-        assertThat(date).isNull();
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime(""));
     }
 
     @Test
@@ -119,9 +118,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseNull()
     {
-        final String s = null;
-        final OffsetDateTime date = parser.parseDateTime(s);
-        assertThat(date).isNull();
+        assertThrows(NullPointerException.class, () -> parser.parseDateTime(null));
     }
 
     @Override

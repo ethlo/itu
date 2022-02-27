@@ -33,4 +33,16 @@ public class EthloITUBenchmarkTest extends BenchmarkTest
     {
         return new EthloITU();
     }
+
+    @Override
+    protected Chronograph getChronograph()
+    {
+        return null;
+    }
+
+    @Override
+    protected long getRuns()
+    {
+        return 100_000_000;
+    }
 }

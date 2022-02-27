@@ -215,17 +215,13 @@ public abstract class CorrectnessTest extends AbstractTest
     @Test
     public void testParseEmptyString()
     {
-        final String s = "";
-        final OffsetDateTime date = parser.parseDateTime(s);
-        assertThat(date).isNull();
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime(""));
     }
 
     @Test
     public void testParseNull()
     {
-        final String s = null;
-        final OffsetDateTime date = parser.parseDateTime(s);
-        assertThat(date).isNull();
+        assertThrows(NullPointerException.class, () -> parser.parseDateTime(null));
     }
 
     @Test

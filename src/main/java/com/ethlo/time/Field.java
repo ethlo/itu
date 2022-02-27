@@ -29,7 +29,14 @@ import java.time.temporal.Temporal;
 public enum Field
 {
     // 2000-12-31T16:11:34.123456
-    YEAR, MONTH, DAY, MINUTE, SECOND;
+    YEAR(4), MONTH(7), DAY(10), MINUTE(16), SECOND(19);
+
+    private final int requiredLength;
+
+    Field(int requiredLength)
+    {
+        this.requiredLength = requiredLength;
+    }
 
     public static Field valueOf(Class<? extends Temporal> type)
     {
@@ -51,5 +58,10 @@ public enum Field
         }
 
         throw new IllegalArgumentException("Type " + type.getSimpleName() + " is not supported");
+    }
+
+    public int getRequiredLength()
+    {
+        return requiredLength;
     }
 }

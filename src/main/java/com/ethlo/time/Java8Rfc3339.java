@@ -38,9 +38,9 @@ import java.util.TimeZone;
  */
 public class Java8Rfc3339 extends AbstractRfc3339
 {
-    private SimpleDateFormat[] formats = new SimpleDateFormat[MAX_FRACTION_DIGITS];
+    private final SimpleDateFormat[] formats = new SimpleDateFormat[MAX_FRACTION_DIGITS];
 
-    private DateTimeFormatter rfc3339baseFormatter = new DateTimeFormatterBuilder()
+    private final DateTimeFormatter rfc3339baseFormatter = new DateTimeFormatterBuilder()
             .appendValue(ChronoField.YEAR, 4)
             .appendLiteral('-')
             .appendValue(ChronoField.MONTH_OF_YEAR, 2)
@@ -53,7 +53,8 @@ public class Java8Rfc3339 extends AbstractRfc3339
             .appendLiteral(':')
             .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
             .toFormatter();
-    private DateTimeFormatter rfc3339formatParser = new DateTimeFormatterBuilder()
+
+    private final DateTimeFormatter rfc3339formatParser = new DateTimeFormatterBuilder()
             .appendValue(ChronoField.YEAR, 4)
             .appendLiteral('-')
             .appendValue(ChronoField.MONTH_OF_YEAR, 2)
@@ -83,14 +84,13 @@ public class Java8Rfc3339 extends AbstractRfc3339
             .optionalStart()
             .appendOffset("+HH:MM", "z")
             .optionalEnd()
-
             .toFormatter();
 
     public Java8Rfc3339()
     {
         for (int i = 1; i < MAX_FRACTION_DIGITS; i++)
         {
-            this.formats[i] = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat('S', i) + "XXX");
+            this.formats[i] = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat(i) + "XXX");
         }
     }
 
@@ -125,18 +125,13 @@ public class Java8Rfc3339 extends AbstractRfc3339
     @Override
     public OffsetDateTime parseDateTime(final String s)
     {
-        if (s == null || s.isEmpty())
-        {
-            return null;
-        }
-
         return OffsetDateTime.from(rfc3339formatParser.parse(s));
     }
 
-    private String repeat(char c, int repeats)
+    private String repeat(int repeats)
     {
         final char[] chars = new char[repeats];
-        Arrays.fill(chars, c);
+        Arrays.fill(chars, 'S');
         return new String(chars);
     }
 

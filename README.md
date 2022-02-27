@@ -27,18 +27,23 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 <img src="doc/performance.jpg" alt="Performance plot">
 
-|	Implementation | Parse |	Format |	Round-trip |
--------------------|--------:|----------:|-----:|
-| Google DateTime	| 1,020 ns |  Not supported | N/A		
-| JDK Java Time	| 1,558 ns	| 426 ns	| 1,984 ns |
-| Ethlo ITU	| 88	ns |166 ns	|254 ns|
+|	Implementation | Parse |	Format |	
+-------------------|--------:|----------:|
+| Google DateTime	| 885,089 |  Not supported		
+| JDK Java Time	| 739,180	| 2,406,040
+| Ethlo ITU	| 12,437,143 | 12,602,170
 
 
-Values in nano-seconds. Lower is better.
+Numbers are operations per second (higher is better).
 
 Your mileage may vary. The tests are easy to run and are included in the repository.
 
-## Example use
+Tests performed on a Dell XPS 9700 
+* Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz
+* Ubuntu 21.10
+* OpenJDK version 11.0.13
+
+## Example usage
 
 ```java
 // Parse a string

@@ -57,7 +57,7 @@ public final class LimitedCharArrayIntegerUtil
         int result = 0;
         for (int i = startInclusive; i < endExclusive; i++)
         {
-            if (!isDigit(strNum[i]))
+            if (isNotDigit(strNum[i]))
             {
                 throw new DateTimeException("Character " + strNum[i] + " is not a digit");
             }
@@ -81,7 +81,7 @@ public final class LimitedCharArrayIntegerUtil
             final int length = Math.min(TABLE_WIDTH, charLength);
             final int padPrefixLen = charLength - length;
             final int start = charLength > TABLE_WIDTH ? TABLE_WIDTH : TABLE_WIDTH - charLength;
-            final int targetOffset = offset + (Math.max(padPrefixLen, 0));
+            final int targetOffset = offset + padPrefixLen;
             final int srcPos = (value * TABLE_WIDTH) + (charLength < TABLE_WIDTH ? start : 0);
             copy(INT_CONVERSION_CACHE, srcPos, buf, targetOffset, length);
             if (padPrefixLen > 0)
@@ -89,28 +89,30 @@ public final class LimitedCharArrayIntegerUtil
                 zeroFill(buf, offset, padPrefixLen);
             }
         }
-
-        int charPos = offset + MAX_INT_WIDTH;
-        value = -value;
-        int div;
-        int rem;
-        while (value <= -10)
+        else
         {
-            div = value / 10;
-            rem = -(value - 10 * div);
-            buf[charPos--] = DIGITS[rem];
-            value = div;
-        }
-        buf[charPos] = DIGITS[-value];
+            int charPos = offset + MAX_INT_WIDTH;
+            value = -value;
+            int div;
+            int rem;
+            while (value <= -10)
+            {
+                div = value / 10;
+                rem = -(value - 10 * div);
+                buf[charPos--] = DIGITS[rem];
+                value = div;
+            }
+            buf[charPos] = DIGITS[-value];
 
-        int l = ((MAX_INT_WIDTH + offset) - charPos) + 1;
-        while (l < charLength)
-        {
-            buf[--charPos] = ZERO;
-            l++;
+            int l = ((MAX_INT_WIDTH + offset) - charPos) + 1;
+            while (l < charLength)
+            {
+                buf[--charPos] = ZERO;
+                l++;
+            }
+            final int srcPos = charPos;
+            copy(buf, srcPos, offset, charLength);
         }
-        final int srcPos = charPos;
-        copy(buf, srcPos, offset, charLength);
     }
 
     private static void zeroFill(char[] buf, int offset, int padPrefixLen)
@@ -136,7 +138,7 @@ public final class LimitedCharArrayIntegerUtil
     {
         for (int i = offset; i < chars.length; i++)
         {
-            if (!isDigit(chars[i]))
+            if (isNotDigit(chars[i]))
             {
                 return i;
             }
@@ -144,9 +146,9 @@ public final class LimitedCharArrayIntegerUtil
         return -1;
     }
 
-    private static boolean isDigit(char c)
+    private static boolean isNotDigit(char c)
     {
-        return (c >= ZERO && c <= '9');
+        return (c < ZERO || c > '9');
     }
 
     private static int digit(char c)

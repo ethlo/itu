@@ -22,12 +22,15 @@ package com.ethlo.time;
 
 import org.junit.jupiter.api.BeforeEach;
 
+import java.text.DecimalFormat;
+
 public abstract class AbstractTest
 {
     protected Rfc3339Parser parser;
     protected Rfc3339Formatter formatter;
 
     protected abstract Rfc3339Parser getParser();
+
     protected abstract Rfc3339Formatter getFormatter();
 
     protected abstract long getRuns();
@@ -45,18 +48,27 @@ public abstract class AbstractTest
         });
     }
 
-    protected final void perform(final Chronograph chronograph, final Runnable func, final String msg)
+    protected final void perform(final Runnable func, final String msg)
     {
         // Warm-up
-        for (int i = 0; i < getRuns(); i++)
+        for (int i = 0; i < getRuns() * 2; i++)
         {
             func.run();
         }
 
         // Benchmark
-        for (int i = 0; i < getRuns(); i++)
+        final Chronograph c = Chronograph.create();
+        c.timed(msg, () ->
         {
-            chronograph.timed(msg, func);
-        }
+            for (int i = 0; i < getRuns(); i++)
+            {
+                func.run();
+            }
+        });
+        System.out.println(c.prettyPrint());
+
+        final double ns = c.getTotalTime().toNanos();
+        System.out.printf("%s - %.2f nanoseconds per operation%n", msg, (ns / getRuns()));
+        System.out.printf("%s - %s operations per second%n", msg, new DecimalFormat("###,###,###").format(getRuns() * 1_000_000_000 / ns));
     }
 }
