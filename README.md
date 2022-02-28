@@ -65,9 +65,9 @@ try
 catch (LeapSecondException exc) 
 {
   // The following helper methods are available let you decide how to progress
-  int exc.getSecondsInMinute(); // 60
-  OffsetDateTime exc.getNearestDateTime() // 1991-01-01T00:00:00Z
-  boolean exc.isVerifiedValidLeapYearMonth() // true
+  exc.getSecondsInMinute(); // 60
+  exc.getNearestDateTime() // 1991-01-01T00:00:00Z
+  exc.isVerifiedValidLeapYearMonth() // true
 }
 ```
 
