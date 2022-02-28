@@ -2,9 +2,7 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.ethlo.time/itu.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ethlo.time%22%20a%3A%22itu%22)
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
-[![Coverage Status](https://coveralls.io/repos/github/ethlo/itu/badge.svg?branch=master&kill_cache=1)](https://coveralls.io/github/ethlo/itu?branch=master)[![Build
-Status](https://travis-ci.org/ethlo/itu.svg?branch=master)](https://travis-ci.org/ethlo/itu)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/598913bc1fe9405c82be73d9a4f105c8)](https://www.codacy.com/app/ethlo/itu?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ethlo/itu&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/598913bc1fe9405c82be73d9a4f105c8)](https://www.codacy.com/gh/ethlo/itu/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ethlo/itu&amp;utm_campaign=Badge_Grade)
 
 An extremely fast parser and formatter of standardized date-times.
 
