@@ -56,6 +56,21 @@ final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
 final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
 ```
 
+### Handle leap-seconds
+```java
+try 
+{
+  final OffsetDateTime dateTime = ITU.parseDateTime("1990-12-31T15:59:60-08:00");
+}
+catch (LeapSecondException exc) 
+{
+  // The following helper methods are available let you decide how to progress
+  exc.getSecondsInMinute(); // 60
+  exc.getNearestDateTime() // 1991-01-01T00:00:00Z
+  exc.isVerifiedValidLeapYearMonth() // true
+}
+```
+
 ## Q & A
 
 *Why this little project?*
