@@ -86,4 +86,12 @@ public class Java8Rfc3339CorrectnessTest extends CorrectnessTest
     {
         // For ignore marker only
     }
+
+    @Override
+    @Test
+    @Disabled
+    public void testParseLeapSecondPotentiallyCorrect()
+    {
+
+    }
 }
