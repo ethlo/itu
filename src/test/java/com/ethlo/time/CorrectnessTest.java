@@ -58,6 +58,7 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final String leapSecondUTC = "1990-12-31T23:59:60Z";
         final LeapSecondException exc = getLeapSecondsException(leapSecondUTC);
+        assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
         assertThat(formatter.formatUtc(exc.getNearestDateTime())).isEqualTo("1991-01-01T00:00:00Z");
         assertThat(exc.getSecondsInMinute()).isEqualTo(60);
     }
@@ -67,6 +68,7 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final String leapSecondPST = "1990-12-31T15:59:60-08:00";
         final LeapSecondException exc = getLeapSecondsException(leapSecondPST);
+        assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
         assertThat(formatter.formatUtc(exc.getNearestDateTime())).isEqualTo("1991-01-01T00:00:00Z");
         assertThat(exc.getSecondsInMinute()).isEqualTo(60);
     }
@@ -76,6 +78,7 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final String leapSecondUTC = "1992-06-30T23:59:60Z";
         final LeapSecondException exc = getLeapSecondsException(leapSecondUTC);
+        assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
         assertThat(formatter.formatUtc(exc.getNearestDateTime())).isEqualTo("1992-07-01T00:00:00Z");
         assertThat(exc.getSecondsInMinute()).isEqualTo(60);
     }
@@ -85,7 +88,18 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final String leapSecondPST = "1992-06-30T15:59:60-08:00";
         final LeapSecondException exc = getLeapSecondsException(leapSecondPST);
+        assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
         assertThat(formatter.formatUtc(exc.getNearestDateTime())).isEqualTo("1992-07-01T00:00:00Z");
+        assertThat(exc.getSecondsInMinute()).isEqualTo(60);
+    }
+
+    @Test
+    public void testParseLeapSecondPotentiallyCorrect()
+    {
+        final String leapSecondPST = "2032-06-30T15:59:60-08:00";
+        final LeapSecondException exc = getLeapSecondsException(leapSecondPST);
+        assertThat(exc.isVerifiedValidLeapYearMonth()).isFalse();
+        assertThat(formatter.formatUtc(exc.getNearestDateTime())).isEqualTo("2032-07-01T00:00:00Z");
         assertThat(exc.getSecondsInMinute()).isEqualTo(60);
     }
 

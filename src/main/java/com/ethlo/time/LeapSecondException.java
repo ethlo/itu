@@ -25,12 +25,14 @@ import java.time.OffsetDateTime;
 public class LeapSecondException extends RuntimeException
 {
     private final int secondsInMinute;
+    private final boolean isVerifiedValidLeapYearMonth;
     private final OffsetDateTime nearestDateTime;
 
-    public LeapSecondException(OffsetDateTime nearestDateTime, int secondsInMinute)
+    public LeapSecondException(OffsetDateTime nearestDateTime, int secondsInMinute, final boolean isVerifiedValidLeapYearMonth)
     {
         this.nearestDateTime = nearestDateTime;
         this.secondsInMinute = secondsInMinute;
+        this.isVerifiedValidLeapYearMonth = isVerifiedValidLeapYearMonth;
     }
 
     public int getSecondsInMinute()
@@ -41,5 +43,10 @@ public class LeapSecondException extends RuntimeException
     public OffsetDateTime getNearestDateTime()
     {
         return nearestDateTime;
+    }
+
+    public boolean isVerifiedValidLeapYearMonth()
+    {
+        return isVerifiedValidLeapYearMonth;
     }
 }
