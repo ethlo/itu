@@ -21,6 +21,7 @@ package com.ethlo.time;
  */
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.OffsetDateTime;
 import java.time.YearMonth;
@@ -56,6 +57,18 @@ public class ITUTest
     public void isValid()
     {
         assertThat(ITU.isValid("2017-asddsd")).isFalse();
+    }
+
+    @Test
+    public void isValidEmpty()
+    {
+        assertThat(ITU.isValid("")).isFalse();
+    }
+
+    @Test
+    public void isValidNull()
+    {
+        assertThrows(NullPointerException.class, () -> ITU.isValid(null));
     }
 
     @Test
