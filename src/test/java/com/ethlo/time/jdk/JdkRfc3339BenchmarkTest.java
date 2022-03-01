@@ -1,4 +1,4 @@
-package com.ethlo.time;
+package com.ethlo.time.jdk;
 
 /*-
  * #%L
@@ -20,7 +20,12 @@ package com.ethlo.time;
  * #L%
  */
 
-public class Java8Rfc3339BenchmarkTest extends BenchmarkTest
+import com.ethlo.time.BenchmarkTest;
+import com.ethlo.time.Java8Rfc3339;
+import com.ethlo.time.Rfc3339;
+import com.ethlo.time.Rfc3339Formatter;
+
+public class JdkRfc3339BenchmarkTest extends BenchmarkTest
 {
     @Override
     protected Rfc3339 getParser()

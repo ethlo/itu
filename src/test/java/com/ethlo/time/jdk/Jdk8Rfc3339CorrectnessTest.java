@@ -1,4 +1,4 @@
-package com.ethlo.time;
+package com.ethlo.time.jdk;
 
 /*-
  * #%L
@@ -21,10 +21,14 @@ package com.ethlo.time;
  */
 
 
+import com.ethlo.time.CorrectnessTest;
+import com.ethlo.time.Java8Rfc3339;
+import com.ethlo.time.Rfc3339;
+
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class Java8Rfc3339CorrectnessTest extends CorrectnessTest
+public class Jdk8Rfc3339CorrectnessTest extends CorrectnessTest
 {
     @Override
     protected Rfc3339 getParser()

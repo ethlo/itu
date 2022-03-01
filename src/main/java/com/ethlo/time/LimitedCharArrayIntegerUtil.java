@@ -27,7 +27,7 @@ public final class LimitedCharArrayIntegerUtil
 {
     private static final char ZERO = '0';
     private static final char[] DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-    private static final int TABLE_WIDTH = 4;
+    private static final int TABLE_WIDTH = 6;
     private static final int RADIX = 10;
     private static final int MAX_INT_WIDTH = 10;
     private static final int TABLE_SIZE = (int) Math.pow(RADIX, TABLE_WIDTH);
@@ -38,7 +38,7 @@ public final class LimitedCharArrayIntegerUtil
         int offset = 0;
         for (int i = 0; i < TABLE_SIZE; i++)
         {
-            toString(i, INT_CONVERSION_CACHE, offset, TABLE_WIDTH, false);
+            createBufferEntry(INT_CONVERSION_CACHE, offset, TABLE_WIDTH, i);
             offset += TABLE_WIDTH;
         }
     }
@@ -68,15 +68,9 @@ public final class LimitedCharArrayIntegerUtil
         return -result;
     }
 
-    protected static void toString(int value, char[] buf, int offset, int padTo)
+    protected static void toString(final int value, final char[] buf, final int offset, final int charLength)
     {
-        toString(value, buf, offset, padTo, true);
-    }
-
-    private static void toString(final int val, final char[] buf, final int offset, final int charLength, final boolean useTable)
-    {
-        int value = val;
-        if (useTable && value < TABLE_SIZE)
+        if (value < TABLE_SIZE)
         {
             final int length = Math.min(TABLE_WIDTH, charLength);
             final int padPrefixLen = charLength - length;
@@ -91,28 +85,33 @@ public final class LimitedCharArrayIntegerUtil
         }
         else
         {
-            int charPos = offset + MAX_INT_WIDTH;
-            value = -value;
-            int div;
-            int rem;
-            while (value <= -10)
-            {
-                div = value / 10;
-                rem = -(value - 10 * div);
-                buf[charPos--] = DIGITS[rem];
-                value = div;
-            }
-            buf[charPos] = DIGITS[-value];
-
-            int l = ((MAX_INT_WIDTH + offset) - charPos) + 1;
-            while (l < charLength)
-            {
-                buf[--charPos] = ZERO;
-                l++;
-            }
-            final int srcPos = charPos;
-            copy(buf, srcPos, offset, charLength);
+            createBufferEntry(buf, offset, charLength, value);
         }
+    }
+
+    private static void createBufferEntry(char[] buf, int offset, int charLength, int value)
+    {
+        int charPos = offset + MAX_INT_WIDTH;
+        value = -value;
+        int div;
+        int rem;
+        while (value <= -10)
+        {
+            div = value / 10;
+            rem = -(value - 10 * div);
+            buf[charPos--] = DIGITS[rem];
+            value = div;
+        }
+        buf[charPos] = DIGITS[-value];
+
+        int l = ((MAX_INT_WIDTH + offset) - charPos) + 1;
+        while (l < charLength)
+        {
+            buf[--charPos] = ZERO;
+            l++;
+        }
+        final int srcPos = charPos;
+        copy(buf, srcPos, offset, charLength);
     }
 
     private static void zeroFill(char[] buf, int offset, int padPrefixLen)
@@ -127,11 +126,7 @@ public final class LimitedCharArrayIntegerUtil
 
     private static void copy(char[] buf, int srcPos, char[] target, int offset, int length)
     {
-        for (int i = 0; i < length; i++)
-        {
-            final int srcLoc = srcPos + i;
-            target[offset + i] = buf[srcLoc];
-        }
+        System.arraycopy(buf, srcPos, target, offset, length);
     }
 
     public static int indexOfNonDigit(char[] chars, int offset)

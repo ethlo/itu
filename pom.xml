@@ -23,12 +23,6 @@
     </developers>
     <dependencies>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>5.8.2</version>
@@ -44,6 +38,14 @@
             <groupId>com.ethlo.time</groupId>
             <artifactId>chronograph</artifactId>
             <version>1.2.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Just to compare implementations -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>

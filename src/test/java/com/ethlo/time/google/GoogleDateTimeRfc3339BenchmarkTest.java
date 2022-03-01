@@ -1,4 +1,4 @@
-package com.ethlo.time;
+package com.ethlo.time.google;
 
 /*-
  * #%L
@@ -19,6 +19,10 @@ package com.ethlo.time;
  * limitations under the License.
  * #L%
  */
+
+import com.ethlo.time.BenchmarkTest;
+import com.ethlo.time.Rfc3339Formatter;
+import com.ethlo.time.Rfc3339Parser;
 
 public class GoogleDateTimeRfc3339BenchmarkTest extends BenchmarkTest
 {

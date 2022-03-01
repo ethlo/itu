@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 
 public abstract class BenchmarkTest extends AbstractTest
 {
-    private final OffsetDateTime d = OffsetDateTime.of(2017, 12, 21, 15, 27, 39, 987, ZoneOffset.UTC);
+    private final OffsetDateTime d = OffsetDateTime.of(2017, 12, 21, 15, 27, 39, 987_000_000, ZoneOffset.UTC);
     private static final Chronograph chronograph = Chronograph.create(CaptureConfig.minInterval(Duration.ofMillis(25)));
 
     @Override
@@ -72,7 +72,7 @@ public abstract class BenchmarkTest extends AbstractTest
         final String name = parser.getClass().getSimpleName() + " - formatUtc";
         if (formatter != null)
         {
-            perform(() -> formatter.formatUtc(d), name);
+            perform(() -> formatter.formatUtcMicro(d), name);
         }
         else
         {

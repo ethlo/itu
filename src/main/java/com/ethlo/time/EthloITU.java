@@ -20,15 +20,22 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.time.*;
+import static com.ethlo.time.LeapSecondHandler.LEAP_SECOND_SECONDS;
+import static com.ethlo.time.LimitedCharArrayIntegerUtil.indexOfNonDigit;
+import static com.ethlo.time.LimitedCharArrayIntegerUtil.parsePositiveInt;
+
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.OffsetDateTime;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
-
-import static com.ethlo.time.LeapSecondHandler.LEAP_SECOND_SECONDS;
-import static com.ethlo.time.LimitedCharArrayIntegerUtil.indexOfNonDigit;
-import static com.ethlo.time.LimitedCharArrayIntegerUtil.parsePositiveInt;
 
 public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 {
@@ -205,7 +212,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     public String formatUtc(OffsetDateTime date, Field lastIncluded, int fractionDigits)
     {
         assertMaxFractionDigits(fractionDigits);
-        final ZonedDateTime utc = date.atZoneSameInstant(ZoneOffset.UTC);
+        final ZonedDateTime utc = date.atZoneSameInstant(FastUTCZoneId.get());
 
         final char[] buffer = new char[31];
 

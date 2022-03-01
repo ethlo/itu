@@ -1,4 +1,4 @@
-package com.ethlo.time;
+package com.ethlo.time.apache;
 
 /*-
  * #%L
@@ -20,29 +20,24 @@ package com.ethlo.time;
  * #L%
  */
 
-public class EthloITUBenchmarkTest extends BenchmarkTest
+import com.ethlo.time.BenchmarkTest;
+import com.ethlo.time.Rfc3339;
+import com.ethlo.time.Rfc3339Formatter;
+
+import org.junit.jupiter.api.Disabled;
+
+@Disabled("Not returning correct results")
+public class ApacheFastDateFormatRfc3339BenchmarkTest extends BenchmarkTest
 {
     @Override
     protected Rfc3339 getParser()
     {
-        return new EthloITU();
+        return new ApacheFastDateFormatRfc3339();
     }
 
     @Override
     protected Rfc3339Formatter getFormatter()
     {
-        return new EthloITU();
-    }
-
-    @Override
-    protected Chronograph getChronograph()
-    {
-        return null;
-    }
-
-    @Override
-    protected long getRuns()
-    {
-        return 100_000_000;
+        return new ApacheFastDateFormatRfc3339();
     }
 }

@@ -116,6 +116,6 @@ public class ITUTest
     @Test
     public void toEpochMillis()
     {
-        assertThat(ITU.toEpochMillis(VALID_DATETIME));
+        assertThat(ITU.toEpochMillis(VALID_DATETIME)).isEqualTo(1493655792000L);
     }
 }

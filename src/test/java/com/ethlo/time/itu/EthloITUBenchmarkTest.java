@@ -1,6 +1,4 @@
-package com.ethlo.time;
-
-import org.junit.jupiter.api.Disabled;
+package com.ethlo.time.itu;
 
 /*-
  * #%L
@@ -21,18 +19,36 @@ import org.junit.jupiter.api.Disabled;
  * limitations under the License.
  * #L%
  */
-@Disabled("Not returning correct results")
-public class Java7Rfc3339BenchmarkTest extends BenchmarkTest
+
+import com.ethlo.time.BenchmarkTest;
+import com.ethlo.time.Chronograph;
+import com.ethlo.time.EthloITU;
+import com.ethlo.time.Rfc3339;
+import com.ethlo.time.Rfc3339Formatter;
+
+public class EthloITUBenchmarkTest extends BenchmarkTest
 {
     @Override
     protected Rfc3339 getParser()
     {
-        return new Java7Rfc3339();
+        return new EthloITU();
     }
 
     @Override
     protected Rfc3339Formatter getFormatter()
     {
-        return new Java7Rfc3339();
+        return new EthloITU();
+    }
+
+    @Override
+    protected Chronograph getChronograph()
+    {
+        return null;
+    }
+
+    @Override
+    protected long getRuns()
+    {
+        return 100_000_000;
     }
 }

@@ -1,4 +1,4 @@
-package com.ethlo.time;
+package com.ethlo.time.apache;
 
 /*-
  * #%L
@@ -20,18 +20,19 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 
-public class Java7Rfc3339 implements Rfc3339
+import com.ethlo.time.Rfc3339;
+import org.apache.commons.lang3.time.FastDateFormat;
+
+public class ApacheFastDateFormatRfc3339 implements Rfc3339
 {
-    private final DateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
-    private final DateFormat fractionParser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    private final FastDateFormat fractionParser = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    private final FastDateFormat parser = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ssXXX");
 
     @Override
     public String formatUtc(OffsetDateTime date)
@@ -62,7 +63,7 @@ public class Java7Rfc3339 implements Rfc3339
     @Override
     public String formatUtc(Date date)
     {
-        return parser.format(date);
+        return fractionParser.format(date);
     }
 
     @Override
