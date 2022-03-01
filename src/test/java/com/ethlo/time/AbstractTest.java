@@ -20,9 +20,9 @@ package com.ethlo.time;
  * #L%
  */
 
-import org.junit.jupiter.api.BeforeEach;
-
 import java.text.DecimalFormat;
+
+import org.junit.jupiter.api.BeforeEach;
 
 public abstract class AbstractTest
 {
@@ -50,13 +50,6 @@ public abstract class AbstractTest
 
     protected final void perform(final Runnable func, final String msg)
     {
-        // Warm-up
-        for (int i = 0; i < getRuns() * 2; i++)
-        {
-            func.run();
-        }
-
-        // Benchmark
         final Chronograph c = Chronograph.create();
         c.timed(msg, () ->
         {
@@ -65,10 +58,10 @@ public abstract class AbstractTest
                 func.run();
             }
         });
-        System.out.println(c.prettyPrint());
 
         final double ns = c.getTotalTime().toNanos();
-        System.out.printf("%s - %.2f nanoseconds per operation%n", msg, (ns / getRuns()));
-        System.out.printf("%s - %s operations per second%n", msg, new DecimalFormat("###,###,###").format(getRuns() * 1_000_000_000 / ns));
+        final double opsSec = (ns / getRuns());
+        final double nsPerOp = getRuns() * 1_000_000_000 / ns;
+        System.out.printf("%s - %.2f ns (%s ops/sec)%n", msg, opsSec, new DecimalFormat("###,###,###").format(nsPerOp));
     }
 }
