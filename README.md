@@ -23,13 +23,13 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 ## Performance
 
-<img src="doc/performance.jpg" alt="Performance plot">
+<img src="doc/performance.png" alt="Performance plot">
 
 |	Implementation | Parse |	Format |	
 -------------------|--------:|----------:|
-| Google DateTime	| 885,089 |  Not supported		
-| JDK Java Time	| 739,180	| 2,406,040
-| Ethlo ITU	| 12,437,143 | 12,602,170
+| Google DateTime	|  935,199 |  Not supported		
+| JDK Java Time	| 732,180 | 1,922,732
+| Ethlo ITU	| 21,231,082 | 28,539,459
 
 
 Numbers are operations per second (higher is better).
