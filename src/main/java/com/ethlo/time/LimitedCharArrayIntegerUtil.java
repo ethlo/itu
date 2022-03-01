@@ -27,7 +27,7 @@ public final class LimitedCharArrayIntegerUtil
 {
     private static final char ZERO = '0';
     private static final char[] DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-    private static final int TABLE_WIDTH = 6;
+    private static final int TABLE_WIDTH = 4;
     private static final int RADIX = 10;
     private static final int MAX_INT_WIDTH = 10;
     private static final int TABLE_SIZE = (int) Math.pow(RADIX, TABLE_WIDTH);

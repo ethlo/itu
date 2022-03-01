@@ -42,7 +42,7 @@ public abstract class BenchmarkTest extends AbstractTest
     public void testParsePerformance()
     {
         final String name = parser.getClass().getSimpleName() + " - parse";
-        perform(() -> parser.parseDateTime("2017-12-21T12:20:45.987Z"), name);
+        perform(() -> parser.parseDateTime("2017-12-21T12:20:45.987654321Z"), name);
     }
 
     protected Chronograph getChronograph()
