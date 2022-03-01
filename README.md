@@ -14,11 +14,10 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 ## Features
 
-* No external dependencies, minimalistic JAR
+* No external dependencies, minimalistic JAR (~18KB)
 * Apache license
-* Configurable validator, formatter and parser within the boundaries of the specification
 * Correct time-zone handling
-* High test coverage
+* Handling of leap-seconds
 * Very high performance
 
 ## Performance
@@ -31,10 +30,12 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 | JDK Java Time	| 732,180 | 1,922,732
 | Ethlo ITU	| 21,231,082 | 28,539,459
 
-
 Numbers are operations per second (higher is better).
 
 Your mileage may vary. The tests are easy to run and are included in the repository.
+```shell
+mvn clean test -Pbenchmark -Dtest=EthloITUBenchmarkTest
+```
 
 Tests performed on a Dell XPS 9700 
 * Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz
