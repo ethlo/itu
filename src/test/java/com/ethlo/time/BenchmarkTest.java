@@ -40,9 +40,30 @@ public abstract class BenchmarkTest extends AbstractTest
     }
 
     @RepeatedTest(5)
-    public void testParsePerformance()
+    public void testParseNoFractions()
     {
-        final String name = parser.getClass().getSimpleName() + " - parse";
+        final String name = parser.getClass().getSimpleName() + " - parse none";
+        perform(() -> parser.parseDateTime("2017-12-21T12:20:45Z"), name);
+    }
+
+    @RepeatedTest(5)
+    public void testParseMilliFractions()
+    {
+        final String name = parser.getClass().getSimpleName() + " - parse milli";
+        perform(() -> parser.parseDateTime("2017-12-21T12:20:45.987Z"), name);
+    }
+
+    @RepeatedTest(5)
+    public void testParseMicroFractions()
+    {
+        final String name = parser.getClass().getSimpleName() + " - parse micro";
+        perform(() -> parser.parseDateTime("2017-12-21T12:20:45.987654Z"), name);
+    }
+
+    @RepeatedTest(5)
+    public void testParseNanoFractions()
+    {
+        final String name = parser.getClass().getSimpleName() + " - parse nano";
         perform(() -> parser.parseDateTime("2017-12-21T12:20:45.987654321Z"), name);
     }
 
@@ -84,6 +105,6 @@ public abstract class BenchmarkTest extends AbstractTest
     @AfterAll
     static void printStats()
     {
-//        System.out.println(Report.prettyPrint(getChronograph().getTaskData(), OutputConfig.EXTENDED.percentiles(90, 95, 99, 99.5), TableTheme.RED_HERRING));
+        //        System.out.println(Report.prettyPrint(getChronograph().getTaskData(), OutputConfig.EXTENDED.percentiles(90, 95, 99, 99.5), TableTheme.RED_HERRING));
     }
 }
