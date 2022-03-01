@@ -25,6 +25,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 public abstract class BenchmarkTest extends AbstractTest
@@ -38,7 +39,7 @@ public abstract class BenchmarkTest extends AbstractTest
         return 10_000_000;
     }
 
-    @Test
+    @RepeatedTest(5)
     public void testParsePerformance()
     {
         final String name = parser.getClass().getSimpleName() + " - parse";
@@ -66,7 +67,7 @@ public abstract class BenchmarkTest extends AbstractTest
         }
     }
 
-    @Test
+    @RepeatedTest(5)
     public void testFormatPerformance()
     {
         final String name = parser.getClass().getSimpleName() + " - formatUtc";
