@@ -32,6 +32,7 @@ public final class LimitedCharArrayIntegerUtil
     private static final int MAX_INT_WIDTH = 10;
     private static final int TABLE_SIZE = (int) Math.pow(RADIX, TABLE_WIDTH);
     private static final char[] INT_CONVERSION_CACHE = new char[(TABLE_SIZE * TABLE_WIDTH) + MAX_INT_WIDTH];
+    public static final char DIGIT_9 = '9';
 
     static
     {
@@ -47,7 +48,29 @@ public final class LimitedCharArrayIntegerUtil
     {
     }
 
-    public static int parsePositiveInt(char[] strNum, int startInclusive, int endExclusive)
+    public static int parsePositiveInt(final String strNum, int startInclusive, int endExclusive)
+    {
+        if (endExclusive > strNum.length())
+        {
+            throw new DateTimeException("Unexpected end of expression at position " + strNum.length() + " '" + strNum + "'");
+        }
+
+        int result = 0;
+        for (int i = startInclusive; i < endExclusive; i++)
+        {
+            final char c = strNum.charAt(i);
+            if (isNotDigit(c))
+            {
+                throw new DateTimeException("Character " + c + " is not a digit");
+            }
+            int digit = digit(c);
+            result *= RADIX;
+            result -= digit;
+        }
+        return -result;
+    }
+
+    public static int parsePositiveInt(final char[] strNum, int startInclusive, int endExclusive)
     {
         if (endExclusive > strNum.length)
         {
@@ -57,11 +80,12 @@ public final class LimitedCharArrayIntegerUtil
         int result = 0;
         for (int i = startInclusive; i < endExclusive; i++)
         {
-            if (isNotDigit(strNum[i]))
+            final char c = strNum[i];
+            if (isNotDigit(c))
             {
-                throw new DateTimeException("Character " + strNum[i] + " is not a digit");
+                throw new DateTimeException("Character " + c + " is not a digit");
             }
-            int digit = digit(strNum[i]);
+            int digit = digit(c);
             result *= RADIX;
             result -= digit;
         }
@@ -129,11 +153,23 @@ public final class LimitedCharArrayIntegerUtil
         System.arraycopy(buf, srcPos, target, offset, length);
     }
 
-    public static int indexOfNonDigit(char[] chars, int offset)
+    public static int indexOfNonDigit(final String text, int offset)
     {
-        for (int i = offset; i < chars.length; i++)
+        for (int i = offset; i < text.length(); i++)
         {
-            if (isNotDigit(chars[i]))
+            if (isNotDigit(text.charAt(i)))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static int indexOfNonDigit(final char[] text, int offset)
+    {
+        for (int i = offset; i < text.length; i++)
+        {
+            if (isNotDigit(text[i]))
             {
                 return i;
             }
@@ -143,7 +179,7 @@ public final class LimitedCharArrayIntegerUtil
 
     private static boolean isNotDigit(char c)
     {
-        return (c < ZERO || c > '9');
+        return (c < ZERO || c > DIGIT_9);
     }
 
     private static int digit(char c)
