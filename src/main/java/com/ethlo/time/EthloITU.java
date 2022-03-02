@@ -50,7 +50,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
-    private final Java8Rfc3339 delegate = new Java8Rfc3339();
+    private final JdkRfc3339 delegate = new JdkRfc3339();
     private final LeapSecondHandler leapSecondHandler = new DefaultLeapSecondHandler();
 
     @Override

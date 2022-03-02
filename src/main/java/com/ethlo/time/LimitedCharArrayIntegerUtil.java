@@ -25,6 +25,7 @@ import java.util.Arrays;
 
 public final class LimitedCharArrayIntegerUtil
 {
+    public static final char DIGIT_9 = '9';
     private static final char ZERO = '0';
     private static final char[] DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     private static final int TABLE_WIDTH = 4;
@@ -32,7 +33,6 @@ public final class LimitedCharArrayIntegerUtil
     private static final int MAX_INT_WIDTH = 10;
     private static final int TABLE_SIZE = (int) Math.pow(RADIX, TABLE_WIDTH);
     private static final char[] INT_CONVERSION_CACHE = new char[(TABLE_SIZE * TABLE_WIDTH) + MAX_INT_WIDTH];
-    public static final char DIGIT_9 = '9';
 
     static
     {

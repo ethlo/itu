@@ -21,25 +21,25 @@ package com.ethlo.time.jdk;
  */
 
 
-import com.ethlo.time.CorrectnessTest;
-import com.ethlo.time.Java8Rfc3339;
-import com.ethlo.time.Rfc3339;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
+import com.ethlo.time.CorrectnessTest;
+import com.ethlo.time.JdkRfc3339;
+import com.ethlo.time.Rfc3339;
 
 public class Jdk8Rfc3339CorrectnessTest extends CorrectnessTest
 {
     @Override
     protected Rfc3339 getParser()
     {
-        return new Java8Rfc3339();
+        return new JdkRfc3339();
     }
 
     @Override
     protected Rfc3339 getFormatter()
     {
-        return new Java8Rfc3339();
+        return new JdkRfc3339();
     }
 
     @Override

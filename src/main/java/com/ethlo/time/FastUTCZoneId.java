@@ -34,11 +34,6 @@ public class FastUTCZoneId
     private static final String customZoneId = "ITU-UTC";
     private static final ZoneId delegate;
 
-    public static ZoneId get()
-    {
-        return delegate;
-    }
-
     static
     {
         // The heart of the magic: the ZoneRulesProvider
@@ -70,5 +65,10 @@ public class FastUTCZoneId
         // Registering the ZoneRulesProvider is the key to ZoneId using it
         ZoneRulesProvider.registerProvider(customProvider);
         delegate = ZoneId.of(customZoneId);
+    }
+
+    public static ZoneId get()
+    {
+        return delegate;
     }
 }

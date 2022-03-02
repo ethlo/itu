@@ -20,9 +20,6 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.time.OffsetDateTime;
-import java.util.Date;
-
 /**
  * The recommendation for date-time exchange in modern APIs is to use RFC-3339, available at https://tools.ietf.org/html/rfc3339
  * This class supports both validation, parsing and formatting of such date-times.

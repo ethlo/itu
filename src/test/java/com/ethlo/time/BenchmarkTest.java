@@ -24,14 +24,16 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public abstract class BenchmarkTest extends AbstractTest
 {
-    private final OffsetDateTime d = OffsetDateTime.of(2017, 12, 21, 15, 27, 39, 987_000_000, ZoneOffset.UTC);
     private static final Chronograph chronograph = Chronograph.create(CaptureConfig.minInterval(Duration.ofMillis(25)));
+    private static final int REPEATS = 3; //Optional.ofNullable(System.getenv("REPEATS")).map(Integer::parseInt).orElse(3);
+    private final OffsetDateTime d = OffsetDateTime.of(2017, 12, 21, 15, 27, 39, 987_000_000, ZoneOffset.UTC);
 
     @Override
     protected long getRuns()
@@ -39,72 +41,71 @@ public abstract class BenchmarkTest extends AbstractTest
         return 10_000_000;
     }
 
-    @RepeatedTest(5)
-    public void testParseNoFractions()
+    @RepeatedTest(REPEATS)
+    public void testParse0()
     {
-        final String name = parser.getClass().getSimpleName() + " - parse none";
+        final String name = parser.getClass().getSimpleName() + " - parse(0)";
         perform(() -> parser.parseDateTime("2017-12-21T12:20:45Z"), name);
     }
 
-    @RepeatedTest(5)
-    public void testParseMilliFractions()
+    @RepeatedTest(REPEATS)
+    public void testParse3()
     {
-        final String name = parser.getClass().getSimpleName() + " - parse milli";
+        final String name = parser.getClass().getSimpleName() + " - parse(3)";
         perform(() -> parser.parseDateTime("2017-12-21T12:20:45.987Z"), name);
     }
 
-    @RepeatedTest(5)
-    public void testParseMicroFractions()
+    @RepeatedTest(REPEATS)
+    public void testParse6()
     {
-        final String name = parser.getClass().getSimpleName() + " - parse micro";
+        final String name = parser.getClass().getSimpleName() + " - parse(6)";
         perform(() -> parser.parseDateTime("2017-12-21T12:20:45.987654Z"), name);
     }
 
-    @RepeatedTest(5)
-    public void testParseNanoFractions()
+    @RepeatedTest(REPEATS)
+    public void testParse9()
     {
-        final String name = parser.getClass().getSimpleName() + " - parse nano";
+        final String name = parser.getClass().getSimpleName() + " - parse(9)";
         perform(() -> parser.parseDateTime("2017-12-21T12:20:45.987654321Z"), name);
     }
 
-    protected Chronograph getChronograph()
+    @RepeatedTest(REPEATS)
+    public void testFormat0()
     {
-        return chronograph;
-    }
-
-    @Test
-    public void testParseLenient()
-    {
-        final String s = "2017-12-21T12:20:45.987Z";
-        final String name = parser.getClass().getSimpleName() + " - parseLenient";
-        if (parser instanceof W3cDateTimeUtil)
+        final String name = parser.getClass().getSimpleName() + " - formatUtc(0)";
+        if (formatter != null)
         {
-            final W3cDateTimeUtil w3cUtil = (W3cDateTimeUtil) parser;
-            perform(() -> w3cUtil.parseLenient(s), name);
-        }
-        else
-        {
-            unsupported(getChronograph(), name);
+            perform(() -> formatter.formatUtc(d), name);
         }
     }
 
-    @RepeatedTest(5)
-    public void testFormatPerformance()
+    @RepeatedTest(REPEATS)
+    public void testFormat3()
     {
-        final String name = parser.getClass().getSimpleName() + " - formatUtc";
+        final String name = parser.getClass().getSimpleName() + " - formatUtc(3)";
+        if (formatter != null)
+        {
+            perform(() -> formatter.formatUtcMilli(d), name);
+        }
+    }
+
+    @RepeatedTest(REPEATS)
+    public void testFormat6()
+    {
+        final String name = parser.getClass().getSimpleName() + " - formatUtc(6)";
         if (formatter != null)
         {
             perform(() -> formatter.formatUtcMicro(d), name);
         }
-        else
-        {
-            unsupported(getChronograph(), name);
-        }
     }
 
-    @AfterAll
-    static void printStats()
+    @RepeatedTest(REPEATS)
+    public void testFormat9()
     {
-        //        System.out.println(Report.prettyPrint(getChronograph().getTaskData(), OutputConfig.EXTENDED.percentiles(90, 95, 99, 99.5), TableTheme.RED_HERRING));
+        final String name = parser.getClass().getSimpleName() + " - formatUtc(9)";
+        if (formatter != null)
+        {
+            perform(() -> formatter.formatUtcMicro(d), name);
+        }
     }
 }

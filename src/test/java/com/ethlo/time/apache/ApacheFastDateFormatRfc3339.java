@@ -26,8 +26,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 
-import com.ethlo.time.Rfc3339;
 import org.apache.commons.lang3.time.FastDateFormat;
+
+import com.ethlo.time.Rfc3339;
 
 public class ApacheFastDateFormatRfc3339 implements Rfc3339
 {

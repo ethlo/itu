@@ -21,7 +21,6 @@ package com.ethlo.time.itu;
  */
 
 import com.ethlo.time.BenchmarkTest;
-import com.ethlo.time.Chronograph;
 import com.ethlo.time.EthloITU;
 import com.ethlo.time.Rfc3339;
 import com.ethlo.time.Rfc3339Formatter;
@@ -38,12 +37,6 @@ public class EthloITUBenchmarkTest extends BenchmarkTest
     protected Rfc3339Formatter getFormatter()
     {
         return new EthloITU();
-    }
-
-    @Override
-    protected Chronograph getChronograph()
-    {
-        return null;
     }
 
     @Override

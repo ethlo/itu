@@ -20,11 +20,11 @@ package com.ethlo.time.apache;
  * #L%
  */
 
+import org.junit.jupiter.api.Disabled;
+
 import com.ethlo.time.BenchmarkTest;
 import com.ethlo.time.Rfc3339;
 import com.ethlo.time.Rfc3339Formatter;
-
-import org.junit.jupiter.api.Disabled;
 
 @Disabled("Not returning correct results")
 public class ApacheFastDateFormatRfc3339BenchmarkTest extends BenchmarkTest
