@@ -74,6 +74,13 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
+    public void parseWithFragmentsNoTimezone()
+    {
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T12:20:45.987"));
+        assertThat(exception.getMessage()).isNotNull();
+    }
+
+    @Test
     public void testParseLeapSecondUTCJune()
     {
         final String leapSecondUTC = "1992-06-30T23:59:60Z";
@@ -115,14 +122,16 @@ public abstract class CorrectnessTest extends AbstractTest
     public void testFormat1()
     {
         final String s = "2017-02-21T15:27:39.0000000";
-        assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
+        assertThat(exception.getMessage()).isNotNull();
     }
 
     @Test
     public void testFormat2()
     {
         final String s = "2017-02-21T15:27:39.000+30:00";
-        assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
+        assertThat(exception.getMessage()).isNotNull();
     }
 
     @Test
@@ -137,7 +146,8 @@ public abstract class CorrectnessTest extends AbstractTest
     public void testInvalidNothingAfterFractionalSeconds()
     {
         final String s = "2017-02-21T10:00:00.12345";
-        assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
+        assertThat(exception.getMessage()).isNotNull();
     }
 
     @Test
@@ -153,7 +163,8 @@ public abstract class CorrectnessTest extends AbstractTest
     @Test
     public void testParseMoreThanNanoResolutionFails()
     {
-        assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-02-21T15:00:00.1234567891Z"));
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-02-21T15:00:00.1234567891Z"));
+        assertThat(exception.getMessage()).isNotNull();
     }
 
     @Test
@@ -161,7 +172,8 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final OffsetDateTime d = parser.parseDateTime("2017-02-21T15:00:00.123456789Z");
         final int fractionDigits = 10;
-        assertThrows(DateTimeException.class, () -> formatter.formatUtc(d, fractionDigits));
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> formatter.formatUtc(d, fractionDigits));
+        assertThat(exception.getMessage()).isNotNull();
     }
 
     @Test
@@ -210,7 +222,8 @@ public abstract class CorrectnessTest extends AbstractTest
     public void testFormat4TrailingNoise()
     {
         final String s = "2017-02-21T15:00:00.123ZGGG";
-        assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
+        assertThat(exception.getMessage()).isNotNull();
     }
 
     @Test
@@ -224,13 +237,15 @@ public abstract class CorrectnessTest extends AbstractTest
     @Test
     public void testParseEmptyString()
     {
-        assertThrows(DateTimeException.class, () -> parser.parseDateTime(""));
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(""));
+        assertThat(exception.getMessage()).isNotNull();
     }
 
     @Test
     public void testParseNull()
     {
-        assertThrows(NullPointerException.class, () -> parser.parseDateTime(null));
+        final NullPointerException exception = assertThrows(NullPointerException.class, () -> parser.parseDateTime(null));
+        assertThat(exception.getMessage()).isNotNull();
     }
 
     @Test
@@ -256,14 +271,16 @@ public abstract class CorrectnessTest extends AbstractTest
     public void testParseNonDigit()
     {
         final String a = "199g-11-05T08:15:30-05:00";
-        assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
+        assertThat(exception.getMessage()).isNotNull();
     }
 
     @Test
     public void testInvalidDateTimeSeparator()
     {
         final String a = "1994-11-05X08:15:30-05:00";
-        assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
+        assertThat(exception.getMessage()).isNotNull();
     }
 
     @Test
@@ -294,10 +311,7 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         for (String f : this.invalidFormats)
         {
-            if (parser.isValid(f))
-            {
-                throw new DateTimeException(f + " is deemed valid");
-            }
+            assertThat(parser.isValid(f)).overridingErrorMessage(f).isFalse();
         }
     }
 
@@ -312,7 +326,8 @@ public abstract class CorrectnessTest extends AbstractTest
     public void testParseUnknownLocalOffsetConvention()
     {
         final String s = "2017-02-21T15:27:39-00:00";
-        assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
+        assertThat(exception.getMessage()).isNotNull();
     }
 
     @Test

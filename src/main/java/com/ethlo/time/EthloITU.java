@@ -121,7 +121,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     {
         if (offset >= chars.length)
         {
-            throw new DateTimeException("Abrupt end of input: " + new String(chars));
+            raiseDateTimeException(chars, "Abrupt end of input: ");
         }
 
         if (chars[offset] != expected)
@@ -135,7 +135,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     {
         if (offset >= chars.length)
         {
-            throw new DateTimeException("Abrupt end of input: " + new String(chars));
+            raiseDateTimeException(chars, "Abrupt end of input: ");
         }
 
         boolean found = false;
@@ -157,7 +157,8 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     private ZoneOffset parseTz(char[] chars, int offset)
     {
         final int left = chars.length - offset;
-        if (chars[offset] == ZULU_UPPER || chars[offset] == ZULU_LOWER)
+        final char c = chars[offset];
+        if (c == ZULU_UPPER || c == ZULU_LOWER)
         {
             assertNoMoreChars(chars, offset);
             return ZoneOffset.UTC;
@@ -423,17 +424,22 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
         // From here the specification is more lenient
         final int remaining = chars.length - 19;
+        if (remaining == 0)
+        {
+            raiseDateTimeException(chars, "No timezone information");
+        }
 
-        ZoneOffset offset;
+        ZoneOffset offset = null;
         int fractions = 0;
 
-        if (remaining == 1 && (chars[19] == ZULU_UPPER || chars[19] == ZULU_LOWER))
+        final char c = chars[19];
+        if (remaining == 1 && (c == ZULU_UPPER || c == ZULU_LOWER))
         {
             // Do nothing we are done
             offset = ZoneOffset.UTC;
             assertNoMoreChars(chars, 19);
         }
-        else if (remaining >= 1 && chars[19] == FRACTION_SEPARATOR)
+        else if (remaining >= 1 && c == FRACTION_SEPARATOR)
         {
             // We have fractional seconds
             final int idx = indexOfNonDigit(chars, 20);
@@ -446,21 +452,17 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             }
             else
             {
-                offset = parseTz(chars, 20);
+                raiseDateTimeException(chars, "No timezone information");
             }
         }
-        else if (remaining >= 1 && (chars[19] == PLUS || chars[19] == MINUS))
+        else if (remaining >= 1 && (c == PLUS || c == MINUS))
         {
             // No fractional sections
             offset = parseTz(chars, 19);
         }
-        else if (remaining == 0)
-        {
-            throw new DateTimeException("Unexpected end of expression at position 19 '" + new String(chars) + "'");
-        }
         else
         {
-            throw new DateTimeException("Unexpected character at position 19:" + chars[19]);
+            raiseDateTimeException(chars, "Unexpected character at position 19");
         }
 
         if (second == LEAP_SECOND_SECONDS)
@@ -482,6 +484,11 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             }
         }
         return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset);
+    }
+
+    private void raiseDateTimeException(char[] chars, String message)
+    {
+        throw new DateTimeException(message + ": " + new String(chars));
     }
 
     private int getSecond(final char[] chars)
