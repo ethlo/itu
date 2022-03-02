@@ -24,17 +24,9 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 <img src="doc/performance.png" alt="Performance plot">
 
-|	Implementation | Parse |	Format |	
--------------------|--------:|----------:|
-| Google DateTime	|  935,199 |  Not supported		
-| JDK Java Time	| 732,180 | 1,922,732
-| Ethlo ITU	| 21,231,082 | 28,539,459
-
-Numbers are operations per second (higher is better).
-
 Your mileage may vary. The tests are easy to run and are included in the repository.
 ```shell
-mvn clean test -Pbenchmark -Dtest=EthloITUBenchmarkTest
+mvn clean test -Pbenchmark
 ```
 
 Tests performed on a Dell XPS 9700 
