@@ -59,6 +59,12 @@ public abstract class CorrectnessTest extends AbstractTest
         verifyLeapSecondDateTime("1990-12-31T23:59:60Z", "1991-01-01T00:00:00Z", true);
     }
 
+    @Test
+    public void testParseDoubleLeapSecondUTC()
+    {
+        assertThrows(DateTimeException.class, () -> verifyLeapSecondDateTime("1990-12-31T23:59:61Z", "1991-01-01T00:00:01Z", true));
+    }
+
     private void verifyLeapSecondDateTime(String input, String expectedInUtc, boolean isVerifiedLeapSecond)
     {
         final LeapSecondException exc = getLeapSecondsException(input);
