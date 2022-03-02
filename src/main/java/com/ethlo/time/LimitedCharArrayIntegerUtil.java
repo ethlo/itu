@@ -52,13 +52,35 @@ public final class LimitedCharArrayIntegerUtil
     {
         if (endExclusive > strNum.length())
         {
-            throw new DateTimeException("Unexpected end of expression at position " + strNum.length() + " '" + new String(strNum) + "'");
+            throw new DateTimeException("Unexpected end of expression at position " + strNum.length() + " '" + strNum + "'");
         }
 
         int result = 0;
         for (int i = startInclusive; i < endExclusive; i++)
         {
             final char c = strNum.charAt(i);
+            if (isNotDigit(c))
+            {
+                throw new DateTimeException("Character " + c + " is not a digit");
+            }
+            int digit = digit(c);
+            result *= RADIX;
+            result -= digit;
+        }
+        return -result;
+    }
+
+    public static int parsePositiveInt(final char[] strNum, int startInclusive, int endExclusive)
+    {
+        if (endExclusive > strNum.length)
+        {
+            throw new DateTimeException("Unexpected end of expression at position " + strNum.length + " '" + new String(strNum) + "'");
+        }
+
+        int result = 0;
+        for (int i = startInclusive; i < endExclusive; i++)
+        {
+            final char c = strNum[i];
             if (isNotDigit(c))
             {
                 throw new DateTimeException("Character " + c + " is not a digit");
@@ -136,6 +158,18 @@ public final class LimitedCharArrayIntegerUtil
         for (int i = offset; i < text.length(); i++)
         {
             if (isNotDigit(text.charAt(i)))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static int indexOfNonDigit(final char[] text, int offset)
+    {
+        for (int i = offset; i < text.length; i++)
+        {
+            if (isNotDigit(text[i]))
             {
                 return i;
             }

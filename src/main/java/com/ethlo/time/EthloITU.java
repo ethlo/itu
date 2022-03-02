@@ -108,7 +108,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             case MINUS:
             case ZULU_UPPER:
             case ZULU_LOWER:
-                final ZoneOffset zoneOffset = parseTz(text, 16);
+                final ZoneOffset zoneOffset = parseTz(text.substring(16).toCharArray(), 0);
                 return OffsetDateTime.of(year, month, day, hour, minute, 0, 0, zoneOffset);
 
             default:
@@ -155,10 +155,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private ZoneOffset parseTz(final String text, final int offset)
+    private ZoneOffset parseTz(final char[] text, final int offset)
     {
-        final int left = text.length() - offset;
-        final char c = text.charAt(offset);
+        final int left = text.length - offset;
+        final char c = text[offset];
         if (c == ZULU_UPPER || c == ZULU_LOWER)
         {
             assertNoMoreChars(text, offset);
@@ -167,10 +167,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
         if (left != 6)
         {
-            throw new DateTimeException("Invalid timezone offset: " + text.substring(offset));
+            throw new DateTimeException("Invalid timezone offset: " + new String(text, offset, left));
         }
 
-        final char sign = text.charAt(offset);
+        final char sign = text[offset];
         int hours = parsePositiveInt(text, offset + 1, offset + 3);
         int minutes = parsePositiveInt(text, offset + 4, offset + 4 + 2);
         if (sign == MINUS)
@@ -193,6 +193,14 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     private void assertNoMoreChars(final String text, int lastUsed)
     {
         if (text.length() > lastUsed + 1)
+        {
+            throw new DateTimeException("Unparsed data from offset " + lastUsed + 1);
+        }
+    }
+
+    private void assertNoMoreChars(final char[] text, int lastUsed)
+    {
+        if (text.length > lastUsed + 1)
         {
             throw new DateTimeException("Unparsed data from offset " + lastUsed + 1);
         }
@@ -422,8 +430,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     {
         final int second = getSecond(text);
 
+        final char[] chars = text.substring(19).toCharArray();
+
         // From here the specification is more lenient
-        final int remaining = text.length() - 19;
+        final int remaining = chars.length;
 
         ZoneOffset offset;
         int fractions = 0;
@@ -433,33 +443,33 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             throw new DateTimeException("Unexpected end of expression at position 19 '" + text + "'");
         }
 
-        final char c = text.charAt(19);
+        final char c = chars[0];
         if (remaining == 1 && (c == ZULU_UPPER || c == ZULU_LOWER))
         {
             // Do nothing we are done
             offset = ZoneOffset.UTC;
-            assertNoMoreChars(text, 19);
+            assertNoMoreChars(chars, 19);
         }
-        else if (remaining >= 1 && c == FRACTION_SEPARATOR)
+        else if (c == FRACTION_SEPARATOR)
         {
             // We have fractional seconds
-            final int idx = indexOfNonDigit(text, 20);
+            final int idx = indexOfNonDigit(chars, 1);
             if (idx != -1)
             {
                 // We have an end of fractions
-                final int len = idx - 20;
-                fractions = getFractions(text, idx, len);
-                offset = parseTz(text, idx);
+                final int len = idx - 1;
+                fractions = getFractions(chars, idx, len);
+                offset = parseTz(chars, idx);
             }
             else
             {
-                offset = parseTz(text, 20);
+                offset = parseTz(chars, 1);
             }
         }
-        else if (remaining >= 1 && (c == PLUS || c == MINUS))
+        else if (c == PLUS || c == MINUS)
         {
             // No fractional sections
-            offset = parseTz(text, 19);
+            offset = parseTz(chars, 0);
         }
         else
         {
@@ -492,10 +502,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return parsePositiveInt(text, 17, 19);
     }
 
-    private int getFractions(final String text, final int idx, final int len)
+    private int getFractions(final char[] text, final int idx, final int len)
     {
         final int fractions;
-        fractions = parsePositiveInt(text, 20, idx);
+        fractions = parsePositiveInt(text, 1, idx);
         switch (len)
         {
             case 1:
