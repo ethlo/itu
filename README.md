@@ -15,16 +15,15 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 ## Features
 
 * No external dependencies, minimalistic JAR (~18KB)
-* Apache license
-* Correct time-zone handling
+* Apache licensed
 * Handling of leap-seconds
-* Very high performance
+* Very high performance (TL;DR: ~10x the speed of `java.time` parser/formatter)
 
 ## Performance
 
 <img src="doc/performance.png" alt="Performance plot">
 
-Your mileage may vary. The tests are easy to run and are included in the repository.
+Your mileage may vary, but tests indicate about 10x faster than JDK classes. The tests are easy to run:
 ```shell
 mvn clean test -Pbenchmark
 ```
@@ -36,15 +35,35 @@ Tests performed on a Dell XPS 9700
 
 ## Example usage
 
+Add dependency
+
+```xml
+<dependency>
+  <groupId>com.ethlo.time</groupId>
+  <artifactId>itu</artifactId>
+  <version>1.5.2</version>
+</dependency>
+```
+
 ```java
-// Parse a string
-final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
+package mytest;
 
-// Format with no fraction digits
-final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
+import com.ethlo.time.ITU;
 
-// Format with microsecond precision
-final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
+class Test
+{
+  public static void main(String[] args)
+  {
+    // Parse a string
+    final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
+
+    // Format with no fraction digits
+    final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
+
+    // Format with microsecond precision
+    final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
+  }
+}
 ```
 
 ### Handle leap-seconds
