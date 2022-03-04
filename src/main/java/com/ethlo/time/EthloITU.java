@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,6 @@ import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.Date;
@@ -213,7 +212,12 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     public String formatUtc(OffsetDateTime date, Field lastIncluded, int fractionDigits)
     {
         assertMaxFractionDigits(fractionDigits);
-        final ZonedDateTime utc = date.atZoneSameInstant(FastUTCZoneId.get());
+
+        OffsetDateTime utc = date;
+        if (date.getOffset() != ZoneOffset.UTC)
+        {
+            utc = date.atZoneSameInstant(FastUTCZoneId.get()).toOffsetDateTime();
+        }
 
         final char[] buffer = new char[31];
 

@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -368,11 +368,5 @@ public abstract class CorrectnessTest extends AbstractTest
         final OffsetDateTime d = parser.parseDateTime(s);
         final String formatted = formatter.format(new Date(d.toInstant().toEpochMilli()), "EST", 3);
         assertThat(formatted).isEqualTo("2017-02-21T10:27:39.321-05:00");
-    }
-
-    @Override
-    protected long getRuns()
-    {
-        return 1;
     }
 }

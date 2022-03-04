@@ -1,4 +1,4 @@
-package com.ethlo.time.apache;
+package com.ethlo.time.jdk;
 
 /*-
  * #%L
@@ -9,9 +9,9 @@ package com.ethlo.time.apache;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,24 +20,13 @@ package com.ethlo.time.apache;
  * #L%
  */
 
-import org.junit.jupiter.api.Disabled;
+import com.ethlo.time.JdkRfc3339;
+import com.ethlo.time.ParserBenchmarkTest;
 
-import com.ethlo.time.BenchmarkTest;
-import com.ethlo.time.Rfc3339;
-import com.ethlo.time.Rfc3339Formatter;
-
-@Disabled("Not returning correct results")
-public class ApacheFastDateFormatRfc3339BenchmarkTest extends BenchmarkTest
+public class JdkRfc3339ParserBenchmarkTest extends ParserBenchmarkTest
 {
-    @Override
-    protected Rfc3339 getParser()
+    public JdkRfc3339ParserBenchmarkTest()
     {
-        return new ApacheFastDateFormatRfc3339();
-    }
-
-    @Override
-    protected Rfc3339Formatter getFormatter()
-    {
-        return new ApacheFastDateFormatRfc3339();
+        super(new JdkRfc3339());
     }
 }

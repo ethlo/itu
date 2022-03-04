@@ -1,10 +1,10 @@
-package com.ethlo.time;
+package com.ethlo.time.itu;
 
 /*-
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 - 2022 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 Morten Haraldsen (ethlo)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.time.YearMonth;
+import com.ethlo.time.EthloITU;
+import com.ethlo.time.ParserBenchmarkTest;
 
-public interface LeapSecondHandler
+public class EthloITUParserBenchmarkTest extends ParserBenchmarkTest
 {
-    int LEAP_SECOND_SECONDS = 60;
-
-    boolean isValidLeapSecondDate(YearMonth needle);
-
-    YearMonth getLastKnownLeapSecond();
+    public EthloITUParserBenchmarkTest()
+    {
+        super(new EthloITU());
+    }
 }

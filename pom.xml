@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ethlo.time</groupId>
     <artifactId>itu</artifactId>
-    <version>1.5.2-SNAPSHOT</version>
+    <version>1.6.0-SNAPSHOT</version>
     <name>Internet Time Utility</name>
     <description>Extremely fast date/time parser and formatter - RFC 3339 (ISO 8601 profile) and W3C format
     </description>
@@ -54,30 +54,13 @@
             <version>1.41.4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>1.33</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-    <profiles>
-        <profile>
-            <id>benchmark</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
-                        <configuration>
-                            <excludes combine.self="override" />
-                            <includes>
-                                <include>**/*BenchmarkTest.java</include>
-                            </includes>
-                            <forkCount>1</forkCount>
-                            <reuseForks>false</reuseForks>
-                            <argLine>-server</argLine>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
     <build>
         <plugins>
             <plugin>
@@ -90,13 +73,19 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
+                <groupId>pw.krejci</groupId>
+                <artifactId>jmh-maven-plugin</artifactId>
+                <version>0.2.2</version>
                 <configuration>
-                    <excludes>
-                        <exclude>**/*BenchmarkTest.java</exclude>
-                    </excludes>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <benchmarkMode>Throughput</benchmarkMode>
+                    <warmupIterations>1</warmupIterations>
+                    <fork>1</fork>
+                    <resultFormat>JSON</resultFormat>
+                    <resultsFile>target/itu_performance.json</resultsFile>
+                    <iterations>2</iterations>
+                    <timeOnIteration>10</timeOnIteration>
                 </configuration>
             </plugin>
             <plugin>
@@ -127,6 +116,44 @@
                 <configuration>
                     <show>public</show>
                     <source>8</source>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <version>2.5.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <obfuscate>true</obfuscate>
+                    <injar>${project.build.finalName}.jar</injar>
+                    <outjar>${project.build.finalName}.jar</outjar>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                    <proguardInclude>${basedir}/proguard.conf</proguardInclude>
+                    <options>
+                        <option>-allowaccessmodification</option>
+                        <option>-keep public class com.ethlo.time.ITU { *; }</option>
+                        <option>-keep public class com.ethlo.time.Field { *; }</option>
+                    </options>
+                    <libs>
+                        <lib>${java.home}/jmods/java.base.jmod</lib>
+                    </libs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*BenchmarkTest.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
@@ -183,6 +210,7 @@
                             <inceptionYear>2017</inceptionYear>
                             <organizationName>Morten Haraldsen (ethlo)</organizationName>
                             <addSvnKeyWords>false</addSvnKeyWords>
+                            <canUpdateDescription>true</canUpdateDescription>
                             <roots>
                                 <root>src/main/java</root>
                                 <root>src/test</root>
@@ -225,5 +253,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <gpg.skip>true</gpg.skip>
+        <proguard.skip>true</proguard.skip>
     </properties>
 </project>

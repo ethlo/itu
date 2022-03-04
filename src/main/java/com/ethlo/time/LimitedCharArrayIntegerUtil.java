@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,28 +46,6 @@ public final class LimitedCharArrayIntegerUtil
 
     private LimitedCharArrayIntegerUtil()
     {
-    }
-
-    public static int parsePositiveInt(final String strNum, int startInclusive, int endExclusive)
-    {
-        if (endExclusive > strNum.length())
-        {
-            throw new DateTimeException("Unexpected end of expression at position " + strNum.length() + " '" + strNum + "'");
-        }
-
-        int result = 0;
-        for (int i = startInclusive; i < endExclusive; i++)
-        {
-            final char c = strNum.charAt(i);
-            if (isNotDigit(c))
-            {
-                throw new DateTimeException("Character " + c + " is not a digit");
-            }
-            int digit = digit(c);
-            result *= RADIX;
-            result -= digit;
-        }
-        return -result;
     }
 
     public static int parsePositiveInt(final char[] strNum, int startInclusive, int endExclusive)
@@ -151,18 +129,6 @@ public final class LimitedCharArrayIntegerUtil
     private static void copy(char[] buf, int srcPos, char[] target, int offset, int length)
     {
         System.arraycopy(buf, srcPos, target, offset, length);
-    }
-
-    public static int indexOfNonDigit(final String text, int offset)
-    {
-        for (int i = offset; i < text.length(); i++)
-        {
-            if (isNotDigit(text.charAt(i)))
-            {
-                return i;
-            }
-        }
-        return -1;
     }
 
     public static int indexOfNonDigit(final char[] text, int offset)
