@@ -35,7 +35,7 @@ def render(dtf, style, target):
                          kind='barh',
                          stacked=False,
                          title='Nanoseconds per operation (lower is better)',
-                         figsize=(16, 16))
+                         figsize=(10, 10))
 
     for container in plot.containers:
         plot.bar_label(container)
