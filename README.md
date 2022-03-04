@@ -23,9 +23,9 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 <img src="doc/performance.png" alt="Performance plot">
 
-Your mileage may vary, but tests indicate about 10x faster than JDK classes. The tests are easy to run:
+Your mileage may vary, but tests indicate comfortably 10x faster than JDK classes. The benchmark is easy to run:
 ```shell
-mvn clean test -Pbenchmark
+mvn clean jmh:benchmark
 ```
 
 Tests performed on a Dell XPS 9700 
