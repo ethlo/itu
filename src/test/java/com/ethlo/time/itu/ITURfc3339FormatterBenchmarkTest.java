@@ -1,4 +1,4 @@
-package com.ethlo.time.apache;
+package com.ethlo.time.itu;
 
 /*-
  * #%L
@@ -20,13 +20,13 @@ package com.ethlo.time.apache;
  * #L%
  */
 
-import com.ethlo.time.ParserBenchmarkTest;
+import com.ethlo.time.EthloITU;
+import com.ethlo.time.FormatterBenchmarkTest;
 
-// NOTE: Not returning correct results
-public class ApacheFastDateFormatRfc3339ParserBenchmarkTest extends ParserBenchmarkTest
+public class ITURfc3339FormatterBenchmarkTest extends FormatterBenchmarkTest
 {
-    public ApacheFastDateFormatRfc3339ParserBenchmarkTest()
+    public ITURfc3339FormatterBenchmarkTest()
     {
-        super(new ApacheFastDateFormatRfc3339());
+        super(new EthloITU());
     }
 }

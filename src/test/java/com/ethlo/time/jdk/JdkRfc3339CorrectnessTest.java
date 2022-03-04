@@ -28,7 +28,7 @@ import com.ethlo.time.CorrectnessTest;
 import com.ethlo.time.JdkRfc3339;
 import com.ethlo.time.Rfc3339;
 
-public class Jdk8Rfc3339CorrectnessTest extends CorrectnessTest
+public class JdkRfc3339CorrectnessTest extends CorrectnessTest
 {
     @Override
     protected Rfc3339 getParser()

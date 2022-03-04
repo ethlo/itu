@@ -20,16 +20,14 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.text.SimpleDateFormat;
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.TimeZone;
 
 /**
  * Java 8 JDK classes. The safe and normally "efficient enough" choice.
@@ -38,7 +36,7 @@ import java.util.TimeZone;
  */
 public class JdkRfc3339 extends AbstractRfc3339
 {
-    private final SimpleDateFormat[] formats = new SimpleDateFormat[MAX_FRACTION_DIGITS];
+    private final DateTimeFormatter[] formatters;
 
     private final DateTimeFormatter rfc3339baseFormatter = new DateTimeFormatterBuilder()
             .appendValue(ChronoField.YEAR, 4)
@@ -88,9 +86,10 @@ public class JdkRfc3339 extends AbstractRfc3339
 
     public JdkRfc3339()
     {
-        for (int i = 1; i < MAX_FRACTION_DIGITS; i++)
+        this.formatters = new DateTimeFormatter[MAX_FRACTION_DIGITS];
+        for (int i = 0; i < MAX_FRACTION_DIGITS; i++)
         {
-            this.formats[i] = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat(i) + "XXX");
+            formatters[i] = getFormatter(i);
         }
     }
 
@@ -126,13 +125,6 @@ public class JdkRfc3339 extends AbstractRfc3339
     public OffsetDateTime parseDateTime(final String s)
     {
         return OffsetDateTime.from(rfc3339formatParser.parse(s));
-    }
-
-    private String repeat(int repeats)
-    {
-        final char[] chars = new char[repeats];
-        Arrays.fill(chars, 'S');
-        return new String(chars);
     }
 
     @Override
@@ -195,8 +187,6 @@ public class JdkRfc3339 extends AbstractRfc3339
     @Override
     public String format(Date date, String timezone, int fractionDigits)
     {
-        final SimpleDateFormat formatter = (SimpleDateFormat) formats[fractionDigits].clone();
-        formatter.setTimeZone(TimeZone.getTimeZone(timezone));
-        return formatter.format(date);
+        return formatters[fractionDigits].format(OffsetDateTime.ofInstant(date.toInstant(), ZoneId.of(timezone)));
     }
 }

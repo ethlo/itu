@@ -366,7 +366,7 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final String s = "2017-02-21T15:27:39.321+00:00";
         final OffsetDateTime d = parser.parseDateTime(s);
-        final String formatted = formatter.format(new Date(d.toInstant().toEpochMilli()), "EST", 3);
+        final String formatted = formatter.format(new Date(d.toInstant().toEpochMilli()), "UTC", 3);
         assertThat(formatted).isEqualTo("2017-02-21T10:27:39.321-05:00");
     }
 }

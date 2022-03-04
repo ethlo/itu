@@ -79,12 +79,13 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-                    <benchmarkMode>Throughput</benchmarkMode>
+                    <benchmarkMode>SampleTime</benchmarkMode>
                     <warmupIterations>1</warmupIterations>
+                    <warmup>30</warmup>
                     <fork>1</fork>
                     <resultFormat>JSON</resultFormat>
                     <resultsFile>target/itu_performance.json</resultsFile>
-                    <iterations>2</iterations>
+                    <iterations>3</iterations>
                     <timeOnIteration>10</timeOnIteration>
                 </configuration>
             </plugin>
