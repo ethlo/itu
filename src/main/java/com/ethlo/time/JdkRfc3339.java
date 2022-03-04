@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,14 +20,16 @@ package com.ethlo.time;
  * #L%
  */
 
+import java.text.SimpleDateFormat;
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Java 8 JDK classes. The safe and normally "efficient enough" choice.
@@ -36,6 +38,8 @@ import java.util.Date;
  */
 public class JdkRfc3339 extends AbstractRfc3339
 {
+    private final SimpleDateFormat[] formats = new SimpleDateFormat[MAX_FRACTION_DIGITS];
+
     private final DateTimeFormatter[] formatters;
 
     private final DateTimeFormatter rfc3339baseFormatter = new DateTimeFormatterBuilder()
@@ -91,6 +95,18 @@ public class JdkRfc3339 extends AbstractRfc3339
         {
             formatters[i] = getFormatter(i);
         }
+
+        for (int i = 1; i < MAX_FRACTION_DIGITS; i++)
+        {
+            this.formats[i] = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat(i) + "XXX");
+        }
+    }
+
+    private String repeat(int repeats)
+    {
+        final char[] chars = new char[repeats];
+        Arrays.fill(chars, 'S');
+        return new String(chars);
     }
 
     private DateTimeFormatter getFormatter(int fractionDigits)
@@ -187,6 +203,8 @@ public class JdkRfc3339 extends AbstractRfc3339
     @Override
     public String format(Date date, String timezone, int fractionDigits)
     {
-        return formatters[fractionDigits].format(OffsetDateTime.ofInstant(date.toInstant(), ZoneId.of(timezone)));
+        final SimpleDateFormat formatter = (SimpleDateFormat) formats[fractionDigits].clone();
+        formatter.setTimeZone(TimeZone.getTimeZone(timezone));
+        return formatter.format(date);
     }
 }
