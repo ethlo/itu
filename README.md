@@ -25,7 +25,7 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 Your mileage may vary, but tests indicate comfortably 10x faster than JDK classes. The benchmark is easy to run:
 ```shell
-mvn clean jmh:benchmark
+mvn jmh:benchmark
 ```
 
 Tests performed on a Dell XPS 9700 
@@ -46,24 +46,22 @@ Add dependency
 ```
 
 ```java
-package mytest;
-
+import java.time.OffsetDateTime;
+import com.ethlo.time.DateTime;
 import com.ethlo.time.ITU;
 
-class Test
-{
-  public static void main(String[] args)
-  {
-    // Parse a string
-    final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
+// Parse a string
+final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
 
-    // Format with no fraction digits
-    final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
+// Format with no fraction digits
+final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
 
-    // Format with microsecond precision
-    final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
-  }
-}
+// Format with microsecond precision
+final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
+
+// Parse lenient, raw data
+final DateTime dateTime = ITU.parse("2012-12-27T19:07Z");
+
 ```
 
 ### Handle leap-seconds
