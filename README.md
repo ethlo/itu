@@ -14,24 +14,27 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 ## Features
 
-* No external dependencies, minimalistic JAR (~18KB)
+* No external dependencies, minimal JAR size
 * Apache licensed
 * Handling of leap-seconds
-* Very high performance (TL;DR: ~10x the speed of `java.time` parser/formatter)
+* Very high performance
 
 ## Performance
 
+Your mileage may vary, but tests indicate comfortably 10x faster than JDK classes.
 <img src="doc/performance.png" alt="Performance plot">
 
-Your mileage may vary, but tests indicate comfortably 10x faster than JDK classes. The benchmark is easy to run:
+Tests performed on a Dell XPS 9700
+* Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz
+* Ubuntu 21.10
+* OpenJDK version 11.0.13
+
+### Run tests yourself
 ```shell
 mvn jmh:benchmark
 ```
 
-Tests performed on a Dell XPS 9700 
-* Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz
-* Ubuntu 21.10
-* OpenJDK version 11.0.13
+To plot the result and create result image, run `plot.py`
 
 ## Example usage
 
