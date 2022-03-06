@@ -21,6 +21,8 @@ package com.ethlo.time;
  */
 
 import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 /**
@@ -126,13 +128,40 @@ public class DateTime
         return offset;
     }
 
+    public LocalDateTime toLocalDatetime()
+    {
+        if (field.ordinal() >= Field.MINUTE.ordinal())
+        {
+            return LocalDateTime.of(year, month, day, hour, minute, second, nano);
+        }
+        throw new DateTimeException("Missing field for date-time, found only " + field.name().toLowerCase());
+    }
+
     public OffsetDateTime toOffsetDatetime()
     {
-        if (field == Field.SECOND && offset != null)
+        if (field.ordinal() >= Field.MINUTE.ordinal() && offset != null)
         {
             return OffsetDateTime.of(year, month, day, hour, minute, second, nano, offset.asJavaTimeOffset());
         }
-        throw new DateTimeException("Missing resolution for date-time, found only " + field.name().toLowerCase());
+        else if (offset == null)
+        {
+            throw new DateTimeException("No zone offset information found");
+        }
+        throw new DateTimeException("Missing field for date-time, found only " + field.name().toLowerCase());
+    }
+
+    /**
+     * Creates a {@link LocalDate}, discarding any lower resolution fields
+     *
+     * @return the LocalDate
+     */
+    public LocalDate toLocalDate()
+    {
+        if (field.ordinal() >= Field.DAY.ordinal())
+        {
+            return LocalDate.of(year, month, day);
+        }
+        throw new DateTimeException("Missing field day for LocalDate, found only " + field.name().toLowerCase());
     }
 
     public Field getField()

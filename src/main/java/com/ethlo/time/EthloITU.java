@@ -377,7 +377,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         final int remaining = chars.length - 19;
         if (remaining == 0)
         {
-            raiseDateTimeException(chars, "No timezone information");
+            return DateTime.of(year, month, day, hour, minute, second, 0, null);
         }
 
         TimezoneOffset offset = null;
