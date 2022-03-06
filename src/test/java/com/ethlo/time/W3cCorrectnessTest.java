@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -91,13 +91,14 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseDateTime()
     {
-        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22:39+20:00");
+        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22:39.123456789+20:00");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDay()).isEqualTo(27);
         assertThat(date.getHour()).isEqualTo(17);
         assertThat(date.getMinute()).isEqualTo(22);
         assertThat(date.getSecond()).isEqualTo(39);
+        assertThat(date.getNano()).isEqualTo(123456789);
         assertThat(date.getField()).isEqualTo(Field.SECOND);
         assertThat(date.getOffset()).isEqualTo(TimezoneOffset.ofHoursMinutes(20, 0));
     }

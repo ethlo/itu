@@ -128,6 +128,11 @@ public class DateTime
         return offset;
     }
 
+    /**
+     * Creates a {@link LocalDateTime}
+     *
+     * @return the {@link LocalDateTime}
+     */
     public LocalDateTime toLocalDatetime()
     {
         if (field.ordinal() >= Field.MINUTE.ordinal())
@@ -137,6 +142,11 @@ public class DateTime
         throw new DateTimeException("Missing field for date-time, found only " + field.name().toLowerCase());
     }
 
+    /**
+     * Creates an {@link OffsetDateTime}
+     *
+     * @return the {@link OffsetDateTime}
+     */
     public OffsetDateTime toOffsetDatetime()
     {
         if (field.ordinal() >= Field.MINUTE.ordinal() && offset != null)
@@ -153,7 +163,7 @@ public class DateTime
     /**
      * Creates a {@link LocalDate}, discarding any lower resolution fields
      *
-     * @return the LocalDate
+     * @return the {@link LocalDate}
      */
     public LocalDate toLocalDate()
     {
@@ -164,6 +174,10 @@ public class DateTime
         throw new DateTimeException("Missing field day for LocalDate, found only " + field.name().toLowerCase());
     }
 
+    /**
+     * Returns the minimum field found during parsing
+     * @return The minimum field found
+     */
     public Field getField()
     {
         return field;

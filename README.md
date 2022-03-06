@@ -2,9 +2,8 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.ethlo.time/itu.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ethlo.time%22%20a%3A%22itu%22)
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/598913bc1fe9405c82be73d9a4f105c8)](https://www.codacy.com/gh/ethlo/itu/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ethlo/itu&amp;utm_campaign=Badge_Grade)
 
-An extremely fast parser and formatter of standardized date-times.
+An extremely fast parser and formatter of ISO format date-times.
 
 > Date and time formats cause a lot of confusion and interoperability problems on the Internet. This document addresses many of the problems encountered and makes recommendations to improve consistency and interoperability when representing and using date and time in Internet protocols.
 
