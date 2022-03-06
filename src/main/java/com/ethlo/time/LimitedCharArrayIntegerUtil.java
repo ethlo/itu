@@ -70,7 +70,7 @@ public final class LimitedCharArrayIntegerUtil
         return -result;
     }
 
-    protected static void toString(final int value, final char[] buf, final int offset, final int charLength)
+    static void toString(final int value, final char[] buf, final int offset, final int charLength)
     {
         if (value < TABLE_SIZE)
         {

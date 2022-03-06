@@ -24,14 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.DateTimeException;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoField;
-import java.time.temporal.Temporal;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -51,68 +44,66 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testFormatYear()
     {
-        assertThat(w3cDateUtil.format(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.YEAR)).isEqualTo("2012");
+        assertThat(w3cDateUtil.formatUtc(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.YEAR)).isEqualTo("2012");
     }
 
     @Test
     public void testFormatYearMonth()
     {
-        assertThat(w3cDateUtil.format(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.MONTH)).isEqualTo("2012-01");
+        assertThat(w3cDateUtil.formatUtc(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.MONTH)).isEqualTo("2012-01");
     }
 
     @Test
     public void testFormatYearMonthDay()
     {
-        assertThat(w3cDateUtil.format(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.DAY)).isEqualTo("2012-01-14");
+        assertThat(w3cDateUtil.formatUtc(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.DAY)).isEqualTo("2012-01-14");
     }
 
     @Test
-    public void testParseYearString()
+    public void testParseYear()
     {
-        final String s = "2012";
-        final Year date = w3cDateUtil.parseLenient(s, Year.class);
-        assertThat(date.getValue()).isEqualTo(2012);
-    }
-
-    @Test
-    public void testParseYearStringLenient()
-    {
-        final String s = "2012";
-        final Temporal date = w3cDateUtil.parseLenient(s);
-        assertThat(date.get(ChronoField.YEAR)).isEqualTo(2012);
-    }
-
-    @Test
-    public void testParseYearMonthString()
-    {
-        final String s = "2012-10";
-        final YearMonth date = w3cDateUtil.parseLenient(s, YearMonth.class);
+        final DateTime date = w3cDateUtil.parse("2012");
         assertThat(date.getYear()).isEqualTo(2012);
-        assertThat(date.getMonthValue()).isEqualTo(10);
+        assertThat(date.getField()).isEqualTo(Field.YEAR);
     }
 
     @Test
-    public void testParseYearMonthStringLenient()
+    public void testParseYearMonth()
     {
-        final String s = "2012-10";
-        final Temporal date = w3cDateUtil.parseLenient(s);
-        assertThat(date.get(ChronoField.YEAR)).isEqualTo(2012);
-        assertThat(date.get(ChronoField.MONTH_OF_YEAR)).isEqualTo(10);
+        final DateTime date = w3cDateUtil.parse("2012-10");
+        assertThat(date.getYear()).isEqualTo(2012);
+        assertThat(date.getMonth()).isEqualTo(10);
+        assertThat(date.getField()).isEqualTo(Field.MONTH);
     }
 
     @Test
-    public void testParseDateString()
+    public void testParseDate()
     {
-        final String s = "2012-03-29";
-        final LocalDate date = w3cDateUtil.parseLenient(s, LocalDate.class);
-        assertThat(formatter.formatUtc(OffsetDateTime.of(date, LocalTime.MIN, ZoneOffset.UTC))).isEqualTo("2012-03-29T00:00:00Z");
+        final DateTime date = w3cDateUtil.parse("2012-03-29");
+        assertThat(date.getYear()).isEqualTo(2012);
+        assertThat(date.getMonth()).isEqualTo(3);
+        assertThat(date.getDay()).isEqualTo(29);
+        assertThat(date.getField()).isEqualTo(Field.DAY);
+    }
+
+    @Test
+    public void testParseDateTime()
+    {
+        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22:39+20:00");
+        assertThat(date.getYear()).isEqualTo(2012);
+        assertThat(date.getMonth()).isEqualTo(10);
+        assertThat(date.getDay()).isEqualTo(27);
+        assertThat(date.getHour()).isEqualTo(17);
+        assertThat(date.getMinute()).isEqualTo(22);
+        assertThat(date.getSecond()).isEqualTo(39);
+        assertThat(date.getField()).isEqualTo(Field.SECOND);
+        assertThat(date.getOffset()).isEqualTo(TimezoneOffset.ofHoursMinutes(20, 0));
     }
 
     @Test
     public void testParseBestEffort1DigitMinute()
     {
-        final String s = "2012-03-29T23:1";
-        Assertions.assertThrows(DateTimeException.class, () -> w3cDateUtil.parseLenient(s));
+        Assertions.assertThrows(DateTimeException.class, () -> w3cDateUtil.parse("2012-03-29T23:1"));
     }
 
     @Test

@@ -21,7 +21,6 @@ package com.ethlo.time;
  */
 
 import java.text.SimpleDateFormat;
-import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -39,8 +38,6 @@ import java.util.TimeZone;
 public class JdkRfc3339 extends AbstractRfc3339
 {
     private final SimpleDateFormat[] formats = new SimpleDateFormat[MAX_FRACTION_DIGITS];
-
-    private final DateTimeFormatter[] formatters;
 
     private final DateTimeFormatter rfc3339baseFormatter = new DateTimeFormatterBuilder()
             .appendValue(ChronoField.YEAR, 4)
@@ -90,12 +87,6 @@ public class JdkRfc3339 extends AbstractRfc3339
 
     public JdkRfc3339()
     {
-        this.formatters = new DateTimeFormatter[MAX_FRACTION_DIGITS];
-        for (int i = 0; i < MAX_FRACTION_DIGITS; i++)
-        {
-            formatters[i] = getFormatter(i);
-        }
-
         for (int i = 1; i < MAX_FRACTION_DIGITS; i++)
         {
             this.formats[i] = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat(i) + "XXX");
@@ -147,20 +138,6 @@ public class JdkRfc3339 extends AbstractRfc3339
     public String formatUtc(OffsetDateTime date)
     {
         return formatUtc(date, 0);
-    }
-
-    @Override
-    public boolean isValid(String dateTime)
-    {
-        try
-        {
-            parseDateTime(dateTime);
-            return true;
-        }
-        catch (DateTimeException exc)
-        {
-            return false;
-        }
     }
 
     @Override

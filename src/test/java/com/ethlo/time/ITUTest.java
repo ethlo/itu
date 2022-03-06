@@ -24,8 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.OffsetDateTime;
-import java.time.YearMonth;
-import java.util.Date;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -39,12 +37,6 @@ public class ITUTest
     public void parseDateTime()
     {
         assertThat(ITU.parseDateTime(VALID_DATETIME.toString())).isNotNull();
-    }
-
-    @Test
-    public void formatUtc()
-    {
-        assertThat(ITU.formatUtc(new Date())).isNotNull();
     }
 
     @Test
@@ -72,12 +64,6 @@ public class ITUTest
     }
 
     @Test
-    public void formatUtcMilli()
-    {
-        assertThat(ITU.formatUtcMilli(new Date())).isNotNull();
-    }
-
-    @Test
     public void formatUtcMicro()
     {
         assertThat(ITU.formatUtcMicro(VALID_DATETIME)).isNotNull();
@@ -96,12 +82,6 @@ public class ITUTest
     }
 
     @Test
-    public void testFormat()
-    {
-        assertThat(ITU.format(new Date(), "GMT")).isNotNull();
-    }
-
-    @Test
     public void parseLenient()
     {
         assertThat(ITU.parseLenient("2017-01-31")).isNotNull();
@@ -110,12 +90,6 @@ public class ITUTest
     @Test
     public void parseLenient2()
     {
-        assertThat(ITU.parseLenient("2017-01-31", YearMonth.class)).isNotNull();
-    }
-
-    @Test
-    public void toEpochMillis()
-    {
-        assertThat(ITU.toEpochMillis(VALID_DATETIME)).isEqualTo(1493655792000L);
+        assertThat(ITU.parseLenient("2017-01-31")).isNotNull();
     }
 }

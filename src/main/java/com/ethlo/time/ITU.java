@@ -20,20 +20,12 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.time.Instant;
-import java.time.LocalDate;
+import java.time.DateTimeException;
 import java.time.OffsetDateTime;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.temporal.Temporal;
-import java.util.Date;
 
 public class ITU
 {
     private static final EthloITU delegate = new EthloITU();
-    private static final ZoneId GMT_ZONE = ZoneOffset.UTC;
 
     private ITU()
     {
@@ -44,29 +36,37 @@ public class ITU
         return delegate.parseDateTime(s);
     }
 
+    public static DateTime parseLenient(String text)
+    {
+        return delegate.parse(text);
+    }
+
+    public static boolean isValid(String dateTime)
+    {
+        try
+        {
+            parseDateTime(dateTime);
+            return true;
+        }
+        catch (DateTimeException exc)
+        {
+            return false;
+        }
+    }
+
     public static String formatUtc(OffsetDateTime date, int fractionDigits)
     {
         return delegate.formatUtc(date, fractionDigits);
     }
 
-    public static String formatUtc(OffsetDateTime date, Field lastIncluded, int fractionDigits)
+    public static String formatUtc(OffsetDateTime date, Field lastIncluded)
     {
-        return delegate.formatUtc(date, lastIncluded, fractionDigits);
+        return delegate.formatUtc(date, lastIncluded);
     }
 
-    public static String formatUtc(Date date)
+    public static String formatUtc(OffsetDateTime date)
     {
         return delegate.formatUtc(date);
-    }
-
-    public static String format(Date date, String timezone)
-    {
-        return delegate.format(date, timezone);
-    }
-
-    public static boolean isValid(String dateTime)
-    {
-        return delegate.isValid(dateTime);
     }
 
     public static String formatUtcMilli(OffsetDateTime date)
@@ -82,55 +82,5 @@ public class ITU
     public static String formatUtcNano(OffsetDateTime date)
     {
         return delegate.formatUtcNano(date);
-    }
-
-    public static String formatUtc(OffsetDateTime date)
-    {
-        return delegate.formatUtc(date);
-    }
-
-    public static String formatUtcMilli(Date date)
-    {
-        return delegate.formatUtcMilli(date);
-    }
-
-    public static String format(Date date, String timezone, int fractionDigits)
-    {
-        return delegate.format(date, timezone, fractionDigits);
-    }
-
-    public static Temporal parseLenient(String s)
-    {
-        return delegate.parseLenient(s);
-    }
-
-    public static <T extends Temporal> T parseLenient(String s, Class<T> type)
-    {
-        return delegate.parseLenient(s, type);
-    }
-
-    public static long toEpochMillis(Temporal temporal)
-    {
-        if (temporal instanceof Instant)
-        {
-            return ((Instant) temporal).toEpochMilli();
-        }
-        else if (temporal instanceof OffsetDateTime)
-        {
-            return toEpochMillis(((OffsetDateTime) temporal).toInstant());
-        }
-        else if (temporal instanceof LocalDate)
-        {
-            return toEpochMillis(((LocalDate) temporal).atStartOfDay(GMT_ZONE).toInstant());
-        }
-        else if (temporal instanceof YearMonth)
-        {
-            return toEpochMillis(((YearMonth) temporal).atDay(1));
-        }
-        else if (temporal instanceof Year)
-        {
-            return toEpochMillis(((Year) temporal).atDay(1));
-        }
-        throw new IllegalArgumentException("Unhandled type " + temporal.getClass());
     }
 }

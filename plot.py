@@ -19,6 +19,7 @@ def load_json(file_path):
             s = benchmark.rsplit(".", 1)
             impl = s[0].replace('Rfc3339ParserBenchmarkTest', '') \
                 .replace('Rfc3339FormatterBenchmarkTest', '') \
+                .replace('LenientParserBenchmarkTest', '') \
                 .rsplit(".", 1)[1]
             if impl not in impls:
                 impls.append(impl)
@@ -35,7 +36,7 @@ def render(dtf, style, target):
                          kind='barh',
                          stacked=False,
                          title='Nanoseconds per operation (lower is better)',
-                         figsize=(10, 10))
+                         figsize=(10, 16))
 
     for container in plot.containers:
         plot.bar_label(container)
@@ -45,7 +46,7 @@ def render(dtf, style, target):
 
 
 def extract_data():
-    (test_methods, impls) = load_json('../target/itu_performance.json')
+    (test_methods, impls) = load_json('target/itu_performance.json')
     y = []
     for tm in test_methods:
         values = [tm]
@@ -54,11 +55,9 @@ def extract_data():
             values.append(int(value))
         y.append(values)
     impls.insert(0, 'Benchmark method')
-    dtf = pd.DataFrame(y, columns=impls)
-    return dtf
+    return pd.DataFrame(y, columns=impls)
 
 
 if __name__ == "__main__":
-    dtf = extract_data()
     # for style in plt.style.available:
-    render(dtf, 'seaborn', '../doc/performance.png')
+    render(extract_data(), 'seaborn', 'doc/performance.png')

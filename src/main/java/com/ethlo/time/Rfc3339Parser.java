@@ -31,12 +31,4 @@ public interface Rfc3339Parser
      * @return The {@link OffsetDateTime} as parsed from the input
      */
     OffsetDateTime parseDateTime(String dateTimeStr);
-
-    /**
-     * Check whether the string is a valid date-time according to RFC-3339
-     *
-     * @param dateTimeStr The date-time to validate
-     * @return True if valid date-time or null, false otherwise
-     */
-    boolean isValid(String dateTimeStr);
 }

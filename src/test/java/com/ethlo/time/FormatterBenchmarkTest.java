@@ -39,25 +39,25 @@ public abstract class FormatterBenchmarkTest
     }
 
     @Benchmark
-    public void testFormat0(final Blackhole blackhole)
+    public void formatSeconds(final Blackhole blackhole)
     {
         blackhole.consume(formatter.formatUtc(input));
     }
 
     @Benchmark
-    public void testFormat3(final Blackhole blackhole)
+    public void formatMillis(final Blackhole blackhole)
     {
         blackhole.consume(formatter.formatUtcMilli(input));
     }
 
     @Benchmark
-    public void testFormat6(final Blackhole blackhole)
+    public void formatMicros(final Blackhole blackhole)
     {
         blackhole.consume(formatter.formatUtcMicro(input));
     }
 
     @Benchmark
-    public void testFormat9(final Blackhole blackhole)
+    public void formatNanos(final Blackhole blackhole)
     {
         blackhole.consume(formatter.formatUtcNano(input));
     }

@@ -70,21 +70,10 @@ public interface W3cDateTimeUtil
      * Format the date/date-time in UTC format
      *
      * @param date           The date to format
-     * @param lastIncluded   The last included field
-     * @param fractionDigits The number of fraction digits, if applicable
+     * @param fractionDigits The number of fraction digits
      * @return the formatted date/date-time
      */
-    String formatUtc(OffsetDateTime date, Field lastIncluded, int fractionDigits);
-
-    /**
-     * Parse the format with an expected type, i.e sub-class of {@link Temporal}
-     *
-     * @param s    The date/date-time to parse
-     * @param type The type you expect
-     * @param <T>  The expected type
-     * @return The parsed date/date-time
-     */
-    <T extends Temporal> T parseLenient(String s, Class<T> type);
+    String formatUtc(OffsetDateTime date, int fractionDigits);
 
     /**
      * Parse the format and return it as a fitting sub-class of {@link Temporal}
@@ -92,7 +81,7 @@ public interface W3cDateTimeUtil
      * @param s The date/date-time to parse
      * @return The parsed date/date-time
      */
-    Temporal parseLenient(String s);
+    DateTime parse(String s);
 
-    String format(OffsetDateTime parse, Field year);
+    String formatUtc(OffsetDateTime parse, Field lastIncluded);
 }

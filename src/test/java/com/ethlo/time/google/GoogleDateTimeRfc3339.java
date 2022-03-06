@@ -35,18 +35,4 @@ public class GoogleDateTimeRfc3339 implements Rfc3339Parser
         final DateTime.SecondsAndNanos secondsAndNanos = DateTime.parseRfc3339ToSecondsAndNanos(dateTimeStr);
         return OffsetDateTime.ofInstant(Instant.ofEpochSecond(secondsAndNanos.getSeconds(), secondsAndNanos.getNanos()), ZoneOffset.UTC);
     }
-
-    @Override
-    public boolean isValid(final String dateTimeStr)
-    {
-        try
-        {
-            parseDateTime(dateTimeStr);
-            return true;
-        }
-        catch (NumberFormatException exc)
-        {
-            return false;
-        }
-    }
 }
