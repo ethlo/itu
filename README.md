@@ -12,9 +12,9 @@ handle [Date and Time on the Internet: Timestamps](https://www.ietf.org/rfc/rfc3
 W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 ## Features
-
+* Very easy to use
 * No external dependencies, minimal JAR size
-* Apache licensed
+* Apache licensed, can be used in any project, even commercial
 * Handling of leap-seconds
 * Very high performance
 
@@ -33,7 +33,7 @@ Tests performed on a Dell XPS 9700
 mvn jmh:benchmark
 ```
 
-To plot the result and create result image, run `plot.py`
+To plot the result and create the resulting image, you can run `plot.py`.
 
 ## Example usage
 
