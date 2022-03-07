@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,7 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.YearMonth;
 
 /**
  * Holder class for parsed data. The {@link #getField()} contains the last found field, like MONTH, MINUTE, SECOND.
@@ -93,7 +94,7 @@ public class DateTime
         return month;
     }
 
-    public int getDay()
+    public int getDayOfMonth()
     {
         return day;
     }
@@ -129,7 +130,21 @@ public class DateTime
     }
 
     /**
-     * Creates a {@link LocalDateTime}
+     * Creates a {@link YearMonth} discarding any higher resolution fields
+     *
+     * @return the {@link YearMonth}
+     */
+    public YearMonth toYearMonth()
+    {
+        if (field.ordinal() >= Field.MONTH.ordinal())
+        {
+            return YearMonth.of(year, month);
+        }
+        throw new DateTimeException("Missing field for date-time, found only " + field.name().toLowerCase());
+    }
+
+    /**
+     * Creates a {@link LocalDateTime} discarding any timezone information
      *
      * @return the {@link LocalDateTime}
      */
@@ -161,7 +176,7 @@ public class DateTime
     }
 
     /**
-     * Creates a {@link LocalDate}, discarding any lower resolution fields
+     * Creates a {@link LocalDate}, discarding any higher resolution fields
      *
      * @return the {@link LocalDate}
      */
@@ -176,10 +191,20 @@ public class DateTime
 
     /**
      * Returns the minimum field found during parsing
+     *
      * @return The minimum field found
      */
     public Field getField()
     {
         return field;
+    }
+
+    public DateTime assertMinGranularity(Field field)
+    {
+        if (this.field.ordinal() < field.ordinal())
+        {
+            throw new DateTimeException("No seconds in the date-time");
+        }
+        return this;
     }
 }

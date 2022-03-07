@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,8 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.time.Duration;
+import java.time.DateTimeException;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 public class TimezoneOffset
@@ -33,6 +32,15 @@ public class TimezoneOffset
 
     private TimezoneOffset(final int hours, final int minutes)
     {
+        if (hours > 0 && minutes < 0)
+        {
+            throw new DateTimeException("Zone offset minutes must be positive because hours is positive");
+        }
+        else if (hours < 0 && minutes > 0)
+        {
+            throw new DateTimeException("Zone offset minutes must be negative because hours is negative");
+        }
+
         this.hours = hours;
         this.minutes = minutes;
     }
@@ -44,8 +52,11 @@ public class TimezoneOffset
 
     public static TimezoneOffset of(ZoneOffset offset)
     {
-        final Duration d = Duration.ofSeconds(offset.getTotalSeconds());
-        return TimezoneOffset.ofHoursMinutes((int) d.get(ChronoUnit.HOURS), (int) d.get(ChronoUnit.MINUTES));
+        final int seconds = offset.getTotalSeconds();
+        final int hours = seconds / 3600;
+        final int remainder = seconds % 3600;
+        final int minutes = remainder / 60;
+        return TimezoneOffset.ofHoursMinutes(hours, minutes);
     }
 
     public int getHours()
@@ -92,9 +103,6 @@ public class TimezoneOffset
     @Override
     public String toString()
     {
-        return "TimezoneOffset{" +
-                "hours=" + hours +
-                ", minutes=" + minutes +
-                '}';
+        return "TimezoneOffset{" + "hours=" + hours + ", minutes=" + minutes + '}';
     }
 }

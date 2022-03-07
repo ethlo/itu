@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,6 +52,25 @@ public abstract class CorrectnessTest extends AbstractTest
             "2017-02-21T15:27:39.123456", "2017-02-21T15:27:39.123456789",
             "2017-02-21T15:27:39+0000", "2017-02-21T15:27:39.123+0000",
             "201702-21T15:27:39.123456+0000", "20170221T15:27:39.123456789+0000"};
+
+    @Test
+    void testValid()
+    {
+        for (final String valid : validFormats)
+        {
+            final OffsetDateTime result = parser.parseDateTime(valid);
+            assertThat(result).isNotNull();
+        }
+    }
+
+    @Test
+    void testInvalid()
+    {
+        for (final String valid : invalidFormats)
+        {
+            assertThrows(DateTimeException.class, () -> parser.parseDateTime(valid));
+        }
+    }
 
     @Test
     public void testParseLeapSecondUTC()

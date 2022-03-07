@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -76,7 +76,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             case ZULU_UPPER:
             case ZULU_LOWER:
                 final TimezoneOffset zoneOffset = parseTimezone(chars, 16);
-                return DateTime.of(year, month, day, hour, minute, 0, 0, zoneOffset);
+                return DateTime.of(year, month, day, hour, minute, zoneOffset);
 
             default:
                 assertPositionContains(chars, 16, TIME_SEPARATOR, PLUS, MINUS, ZULU_UPPER);
@@ -88,7 +88,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     {
         if (offset >= chars.length)
         {
-            raiseDateTimeException(chars, "Abrupt end of input: ");
+            raiseDateTimeException(chars, "Unexpected end of input");
         }
 
         if (chars[offset] != expected)
@@ -102,7 +102,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     {
         if (offset >= chars.length)
         {
-            raiseDateTimeException(chars, "Abrupt end of input: ");
+            raiseDateTimeException(chars, "Unexpected end of input");
         }
 
         boolean found = false;
@@ -269,7 +269,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     @Override
     public OffsetDateTime parseDateTime(final String dateTime)
     {
-        return parse(dateTime).toOffsetDatetime();
+        return parse(dateTime).assertMinGranularity(Field.SECOND).toOffsetDatetime();
     }
 
     @Override

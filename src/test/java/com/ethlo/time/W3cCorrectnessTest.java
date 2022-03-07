@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,8 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -76,6 +78,11 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getField()).isEqualTo(Field.MONTH);
+        final YearMonth yearMonth = w3cDateUtil.parse("2012-10").toYearMonth();
+        assertThat(yearMonth.getYear()).isEqualTo(2012);
+        assertThat(yearMonth.getMonthValue()).isEqualTo(10);
+
+        assertThrows(DateTimeException.class, () -> w3cDateUtil.parse("2012").toYearMonth());
     }
 
     @Test
@@ -84,7 +91,7 @@ public class W3cCorrectnessTest extends AbstractTest
         final DateTime date = w3cDateUtil.parse("2012-03-29");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(3);
-        assertThat(date.getDay()).isEqualTo(29);
+        assertThat(date.getDayOfMonth()).isEqualTo(29);
         assertThat(date.getField()).isEqualTo(Field.DAY);
     }
 
@@ -94,13 +101,76 @@ public class W3cCorrectnessTest extends AbstractTest
         final DateTime date = w3cDateUtil.parse("2012-10-27T17:22:39.123456789+20:00");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
-        assertThat(date.getDay()).isEqualTo(27);
+        assertThat(date.getDayOfMonth()).isEqualTo(27);
         assertThat(date.getHour()).isEqualTo(17);
         assertThat(date.getMinute()).isEqualTo(22);
         assertThat(date.getSecond()).isEqualTo(39);
         assertThat(date.getNano()).isEqualTo(123456789);
         assertThat(date.getField()).isEqualTo(Field.SECOND);
+        assertThat(date.getOffset().getHours()).isEqualTo(20);
+        assertThat(date.getOffset().getMinutes()).isEqualTo(0);
         assertThat(date.getOffset()).isEqualTo(TimezoneOffset.ofHoursMinutes(20, 0));
+    }
+
+    @Test
+    public void testTimezoneOffset()
+    {
+        final TimezoneOffset tz = TimezoneOffset.ofHoursMinutes(-17, -30);
+        assertThat(tz.getHours()).isEqualTo(-17);
+        assertThat(tz.getMinutes()).isEqualTo(-30);
+    }
+
+    @Test
+    public void testMismatch()
+    {
+        assertThrows(DateTimeException.class, () -> TimezoneOffset.ofHoursMinutes(-17, 30));
+        assertThrows(DateTimeException.class, () -> TimezoneOffset.ofHoursMinutes(17, -30));
+    }
+
+    @Test
+    public void testOfZoneOffset()
+    {
+        final ZoneOffset zoneOffset = ZoneOffset.ofHoursMinutes(-17, -33);
+        final TimezoneOffset tz = TimezoneOffset.of(zoneOffset);
+        assertThat(tz.getHours()).isEqualTo(-17);
+        assertThat(tz.getMinutes()).isEqualTo(-33);
+    }
+
+    @Test
+    public void testParseDateTimeWithoutSeconds()
+    {
+        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22Z");
+        assertThat(date.getYear()).isEqualTo(2012);
+        assertThat(date.getMonth()).isEqualTo(10);
+        assertThat(date.getDayOfMonth()).isEqualTo(27);
+        assertThat(date.getHour()).isEqualTo(17);
+        assertThat(date.getMinute()).isEqualTo(22);
+        assertThat(date.getField()).isEqualTo(Field.MINUTE);
+        assertThat(date.getOffset()).isEqualTo(TimezoneOffset.UTC);
+    }
+
+    @Test
+    public void testParseDateTimeWithoutSecondsAndTimezone()
+    {
+        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22");
+        assertThat(date.getYear()).isEqualTo(2012);
+        assertThat(date.getMonth()).isEqualTo(10);
+        assertThat(date.getDayOfMonth()).isEqualTo(27);
+        assertThat(date.getHour()).isEqualTo(17);
+        assertThat(date.getMinute()).isEqualTo(22);
+        assertThat(date.getField()).isEqualTo(Field.MINUTE);
+        assertThat(date.getOffset()).isNull();
+        assertThat(date.getOffset()).isNull();
+
+        final DateTimeException excOffsetDateTime = assertThrows(DateTimeException.class, date::toOffsetDatetime);
+        assertThat(excOffsetDateTime).hasMessage("No zone offset information found");
+
+        final LocalDateTime localDateTime = date.toLocalDatetime();
+        assertThat(localDateTime.getYear()).isEqualTo(2012);
+        assertThat(localDateTime.getMonthValue()).isEqualTo(10);
+        assertThat(localDateTime.getDayOfMonth()).isEqualTo(27);
+        assertThat(localDateTime.getHour()).isEqualTo(17);
+        assertThat(localDateTime.getMinute()).isEqualTo(22);
     }
 
     @Test
@@ -109,7 +179,7 @@ public class W3cCorrectnessTest extends AbstractTest
         final DateTime date = w3cDateUtil.parse("2012-10-27T17:22:39");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
-        assertThat(date.getDay()).isEqualTo(27);
+        assertThat(date.getDayOfMonth()).isEqualTo(27);
         assertThat(date.getHour()).isEqualTo(17);
         assertThat(date.getMinute()).isEqualTo(22);
         assertThat(date.getSecond()).isEqualTo(39);
