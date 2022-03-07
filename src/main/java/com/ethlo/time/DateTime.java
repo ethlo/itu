@@ -203,7 +203,7 @@ public class DateTime
     {
         if (this.field.ordinal() < field.ordinal())
         {
-            throw new DateTimeException("No seconds in the date-time");
+            throw new DateTimeException("No " + field.name().toLowerCase() + " was found");
         }
         return this;
     }

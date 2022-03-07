@@ -217,7 +217,7 @@
                             <inceptionYear>2017</inceptionYear>
                             <organizationName>Morten Haraldsen (ethlo)</organizationName>
                             <addSvnKeyWords>false</addSvnKeyWords>
-                            <canUpdateDescription>true</canUpdateDescription>
+                            <canUpdateDescription>false</canUpdateDescription>
                             <roots>
                                 <root>src/main/java</root>
                                 <root>src/test</root>
@@ -251,6 +251,11 @@
             <name>Nexus Release Repository</name>
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Nexus Snapshot repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
     </distributionManagement>
     <scm>
         <url>https://github.com:ethlo/itu</url>
