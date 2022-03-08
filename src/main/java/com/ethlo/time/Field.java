@@ -29,7 +29,7 @@ import java.time.temporal.Temporal;
 public enum Field
 {
     // 2000-12-31T16:11:34.123456
-    YEAR(4), MONTH(7), DAY(10), MINUTE(16), SECOND(19);
+    YEAR(4), MONTH(7), DAY(10), HOUR(13), MINUTE(16), SECOND(19), NANO(20);
 
     private final int requiredLength;
 

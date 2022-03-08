@@ -102,7 +102,7 @@ public abstract class CorrectnessTest extends AbstractTest
     public void parseWithFragmentsNoTimezone()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T12:20:45.987"));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("No timezone information: 2017-12-21T12:20:45.987");
     }
 
     @Test
@@ -148,7 +148,7 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final String s = "2017-02-21T15:27:39.0000000";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("No timezone information: 2017-02-21T15:27:39.0000000");
     }
 
     @Test
@@ -156,7 +156,7 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final String s = "2017-02-21T15:27:39.000+30:00";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("Zone offset hours not in valid range: value 30 is not in the range -18 to 18");
     }
 
     @Test
@@ -172,7 +172,14 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final String s = "2017-02-21T10:00:00.12345";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("No timezone information: 2017-02-21T10:00:00.12345");
+    }
+
+    @Test
+    public void parseWithoutSeconds()
+    {
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T12:20Z"));
+        assertThat(exception.getMessage()).isEqualTo("No SECOND field found");
     }
 
     @Test
@@ -189,7 +196,7 @@ public abstract class CorrectnessTest extends AbstractTest
     public void testParseMoreThanNanoResolutionFails()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-02-21T15:00:00.1234567891Z"));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("Field NANO out of bounds. Expected 0-999999999, got 1234567891");
     }
 
     @Test
@@ -198,7 +205,7 @@ public abstract class CorrectnessTest extends AbstractTest
         final OffsetDateTime d = parser.parseDateTime("2017-02-21T15:00:00.123456789Z");
         final int fractionDigits = 10;
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> formatter.formatUtc(d, fractionDigits));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("Maximum supported number of fraction digits in second is 9, got 10");
     }
 
     @Test
@@ -248,7 +255,7 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final String s = "2017-02-21T15:00:00.123ZGGG";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("Trailing junk data after position 24: 2017-02-21T15:00:00.123ZGGG");
     }
 
     @Test
@@ -263,14 +270,14 @@ public abstract class CorrectnessTest extends AbstractTest
     public void testParseEmptyString()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(""));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("Unexpected end of expression at position 0: ''");
     }
 
     @Test
     public void testParseNull()
     {
         final NullPointerException exception = assertThrows(NullPointerException.class, () -> parser.parseDateTime(null));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("text cannot be null");
     }
 
     @Test
@@ -297,7 +304,7 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final String a = "199g-11-05T08:15:30-05:00";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("Character g is not a digit");
     }
 
     @Test
@@ -305,7 +312,7 @@ public abstract class CorrectnessTest extends AbstractTest
     {
         final String a = "1994-11-05X08:15:30-05:00";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("Expected character [T, t,  ] at position 11 '1994-11-05X08:15:30-05:00'");
     }
 
     @Test
@@ -331,7 +338,7 @@ public abstract class CorrectnessTest extends AbstractTest
     public void testParseUnknownLocalOffsetConvention()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-02-21T15:27:39-00:00"));
-        assertThat(exception.getMessage()).isNotNull();
+        assertThat(exception.getMessage()).isEqualTo("Unknown 'Local Offset Convention' date-time not allowed");
     }
 
     @Test

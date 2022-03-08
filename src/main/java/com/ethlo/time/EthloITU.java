@@ -174,7 +174,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     {
         if (chars.length > lastUsed + 1)
         {
-            throw new DateTimeException("Unparsed data from offset " + lastUsed + 1);
+            throw new DateTimeException("Trailing junk data after position " + (lastUsed + 1) + ": " + new String(chars));
         }
     }
 

@@ -45,13 +45,22 @@ public class DateTime
     {
         this.field = field;
         this.year = year;
-        this.month = month;
-        this.day = day;
-        this.hour = hour;
-        this.minute = minute;
-        this.second = second;
-        this.nano = nano;
+        this.month = assertSize(month, 1, 12, Field.MONTH);
+        this.day = assertSize(day, 1, 31, Field.DAY);
+        this.hour = assertSize(hour, 0, 24, Field.HOUR);
+        this.minute = assertSize(minute, 0, 60, Field.MINUTE);
+        this.second = assertSize(second, 0, 60, Field.SECOND);
+        this.nano = assertSize(nano, 0, 999_999_999, Field.NANO);
         this.offset = offset;
+    }
+
+    private int assertSize(int value, int min, int max, Field field)
+    {
+        if (value > max)
+        {
+            throw new DateTimeException("Field " + field.name() + " out of bounds. Expected " + min + "-" + max + ", got " + value);
+        }
+        return value;
     }
 
     public static DateTime of(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
@@ -203,7 +212,7 @@ public class DateTime
     {
         if (this.field.ordinal() < field.ordinal())
         {
-            throw new DateTimeException("No " + field.name().toLowerCase() + " was found");
+            throw new DateTimeException("No " + field.name() + " field found");
         }
         return this;
     }

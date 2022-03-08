@@ -52,7 +52,7 @@ public final class LimitedCharArrayIntegerUtil
     {
         if (endExclusive > strNum.length)
         {
-            throw new DateTimeException("Unexpected end of expression at position " + strNum.length + " '" + new String(strNum) + "'");
+            throw new DateTimeException("Unexpected end of expression at position " + strNum.length + ": '" + new String(strNum) + "'");
         }
 
         int result = 0;
