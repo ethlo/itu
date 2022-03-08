@@ -43,7 +43,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.5.2</version>
+  <version>1.6.0</version>
 </dependency>
 ```
 
