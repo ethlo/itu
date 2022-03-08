@@ -233,7 +233,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Override
     protected Rfc3339 getParser()
     {
-        final EthloITU retVal = new EthloITU();
+        final EthloITU retVal = EthloITU.getInstance();
         this.w3cDateUtil = retVal;
         return retVal;
     }
@@ -241,6 +241,6 @@ public class W3cCorrectnessTest extends AbstractTest
     @Override
     protected Rfc3339Formatter getFormatter()
     {
-        return new EthloITU();
+        return EthloITU.getInstance();
     }
 }

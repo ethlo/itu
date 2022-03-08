@@ -9,9 +9,9 @@ package com.ethlo.time.itu;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,30 +38,12 @@ import com.ethlo.time.EthloITU;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class ITULenientParserBenchmarkTest
 {
-    private static final EthloITU ethloItu = new EthloITU();
+    private static final EthloITU ethloItu = EthloITU.getInstance();
 
     @Benchmark
-    public void parseRawYear(final Blackhole blackhole)
-    {
-        blackhole.consume(ethloItu.parse("2017"));
-    }
-
-    @Benchmark
-    public void parseRawMonth(final Blackhole blackhole)
-    {
-        blackhole.consume(ethloItu.parse("2017-12"));
-    }
-
-    @Benchmark
-    public void parseRawDay(final Blackhole blackhole)
+    public void parseRawDate(final Blackhole blackhole)
     {
         blackhole.consume(ethloItu.parse("2017-12-21"));
-    }
-
-    @Benchmark
-    public void parseRawMinute(final Blackhole blackhole)
-    {
-        blackhole.consume(ethloItu.parse("2017-12-21T12:20Z"));
     }
 
     @Benchmark

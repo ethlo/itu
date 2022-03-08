@@ -23,6 +23,7 @@ package com.ethlo.time;
 import static com.ethlo.time.LeapSecondHandler.LEAP_SECOND_SECONDS;
 import static com.ethlo.time.LimitedCharArrayIntegerUtil.indexOfNonDigit;
 import static com.ethlo.time.LimitedCharArrayIntegerUtil.parsePositiveInt;
+import static com.ethlo.time.LimitedCharArrayIntegerUtil.uncheckedParsePositiveInt;
 
 import java.time.DateTimeException;
 import java.time.Month;
@@ -34,6 +35,8 @@ import java.util.Date;
 
 public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 {
+    private static final EthloITU instance = new EthloITU();
+
     private static final char PLUS = '+';
     private static final char MINUS = '-';
     private static final char DATE_SEPARATOR = '-';
@@ -47,6 +50,16 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
     private final JdkRfc3339 delegate = new JdkRfc3339();
     private final LeapSecondHandler leapSecondHandler = new DefaultLeapSecondHandler();
+
+    private EthloITU()
+    {
+
+    }
+
+    public static EthloITU getInstance()
+    {
+        return instance;
+    }
 
     private int getHour(final char[] chars)
     {
@@ -69,7 +82,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             // We have more granularity, keep going
             case TIME_SEPARATOR:
-                return seconds(year, month, day, hour, minute, chars);
+                return handleSeconds(year, month, day, hour, minute, chars);
 
             case PLUS:
             case MINUS:
@@ -123,7 +136,8 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
     private TimezoneOffset parseTimezone(char[] chars, int offset)
     {
-        final int left = chars.length - offset;
+        final int len = chars.length;
+        final int left = len - offset;
         final char c = chars[offset];
         if (c == ZULU_UPPER || c == ZULU_LOWER)
         {
@@ -316,13 +330,14 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             throw new NullPointerException("text cannot be null");
         }
 
+        final int len = text.length();
         final char[] chars = text.toCharArray();
 
         // Date portion
 
         // YEAR
         final int years = getYear(chars);
-        if (chars.length == 4)
+        if (4 == len)
         {
             return DateTime.ofYear(years);
         }
@@ -330,7 +345,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         // MONTH
         assertPositionContains(chars, 4, DATE_SEPARATOR);
         final int months = getMonth(chars);
-        if (chars.length == 7)
+        if (7 == len)
         {
             return DateTime.ofYearMonth(years, months);
         }
@@ -338,7 +353,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         // DAY
         assertPositionContains(chars, 7, DATE_SEPARATOR);
         final int days = getDay(chars);
-        if (chars.length == 10)
+        if (10 == len)
         {
             return DateTime.ofDate(years, months, days);
         }
@@ -350,7 +365,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         // MINUTES
         assertPositionContains(chars, 13, TIME_SEPARATOR);
         final int minutes = getMinute(chars);
-        if (chars.length == 16)
+        if (16 == len)
         {
             return DateTime.of(years, months, days, hours, minutes, null);
         }
@@ -369,15 +384,14 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return parsePositiveInt(chars, 0, 4);
     }
 
-    private DateTime seconds(int year, int month, int day, int hour, int minute, char[] chars)
+    private DateTime handleSeconds(int year, int month, int day, int hour, int minute, char[] chars)
     {
-        final int second = getSecond(chars);
-
         // From here the specification is more lenient
         final int remaining = chars.length - 19;
         if (remaining == 0)
         {
-            return DateTime.of(year, month, day, hour, minute, second, 0, null);
+            final int seconds = getSeconds(chars);
+            return leapSecondCheck(year, month, day, hour, minute, seconds, 0, null);
         }
 
         TimezoneOffset offset = null;
@@ -416,6 +430,11 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             raiseDateTimeException(chars, "Unexpected character at position 19");
         }
 
+        return leapSecondCheck(year, month, day, hour, minute, getSeconds(chars), fractions, offset);
+    }
+
+    private DateTime leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
+    {
         if (second == LEAP_SECOND_SECONDS)
         {
             // Do not fall over trying to parse leap seconds
@@ -430,11 +449,11 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
                         && utcMinute == 59)
                 {
                     // Consider it a leap second
-                    throw new LeapSecondException(OffsetDateTime.of(year, month, day, hour, minute, 59, fractions, offset.asJavaTimeOffset()).plusSeconds(1), second, isValidLeapYearMonth);
+                    throw new LeapSecondException(OffsetDateTime.of(year, month, day, hour, minute, 59, nanos, offset.asJavaTimeOffset()).plusSeconds(1), second, isValidLeapYearMonth);
                 }
             }
         }
-        return DateTime.of(year, month, day, hour, minute, second, fractions, offset);
+        return DateTime.of(year, month, day, hour, minute, second, nanos, offset);
     }
 
     private void raiseDateTimeException(char[] chars, String message)
@@ -442,7 +461,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         throw new DateTimeException(message + ": " + new String(chars));
     }
 
-    private int getSecond(final char[] chars)
+    private int getSeconds(final char[] chars)
     {
         return parsePositiveInt(chars, 17, 19);
     }
@@ -450,7 +469,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     private int getFractions(final char[] chars, final int idx, final int len)
     {
         final int fractions;
-        fractions = parsePositiveInt(chars, 20, idx);
+        fractions = uncheckedParsePositiveInt(chars, 20, idx);
         switch (len)
         {
             case 1:

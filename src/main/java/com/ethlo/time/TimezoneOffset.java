@@ -76,6 +76,10 @@ public class TimezoneOffset
 
     public ZoneOffset asJavaTimeOffset()
     {
+        if (this.equals(UTC))
+        {
+            return ZoneOffset.UTC;
+        }
         return ZoneOffset.ofHoursMinutes(hours, minutes);
     }
 

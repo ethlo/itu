@@ -1,17 +1,17 @@
-package com.ethlo.time.google;
+package com.ethlo.time.itu;
 
 /*-
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 - 2022 Morten Haraldsen (ethlo)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,12 +20,21 @@ package com.ethlo.time.google;
  * #L%
  */
 
-import com.ethlo.time.ParserBenchmarkTest;
+import org.junit.jupiter.api.Test;
 
-public class GoogleDateTimeRfc3339ParserBenchmarkTest// extends ParserBenchmarkTest
+import com.ethlo.time.EthloITU;
+
+public class EthloItuProfilerTest
 {
-    public GoogleDateTimeRfc3339ParserBenchmarkTest()
+    private static final EthloITU ethloItu = EthloITU.getInstance();
+
+    @Test
+    void profileParsing()
     {
-        //super(new GoogleDateTimeRfc3339());
+        final int runs = 1_000_000_000;
+        for (int i = 0; i < runs; i++)
+        {
+            ethloItu.parseDateTime("2017-12-21T12:20:45.987654321Z");
+        }
     }
 }

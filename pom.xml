@@ -160,6 +160,7 @@
                 <configuration>
                     <excludes>
                         <exclude>**/*BenchmarkTest.java</exclude>
+                        <exclude>**/*ProfilerTest.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>
