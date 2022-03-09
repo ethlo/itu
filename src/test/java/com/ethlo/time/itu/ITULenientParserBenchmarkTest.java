@@ -30,7 +30,7 @@ import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
-import com.ethlo.time.EthloITU;
+import com.ethlo.time.internal.EthloITU;
 
 @Warmup(iterations = 1, time = 30)
 @BenchmarkMode(Mode.SampleTime)

@@ -22,6 +22,7 @@ package com.ethlo.time;
 
 import java.util.concurrent.TimeUnit;
 
+import com.ethlo.time.internal.Rfc3339Parser;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.infra.Blackhole;

@@ -26,7 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 
-import com.ethlo.time.AbstractRfc3339;
+import com.ethlo.time.internal.AbstractRfc3339;
 
 /**
  * Java 8 JDK classes. The safe and normally "efficient enough" choice.

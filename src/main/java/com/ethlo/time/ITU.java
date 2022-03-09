@@ -20,6 +20,8 @@ package com.ethlo.time;
  * #L%
  */
 
+import com.ethlo.time.internal.EthloITU;
+
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,21 +37,39 @@ public class ITU
     {
     }
 
-    public static OffsetDateTime parseDateTime(String s)
+    /**
+     * Parse an RFC-3339 formatted date-time to an {@link OffsetDateTime}
+     *
+     * @param text The text to parse
+     * @return The date and time parsed
+     */
+    public static OffsetDateTime parseDateTime(String text)
     {
-        return delegate.parseDateTime(s);
+        return delegate.parseDateTime(text);
     }
 
+    /**
+     * Parse an ISO formatted date and optionally time to a {@link DateTime}. The result has
+     * rudimentary checks for correctness, but will not be aware of number of days per specific month or leap-years.
+     *
+     * @param text The text to parse
+     * @return The date and time parsed
+     */
     public static DateTime parseLenient(String text)
     {
         return delegate.parse(text);
     }
 
-    public static boolean isValid(String dateTime)
+    /**
+     * Check if the dateTime is valid according to the RFC-3339 specification
+     * @param text The input to validate
+     * @return True if valid, otherwise false
+     */
+    public static boolean isValid(String text)
     {
         try
         {
-            parseDateTime(dateTime);
+            parseDateTime(text);
             return true;
         }
         catch (DateTimeException exc)
@@ -58,12 +78,23 @@ public class ITU
         }
     }
 
-    public static String formatUtc(OffsetDateTime date, int fractionDigits)
+    /**
+     * Format the input as an RFC-3339 formatted date-time in the UTC timezone
+     * @param offsetDateTime The date-time to format
+     * @param fractionDigits The Nuber of fraction digits in the second
+     * @return A formatted string
+     */
+    public static String formatUtc(OffsetDateTime offsetDateTime, int fractionDigits)
     {
-        return delegate.formatUtc(date, fractionDigits);
+        return delegate.formatUtc(offsetDateTime, fractionDigits);
     }
 
     public static String formatUtc(OffsetDateTime date, Field lastIncluded)
+    {
+        return delegate.formatUtc(date, lastIncluded);
+    }
+
+    public static String formatUtc(DateTime date, Field lastIncluded)
     {
         return delegate.formatUtc(date, lastIncluded);
     }

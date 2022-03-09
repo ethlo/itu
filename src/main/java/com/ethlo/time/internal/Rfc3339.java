@@ -1,4 +1,4 @@
-package com.ethlo.time;
+package com.ethlo.time.internal;
 
 /*-
  * #%L
@@ -20,18 +20,13 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.time.DateTimeException;
-
-public abstract class AbstractRfc3339 implements Rfc3339
+/**
+ * The recommendation for date-time exchange in modern APIs is to use RFC-3339, available at https://tools.ietf.org/html/rfc3339
+ * This class supports both validation, parsing and formatting of such date-times.
+ *
+ * @author ethlo, Morten Haraldsen
+ */
+public interface Rfc3339 extends Rfc3339Parser, Rfc3339Formatter
 {
-    public static final int MAX_FRACTION_DIGITS = 9;
 
-    protected void assertMaxFractionDigits(int fractionDigits)
-    {
-        if (fractionDigits > MAX_FRACTION_DIGITS)
-        {
-            throw new DateTimeException("Maximum supported number of fraction digits in second is "
-                    + MAX_FRACTION_DIGITS + ", got " + fractionDigits);
-        }
-    }
 }

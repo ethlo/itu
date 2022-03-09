@@ -21,9 +21,9 @@ package com.ethlo.time.itu;
  */
 
 import com.ethlo.time.CorrectnessTest;
-import com.ethlo.time.EthloITU;
-import com.ethlo.time.Rfc3339;
-import com.ethlo.time.Rfc3339Formatter;
+import com.ethlo.time.internal.EthloITU;
+import com.ethlo.time.internal.Rfc3339;
+import com.ethlo.time.internal.Rfc3339Formatter;
 
 public class EthloITUCorrectnessTest extends CorrectnessTest
 {

@@ -1,10 +1,10 @@
-package com.ethlo.time;
+package com.ethlo.time.internal;
 
 /*-
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 - 2022 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 Morten Haraldsen (ethlo)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,18 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.time.YearMonth;
+import java.time.DateTimeException;
 
-public interface LeapSecondHandler
+public abstract class AbstractRfc3339 implements Rfc3339
 {
-    int LEAP_SECOND_SECONDS = 60;
+    public static final int MAX_FRACTION_DIGITS = 9;
 
-    boolean isValidLeapSecondDate(YearMonth needle);
-
-    YearMonth getLastKnownLeapSecond();
+    protected void assertMaxFractionDigits(int fractionDigits)
+    {
+        if (fractionDigits > MAX_FRACTION_DIGITS)
+        {
+            throw new DateTimeException("Maximum supported number of fraction digits in second is "
+                    + MAX_FRACTION_DIGITS + ", got " + fractionDigits);
+        }
+    }
 }

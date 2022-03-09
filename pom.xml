@@ -123,6 +123,7 @@
                 <configuration>
                     <show>public</show>
                     <source>8</source>
+                    <excludePackageNames>com.ethlo.time.internal</excludePackageNames>
                 </configuration>
             </plugin>
             <plugin>

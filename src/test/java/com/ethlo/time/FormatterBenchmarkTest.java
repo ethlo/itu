@@ -23,6 +23,7 @@ package com.ethlo.time;
 import java.time.OffsetDateTime;
 import java.util.concurrent.TimeUnit;
 
+import com.ethlo.time.internal.Rfc3339Formatter;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.infra.Blackhole;

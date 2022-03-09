@@ -1,4 +1,4 @@
-package com.ethlo.time;
+package com.ethlo.time.internal;
 
 /*-
  * #%L
@@ -20,15 +20,13 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.time.OffsetDateTime;
+import java.time.YearMonth;
 
-public interface Rfc3339Parser
+public interface LeapSecondHandler
 {
-    /**
-     * Parse the date-time and return it as a {@link OffsetDateTime}.
-     *
-     * @param dateTimeStr The date-time string to parse
-     * @return The {@link OffsetDateTime} as parsed from the input
-     */
-    OffsetDateTime parseDateTime(String dateTimeStr);
+    int LEAP_SECOND_SECONDS = 60;
+
+    boolean isValidLeapSecondDate(YearMonth needle);
+
+    YearMonth getLastKnownLeapSecond();
 }

@@ -20,9 +20,13 @@ package com.ethlo.time;
  * #L%
  */
 
+import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 
-public class LeapSecondException extends RuntimeException
+/**
+ * This exception is used to signal that there was a potentially valid leap-second in the parsed input.
+ */
+public class LeapSecondException extends DateTimeException
 {
     private final int secondsInMinute;
     private final boolean isVerifiedValidLeapYearMonth;
@@ -30,21 +34,37 @@ public class LeapSecondException extends RuntimeException
 
     public LeapSecondException(OffsetDateTime nearestDateTime, int secondsInMinute, final boolean isVerifiedValidLeapYearMonth)
     {
+        super("Leap second detected in input");
         this.nearestDateTime = nearestDateTime;
         this.secondsInMinute = secondsInMinute;
         this.isVerifiedValidLeapYearMonth = isVerifiedValidLeapYearMonth;
     }
 
+    /**
+     * The number of seconds, typically <code>60</code>.
+     *
+     * @return The number of seconds in this parsed date-time
+     */
     public int getSecondsInMinute()
     {
         return secondsInMinute;
     }
 
+    /**
+     * Get the nearest date-time that is a roll-over to the next minute, (and potentially lower granularity fields) and 0 seconds.
+     *
+     * @return The date-time
+     */
     public OffsetDateTime getNearestDateTime()
     {
         return nearestDateTime;
     }
 
+    /**
+     * Whether this is a date-time with a well-known leap-second
+     *
+     * @return True if known, otherwise false
+     */
     public boolean isVerifiedValidLeapYearMonth()
     {
         return isVerifiedValidLeapYearMonth;

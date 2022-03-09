@@ -1,4 +1,4 @@
-package com.ethlo.time;
+package com.ethlo.time.internal;
 
 /*-
  * #%L
@@ -19,6 +19,9 @@ package com.ethlo.time;
  * limitations under the License.
  * #L%
  */
+
+import com.ethlo.time.DateTime;
+import com.ethlo.time.Field;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.Temporal;
@@ -84,4 +87,6 @@ public interface W3cDateTimeUtil
     DateTime parse(String s);
 
     String formatUtc(OffsetDateTime parse, Field lastIncluded);
+
+    String formatUtc(DateTime date, Field lastIncluded);
 }

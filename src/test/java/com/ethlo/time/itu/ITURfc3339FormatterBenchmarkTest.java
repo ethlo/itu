@@ -20,7 +20,7 @@ package com.ethlo.time.itu;
  * #L%
  */
 
-import com.ethlo.time.EthloITU;
+import com.ethlo.time.internal.EthloITU;
 import com.ethlo.time.FormatterBenchmarkTest;
 
 public class ITURfc3339FormatterBenchmarkTest extends FormatterBenchmarkTest

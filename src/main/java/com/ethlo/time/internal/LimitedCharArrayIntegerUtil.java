@@ -1,4 +1,4 @@
-package com.ethlo.time;
+package com.ethlo.time.internal;
 
 /*-
  * #%L
@@ -83,7 +83,7 @@ public final class LimitedCharArrayIntegerUtil
         return -result;
     }
 
-    static void toString(final int value, final char[] buf, final int offset, final int charLength)
+    public static void toString(final int value, final char[] buf, final int offset, final int charLength)
     {
         if (value < TABLE_SIZE)
         {

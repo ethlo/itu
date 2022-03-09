@@ -1,4 +1,4 @@
-package com.ethlo.time;
+package com.ethlo.time.internal;
 
 /*-
  * #%L
@@ -20,10 +20,15 @@ package com.ethlo.time;
  * #L%
  */
 
-import static com.ethlo.time.LeapSecondHandler.LEAP_SECOND_SECONDS;
-import static com.ethlo.time.LimitedCharArrayIntegerUtil.indexOfNonDigit;
-import static com.ethlo.time.LimitedCharArrayIntegerUtil.parsePositiveInt;
-import static com.ethlo.time.LimitedCharArrayIntegerUtil.uncheckedParsePositiveInt;
+import com.ethlo.time.DateTime;
+import com.ethlo.time.Field;
+import com.ethlo.time.LeapSecondException;
+import com.ethlo.time.TimezoneOffset;
+
+import static com.ethlo.time.internal.LeapSecondHandler.LEAP_SECOND_SECONDS;
+import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.indexOfNonDigit;
+import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.parsePositiveInt;
+import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.uncheckedParsePositiveInt;
 
 import java.time.DateTimeException;
 import java.time.Month;
@@ -186,6 +191,12 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     public String formatUtc(OffsetDateTime date, Field lastIncluded)
     {
         return doFormatUtc(date, lastIncluded, 0);
+    }
+
+    @Override
+    public String formatUtc(final DateTime date, final Field lastIncluded)
+    {
+        throw new UnsupportedOperationException();
     }
 
     private String doFormatUtc(OffsetDateTime date, Field lastIncluded, int fractionDigits)
