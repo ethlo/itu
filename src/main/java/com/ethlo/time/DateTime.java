@@ -20,6 +20,11 @@ package com.ethlo.time;
  * #L%
  */
 
+import static com.ethlo.time.internal.EthloITU.DATE_SEPARATOR;
+import static com.ethlo.time.internal.EthloITU.SEPARATOR_UPPER;
+import static com.ethlo.time.internal.EthloITU.TIME_SEPARATOR;
+import static com.ethlo.time.internal.EthloITU.finish;
+
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,6 +32,8 @@ import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.util.Optional;
+
+import com.ethlo.time.internal.LimitedCharArrayIntegerUtil;
 
 /**
  * Container class for parsed date/date-time data. The {@link #getField()} contains the highest granularity field found, like MONTH, MINUTE, SECOND.
@@ -232,4 +239,95 @@ public class DateTime
         }
         return this;
     }
+
+    public String toString(final Field lastIncluded)
+    {
+        return toString(this, lastIncluded, 0);
+    }
+
+    public String toString(final int fractionDigits)
+    {
+        return toString(this, Field.NANO, fractionDigits);
+    }
+
+    private String toString(final DateTime date, final Field lastIncluded, final int fractionDigits)
+    {
+        if (lastIncluded.ordinal() > date.getField().ordinal())
+        {
+            throw new DateTimeException("Requested granularity was " + lastIncluded.name() + ", but contains only granularity " + date.getField().name());
+        }
+        final boolean hasTz = date.getOffset().isPresent();
+        final char[] buffer = new char[32];
+
+        // YEAR
+        LimitedCharArrayIntegerUtil.toString(date.getYear(), buffer, 0, 4);
+        if (lastIncluded == Field.YEAR)
+        {
+            return finish(buffer, Field.YEAR.getRequiredLength(), false);
+        }
+
+        // MONTH
+        if (lastIncluded.ordinal() >= Field.MONTH.ordinal())
+        {
+            buffer[4] = DATE_SEPARATOR;
+            LimitedCharArrayIntegerUtil.toString(date.getMonth(), buffer, 5, 2);
+        }
+        if (lastIncluded == Field.MONTH)
+        {
+            return finish(buffer, Field.MONTH.getRequiredLength(), false);
+        }
+
+        // DAY
+        if (lastIncluded.ordinal() >= Field.DAY.ordinal())
+        {
+            buffer[7] = DATE_SEPARATOR;
+            LimitedCharArrayIntegerUtil.toString(date.getDayOfMonth(), buffer, 8, 2);
+        }
+        if (lastIncluded == Field.DAY)
+        {
+            return finish(buffer, Field.DAY.getRequiredLength(), false);
+        }
+
+        // HOUR
+        if (lastIncluded.ordinal() >= Field.HOUR.ordinal())
+        {
+            buffer[10] = SEPARATOR_UPPER;
+            LimitedCharArrayIntegerUtil.toString(date.getHour(), buffer, 11, 2);
+        }
+        if (lastIncluded == Field.HOUR)
+        {
+            return finish(buffer, Field.HOUR.getRequiredLength(), hasTz);
+        }
+
+        // MINUTE
+        if (lastIncluded.ordinal() >= Field.MINUTE.ordinal())
+        {
+            buffer[13] = TIME_SEPARATOR;
+            LimitedCharArrayIntegerUtil.toString(date.getMinute(), buffer, 14, 2);
+        }
+        if (lastIncluded == Field.MINUTE)
+        {
+            return finish(buffer, Field.MINUTE.getRequiredLength(), hasTz);
+        }
+
+        // SECOND
+        if (lastIncluded.ordinal() >= Field.SECOND.ordinal())
+        {
+            buffer[16] = TIME_SEPARATOR;
+            LimitedCharArrayIntegerUtil.toString(date.getSecond(), buffer, 17, 2);
+        }
+        if (lastIncluded == Field.SECOND)
+        {
+            return finish(buffer, Field.SECOND.getRequiredLength(), hasTz);
+        }
+
+        // Fractions
+        if (lastIncluded.ordinal() >= Field.NANO.ordinal())
+        {
+            buffer[19] = '.';
+            LimitedCharArrayIntegerUtil.toString(date.getNano(), buffer, 20, fractionDigits);
+        }
+        return finish(buffer, 20 + fractionDigits, hasTz);
+    }
+
 }

@@ -94,17 +94,7 @@ public class ITU
         return delegate.formatUtc(offsetDateTime, fractionDigits);
     }
 
-    public static String formatUtc(DateTime dateTime, int fractionDigits)
-    {
-        return delegate.formatUtc(dateTime, fractionDigits);
-    }
-
     public static String formatUtc(OffsetDateTime date, Field lastIncluded)
-    {
-        return delegate.formatUtc(date, lastIncluded);
-    }
-
-    public static String formatUtc(DateTime date, Field lastIncluded)
     {
         return delegate.formatUtc(date, lastIncluded);
     }

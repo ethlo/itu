@@ -20,11 +20,11 @@ package com.ethlo.time.internal;
  * #L%
  */
 
-import com.ethlo.time.DateTime;
-import com.ethlo.time.Field;
-
 import java.time.OffsetDateTime;
 import java.time.temporal.Temporal;
+
+import com.ethlo.time.DateTime;
+import com.ethlo.time.Field;
 
 /**
  * This class deals with the formats mentioned in W3C - NOTE-datetime: https://www.w3.org/TR/NOTE-datetime
@@ -78,8 +78,6 @@ public interface W3cDateTimeUtil
      */
     String formatUtc(OffsetDateTime date, int fractionDigits);
 
-    String formatUtc(DateTime date, int fractionDigits);
-
     /**
      * Parse the format and return it as a fitting sub-class of {@link Temporal}
      *
@@ -89,6 +87,4 @@ public interface W3cDateTimeUtil
     DateTime parse(String s);
 
     String formatUtc(OffsetDateTime parse, Field lastIncluded);
-
-    String formatUtc(DateTime date, Field lastIncluded);
 }
