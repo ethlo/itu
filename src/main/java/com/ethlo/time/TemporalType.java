@@ -20,6 +20,9 @@ package com.ethlo.time;
  * #L%
  */
 
+/**
+ * Enumeration listing the different types that can be converted to
+ */
 public enum TemporalType
 {
     YEAR,

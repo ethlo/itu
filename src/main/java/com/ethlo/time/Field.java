@@ -27,7 +27,7 @@ import java.time.YearMonth;
 import java.time.temporal.Temporal;
 
 /**
- * Enum naming the fields that makes up the date/date-time
+ * Enumeration of the fields that makes up the date/date-time
  */
 public enum Field
 {

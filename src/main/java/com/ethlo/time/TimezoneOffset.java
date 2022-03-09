@@ -24,6 +24,9 @@ import java.time.DateTimeException;
 import java.time.ZoneOffset;
 import java.util.Objects;
 
+/**
+ * Container class for timezone offset, denoted by hours and minutes
+ */
 public class TimezoneOffset
 {
     public static final TimezoneOffset UTC = new TimezoneOffset(0, 0);

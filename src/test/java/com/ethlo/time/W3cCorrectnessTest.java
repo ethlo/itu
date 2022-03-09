@@ -27,17 +27,18 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import com.ethlo.time.internal.EthloITU;
 import com.ethlo.time.internal.Rfc3339;
 import com.ethlo.time.internal.Rfc3339Formatter;
 import com.ethlo.time.internal.W3cDateTimeUtil;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 
 @Tag("CorrectnessTest")
 public class W3cCorrectnessTest extends AbstractTest
@@ -74,6 +75,7 @@ public class W3cCorrectnessTest extends AbstractTest
         final DateTime date = w3cDateUtil.parse("2012");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getField()).isEqualTo(Field.YEAR);
+        assertThat(date.toYear()).isEqualTo(Year.of(2012));
     }
 
     @Test

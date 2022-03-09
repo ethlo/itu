@@ -24,6 +24,7 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.Year;
 import java.time.YearMonth;
 import java.util.Optional;
 
@@ -140,7 +141,7 @@ public class DateTime
         return second;
     }
 
-    public long getNano()
+    public int getNano()
     {
         return nano;
     }
@@ -156,17 +157,24 @@ public class DateTime
     }
 
     /**
+     * Creates a {@link Year} discarding any higher resolution fields
+     *
+     * @return the {@link Year}
+     */
+    public Year toYear()
+    {
+        return Year.of(year);
+    }
+
+    /**
      * Creates a {@link YearMonth} discarding any higher resolution fields
      *
      * @return the {@link YearMonth}
      */
     public YearMonth toYearMonth()
     {
-        if (field.ordinal() >= Field.MONTH.ordinal())
-        {
-            return YearMonth.of(year, month);
-        }
-        throw new DateTimeException("Missing field for date-time, found only " + field.name().toLowerCase());
+        assertMinGranularity(Field.MONTH);
+        return YearMonth.of(year, month);
     }
 
     /**
@@ -176,11 +184,8 @@ public class DateTime
      */
     public LocalDateTime toLocalDatetime()
     {
-        if (field.ordinal() >= Field.MINUTE.ordinal())
-        {
-            return LocalDateTime.of(year, month, day, hour, minute, second, nano);
-        }
-        throw new DateTimeException("Missing field for date-time, found only " + field.name().toLowerCase());
+        assertMinGranularity(Field.MINUTE);
+        return LocalDateTime.of(year, month, day, hour, minute, second, nano);
     }
 
     /**
@@ -190,15 +195,12 @@ public class DateTime
      */
     public OffsetDateTime toOffsetDatetime()
     {
-        if (field.ordinal() >= Field.MINUTE.ordinal() && offset != null)
+        assertMinGranularity(Field.MINUTE);
+        if (offset != null)
         {
             return OffsetDateTime.of(year, month, day, hour, minute, second, nano, offset.asJavaTimeOffset());
         }
-        else if (offset == null)
-        {
-            throw new DateTimeException("No zone offset information found");
-        }
-        throw new DateTimeException("Missing field for date-time, found only " + field.name().toLowerCase());
+        throw new DateTimeException("No zone offset information found");
     }
 
     /**
@@ -208,11 +210,8 @@ public class DateTime
      */
     public LocalDate toLocalDate()
     {
-        if (field.ordinal() >= Field.DAY.ordinal())
-        {
-            return LocalDate.of(year, month, day);
-        }
-        throw new DateTimeException("Missing field day for LocalDate, found only " + field.name().toLowerCase());
+        assertMinGranularity(Field.DAY);
+        return LocalDate.of(year, month, day);
     }
 
     /**

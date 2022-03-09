@@ -27,6 +27,10 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
 
+/**
+ * Handler for flexibly dealing with different granularity date/date-times
+ * @param <T> The return type of the functions
+ */
 public interface TemporalHandler<T>
 {
     default T handle(LocalDateTime localDateTime)

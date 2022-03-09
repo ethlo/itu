@@ -58,6 +58,30 @@ public class ITUTest
     }
 
     @Test
+    void formatUtcWithFractionDigits()
+    {
+        assertThat(ITU.formatUtc(VALID_DATETIME, 6)).isEqualTo("2017-05-01T16:23:12.000000Z");
+    }
+
+    @Test
+    void formatOffsetDateTimeWithLimitedGranularity()
+    {
+        assertThat(ITU.formatUtc(VALID_DATETIME, Field.MINUTE)).isEqualTo("2017-05-01T16:23Z");
+    }
+
+    @Test
+    void formatDateTimeWithLimitedGranularity()
+    {
+        assertThat(ITU.formatUtc(DateTime.of(2012, 11, 31, 22, 50, TimezoneOffset.UTC), Field.MINUTE)).isEqualTo("2012-11-31T22:50Z");
+    }
+
+    @Test
+    void formatDateTimeWithFullGranularity()
+    {
+        assertThat(ITU.formatUtc(DateTime.of(2012, 11, 31, 22, 50, 46, 123456789, TimezoneOffset.UTC), 9)).isEqualTo("2012-11-31T22:50:46.123456789Z");
+    }
+
+    @Test
     public void testFormatUtc()
     {
         assertThat(ITU.formatUtc(VALID_DATETIME)).isNotNull();

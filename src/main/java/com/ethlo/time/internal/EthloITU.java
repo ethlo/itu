@@ -196,7 +196,93 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     @Override
     public String formatUtc(final DateTime date, final Field lastIncluded)
     {
-        throw new UnsupportedOperationException();
+        return formatUtc(date, lastIncluded, 0);
+    }
+
+    @Override
+    public String formatUtc(final DateTime date, final int fractionDigits)
+    {
+        return formatUtc(date, Field.NANO, fractionDigits);
+    }
+
+    private String formatUtc(final DateTime date, final Field lastIncluded, final int fractionDigits)
+    {
+        if (lastIncluded.ordinal() > date.getField().ordinal())
+        {
+            throw new DateTimeException("Requested granularity was " + lastIncluded.name() + ", but contains only granularity " + date.getField().name());
+        }
+        final boolean hasTz = date.getOffset().isPresent();
+        final char[] buffer = new char[32];
+
+        // YEAR
+        LimitedCharArrayIntegerUtil.toString(date.getYear(), buffer, 0, 4);
+        if (lastIncluded == Field.YEAR)
+        {
+            return finish(buffer, Field.YEAR.getRequiredLength(), false);
+        }
+
+        // MONTH
+        if (lastIncluded.ordinal() >= Field.MONTH.ordinal())
+        {
+            buffer[4] = DATE_SEPARATOR;
+            LimitedCharArrayIntegerUtil.toString(date.getMonth(), buffer, 5, 2);
+        }
+        if (lastIncluded == Field.MONTH)
+        {
+            return finish(buffer, Field.MONTH.getRequiredLength(), false);
+        }
+
+        // DAY
+        if (lastIncluded.ordinal() >= Field.DAY.ordinal())
+        {
+            buffer[7] = DATE_SEPARATOR;
+            LimitedCharArrayIntegerUtil.toString(date.getDayOfMonth(), buffer, 8, 2);
+        }
+        if (lastIncluded == Field.DAY)
+        {
+            return finish(buffer, Field.DAY.getRequiredLength(), false);
+        }
+
+        // HOUR
+        if (lastIncluded.ordinal() >= Field.HOUR.ordinal())
+        {
+            buffer[10] = SEPARATOR_UPPER;
+            LimitedCharArrayIntegerUtil.toString(date.getHour(), buffer, 11, 2);
+        }
+        if (lastIncluded == Field.HOUR)
+        {
+            return finish(buffer, Field.HOUR.getRequiredLength(), hasTz);
+        }
+
+        // MINUTE
+        if (lastIncluded.ordinal() >= Field.MINUTE.ordinal())
+        {
+            buffer[13] = TIME_SEPARATOR;
+            LimitedCharArrayIntegerUtil.toString(date.getMinute(), buffer, 14, 2);
+        }
+        if (lastIncluded == Field.MINUTE)
+        {
+            return finish(buffer, Field.MINUTE.getRequiredLength(), hasTz);
+        }
+
+        // SECOND
+        if (lastIncluded.ordinal() >= Field.SECOND.ordinal())
+        {
+            buffer[16] = TIME_SEPARATOR;
+            LimitedCharArrayIntegerUtil.toString(date.getSecond(), buffer, 17, 2);
+        }
+        if (lastIncluded == Field.SECOND)
+        {
+            return finish(buffer, Field.SECOND.getRequiredLength(), hasTz);
+        }
+
+        // Fractions
+        if (lastIncluded.ordinal() >= Field.NANO.ordinal())
+        {
+            buffer[19] = '.';
+            LimitedCharArrayIntegerUtil.toString(date.getNano(), buffer, 20, fractionDigits);
+        }
+        return finish(buffer, 20 + fractionDigits, hasTz);
     }
 
     private String doFormatUtc(OffsetDateTime date, Field lastIncluded, int fractionDigits)
@@ -213,19 +299,19 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
         if (handleDatePart(lastIncluded, buffer, utc.getYear(), 0, 4, Field.YEAR))
         {
-            return finish(buffer, Field.YEAR.getRequiredLength());
+            return finish(buffer, Field.YEAR.getRequiredLength(), false);
         }
 
         buffer[4] = DATE_SEPARATOR;
         if (handleDatePart(lastIncluded, buffer, utc.getMonthValue(), 5, 2, Field.MONTH))
         {
-            return finish(buffer, Field.MONTH.getRequiredLength());
+            return finish(buffer, Field.MONTH.getRequiredLength(), false);
         }
 
         buffer[7] = DATE_SEPARATOR;
         if (handleDatePart(lastIncluded, buffer, utc.getDayOfMonth(), 8, 2, Field.DAY))
         {
-            return finish(buffer, Field.DAY.getRequiredLength());
+            return finish(buffer, Field.DAY.getRequiredLength(), false);
         }
 
         // T separator
@@ -236,7 +322,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         buffer[13] = TIME_SEPARATOR;
         if (handleDatePart(lastIncluded, buffer, utc.getMinute(), 14, 2, Field.MINUTE))
         {
-            return finish(buffer, Field.MINUTE.getRequiredLength());
+            return finish(buffer, Field.MINUTE.getRequiredLength(), true);
         }
         buffer[16] = TIME_SEPARATOR;
         LimitedCharArrayIntegerUtil.toString(utc.getSecond(), buffer, 17, 2);
@@ -247,17 +333,9 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             buffer[19] = FRACTION_SEPARATOR;
             addFractions(buffer, fractionDigits, utc.getNano());
+            return finish(buffer, 20 + fractionDigits, true);
         }
-
-        final int length = addUtcTimezone(fractionDigits, buffer, hasFractionDigits);
-
-        return finish(buffer, length);
-    }
-
-    private int addUtcTimezone(final int fractionDigits, final char[] buf, final boolean hasFractionDigits)
-    {
-        buf[(hasFractionDigits ? 20 + fractionDigits : 19)] = ZULU_UPPER;
-        return hasFractionDigits ? 21 + fractionDigits : 20;
+        return finish(buffer, 19, true);
     }
 
     private boolean handleDatePart(final Field lastIncluded, final char[] buffer, final int value, final int offset, final int length, final Field field)
@@ -266,9 +344,13 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return lastIncluded == field;
     }
 
-    private String finish(char[] buf, int length)
+    private String finish(char[] buf, int length, final boolean tz)
     {
-        return new String(buf, 0, length);
+        if (tz)
+        {
+            buf[length] = ZULU_UPPER;
+        }
+        return new String(buf, 0, length + (tz ? 1 : 0));
     }
 
     private void addFractions(char[] buf, int fractionDigits, int nano)

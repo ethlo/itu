@@ -78,6 +78,8 @@ public interface W3cDateTimeUtil
      */
     String formatUtc(OffsetDateTime date, int fractionDigits);
 
+    String formatUtc(DateTime date, int fractionDigits);
+
     /**
      * Parse the format and return it as a fitting sub-class of {@link Temporal}
      *

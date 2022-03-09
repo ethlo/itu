@@ -27,6 +27,9 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
 
+/**
+ * Consumer for flexibly dealing with different granularity date/date-times
+ */
 public interface TemporalConsumer
 {
     default void handle(LocalDateTime localDateTime)

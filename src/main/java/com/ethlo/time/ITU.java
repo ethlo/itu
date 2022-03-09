@@ -20,8 +20,6 @@ package com.ethlo.time;
  * #L%
  */
 
-import com.ethlo.time.internal.EthloITU;
-
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,6 +27,11 @@ import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 
+import com.ethlo.time.internal.EthloITU;
+
+/**
+ * The main class for accessing the functions in this library
+ */
 public class ITU
 {
     private static final EthloITU delegate = EthloITU.getInstance();
@@ -62,6 +65,7 @@ public class ITU
 
     /**
      * Check if the dateTime is valid according to the RFC-3339 specification
+     *
      * @param text The input to validate
      * @return True if valid, otherwise false
      */
@@ -80,6 +84,7 @@ public class ITU
 
     /**
      * Format the input as an RFC-3339 formatted date-time in the UTC timezone
+     *
      * @param offsetDateTime The date-time to format
      * @param fractionDigits The Nuber of fraction digits in the second
      * @return A formatted string
@@ -87,6 +92,11 @@ public class ITU
     public static String formatUtc(OffsetDateTime offsetDateTime, int fractionDigits)
     {
         return delegate.formatUtc(offsetDateTime, fractionDigits);
+    }
+
+    public static String formatUtc(DateTime dateTime, int fractionDigits)
+    {
+        return delegate.formatUtc(dateTime, fractionDigits);
     }
 
     public static String formatUtc(OffsetDateTime date, Field lastIncluded)
