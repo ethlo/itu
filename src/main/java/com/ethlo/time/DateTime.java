@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.YearMonth;
+import java.util.Optional;
 
 /**
  * Holder class for parsed data. The {@link #getField()} contains the last found field, like MONTH, MINUTE, SECOND.
@@ -47,20 +48,11 @@ public class DateTime
         this.year = year;
         this.month = assertSize(month, 1, 12, Field.MONTH);
         this.day = assertSize(day, 1, 31, Field.DAY);
-        this.hour = assertSize(hour, 0, 24, Field.HOUR);
-        this.minute = assertSize(minute, 0, 60, Field.MINUTE);
+        this.hour = assertSize(hour, 0, 23, Field.HOUR);
+        this.minute = assertSize(minute, 0, 59, Field.MINUTE);
         this.second = assertSize(second, 0, 60, Field.SECOND);
         this.nano = assertSize(nano, 0, 999_999_999, Field.NANO);
         this.offset = offset;
-    }
-
-    private int assertSize(int value, int min, int max, Field field)
-    {
-        if (value > max)
-        {
-            throw new DateTimeException("Field " + field.name() + " out of bounds. Expected " + min + "-" + max + ", got " + value);
-        }
-        return value;
     }
 
     public static DateTime of(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
@@ -91,6 +83,20 @@ public class DateTime
     public static DateTime of(OffsetDateTime dateTime)
     {
         return DateTime.of(dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond(), dateTime.getNano(), TimezoneOffset.of(dateTime.getOffset()));
+    }
+
+    private int assertSize(int value, int min, int max, Field field)
+    {
+        if (value > max)
+        {
+            throw new DateTimeException("Field " + field.name() + " out of bounds. Expected " + min + "-" + max + ", got " + value);
+        }
+        return value;
+    }
+
+    public boolean includesGranularity(Field field)
+    {
+        return field.ordinal() <= this.field.ordinal();
     }
 
     public int getYear()
@@ -133,9 +139,9 @@ public class DateTime
      *
      * @return the time offset, if available
      */
-    public TimezoneOffset getOffset()
+    public Optional<TimezoneOffset> getOffset()
     {
-        return offset;
+        return Optional.ofNullable(offset);
     }
 
     /**
@@ -210,7 +216,7 @@ public class DateTime
 
     public DateTime assertMinGranularity(Field field)
     {
-        if (this.field.ordinal() < field.ordinal())
+        if (!includesGranularity(field))
         {
             throw new DateTimeException("No " + field.name() + " field found");
         }

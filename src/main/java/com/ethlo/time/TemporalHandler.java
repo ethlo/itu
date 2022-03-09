@@ -4,7 +4,7 @@ package com.ethlo.time;
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 - 2019 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 - 2022 Morten Haraldsen (ethlo)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,33 +20,42 @@ package com.ethlo.time;
  * #L%
  */
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
-@Tag("CorrectnessTest")
-public class FieldTest
+public interface TemporalHandler<T>
 {
-    @Test
-    public void testGetKnownFields()
+    default T handle(LocalDateTime localDateTime)
     {
-        assertThat(Field.valueOf(Year.class)).isEqualTo(Field.YEAR);
-        assertThat(Field.valueOf(YearMonth.class)).isEqualTo(Field.MONTH);
-        assertThat(Field.valueOf(LocalDate.class)).isEqualTo(Field.DAY);
-        assertThat(Field.valueOf(OffsetDateTime.class)).isEqualTo(Field.SECOND);
+        return fallback(localDateTime);
     }
 
-    @Test
-    public void testGetUnknown()
+    default T handle(LocalDate localDate)
     {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> Field.valueOf(Temporal.class));
+        return fallback(localDate);
+    }
+
+    default T handle(YearMonth yearMonth)
+    {
+        return fallback(yearMonth);
+    }
+
+    default T handle(Year year)
+    {
+        return fallback(year);
+    }
+
+    default T handle(OffsetDateTime offsetDateTime)
+    {
+        return fallback(offsetDateTime);
+    }
+
+    default T fallback(final Temporal temporal)
+    {
+        throw new UnsupportedOperationException("Unhandled type " + temporal.getClass());
     }
 }

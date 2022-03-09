@@ -21,7 +21,11 @@ package com.ethlo.time;
  */
 
 import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.Year;
+import java.time.YearMonth;
 
 public class ITU
 {
@@ -82,5 +86,124 @@ public class ITU
     public static String formatUtcNano(OffsetDateTime date)
     {
         return delegate.formatUtcNano(date);
+    }
+
+    public static void parse(String text, TemporalConsumer temporalConsumer)
+    {
+        final DateTime dateTime = delegate.parse(text);
+        if (dateTime.includesGranularity(Field.MINUTE))
+        {
+            if (dateTime.getOffset().isPresent())
+            {
+                temporalConsumer.handle(dateTime.toOffsetDatetime());
+            }
+            else
+            {
+                temporalConsumer.handle(dateTime.toLocalDatetime());
+            }
+        }
+        else if (dateTime.includesGranularity(Field.DAY))
+        {
+            temporalConsumer.handle(dateTime.toLocalDate());
+        }
+        else if (dateTime.includesGranularity(Field.MONTH))
+        {
+            temporalConsumer.handle(dateTime.toYearMonth());
+        }
+        else
+        {
+            temporalConsumer.handle(Year.of(dateTime.getYear()));
+        }
+    }
+
+    public static <T> T parse(String text, TemporalHandler<T> temporalHandler)
+    {
+        final DateTime dateTime = delegate.parse(text);
+        if (dateTime.includesGranularity(Field.MINUTE))
+        {
+            if (dateTime.getOffset().isPresent())
+            {
+                return temporalHandler.handle(dateTime.toOffsetDatetime());
+            }
+            else
+            {
+                return temporalHandler.handle(dateTime.toLocalDatetime());
+            }
+        }
+        else if (dateTime.includesGranularity(Field.DAY))
+        {
+            return temporalHandler.handle(dateTime.toLocalDate());
+        }
+        else if (dateTime.includesGranularity(Field.MONTH))
+        {
+            return temporalHandler.handle(dateTime.toYearMonth());
+        }
+        else
+        {
+            return temporalHandler.handle(Year.of(dateTime.getYear()));
+        }
+    }
+
+    public static boolean isValid(final String text, TemporalType... types)
+    {
+        try
+        {
+            return ITU.parse(text, new TemporalHandler<Boolean>()
+            {
+                @Override
+                public Boolean handle(final LocalDate localDate)
+                {
+                    return isAllowed(TemporalType.LOCAL_DATE, types);
+                }
+
+                @Override
+                public Boolean handle(final OffsetDateTime offsetDateTime)
+                {
+                    return isAllowed(TemporalType.OFFSET_DATE_TIME, types);
+                }
+
+                @Override
+                public Boolean handle(final LocalDateTime localDateTime)
+                {
+                    return isAllowed(TemporalType.LOCAL_DATE_TIME, types);
+                }
+
+                @Override
+                public Boolean handle(final YearMonth yearMonth)
+                {
+                    return isAllowed(TemporalType.YEAR_MONTH, types);
+                }
+
+                @Override
+                public Boolean handle(final Year year)
+                {
+                    return isAllowed(TemporalType.YEAR, types);
+                }
+            });
+        }
+        catch (DateTimeException exc)
+        {
+            return false;
+        }
+    }
+
+    private static void assertIsAllowed(TemporalType needle, TemporalType... allowed)
+    {
+        if (!isAllowed(needle, allowed))
+        {
+            throw new DateTimeException("Is not a valid representation of " + needle);
+        }
+    }
+
+    private static boolean isAllowed(TemporalType needle, TemporalType... allowed)
+    {
+        for (TemporalType t : allowed)
+        {
+            if (t.equals(needle))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

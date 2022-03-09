@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ethlo.time</groupId>
     <artifactId>itu</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1-SNAPSHOT</version>
     <name>Internet Time Utility</name>
     <description>Extremely fast date/time parser and formatter - RFC 3339 (ISO 8601 profile) and W3C format
     </description>

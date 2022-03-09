@@ -107,9 +107,9 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getSecond()).isEqualTo(39);
         assertThat(date.getNano()).isEqualTo(123456789);
         assertThat(date.getField()).isEqualTo(Field.SECOND);
-        assertThat(date.getOffset().getHours()).isEqualTo(20);
-        assertThat(date.getOffset().getMinutes()).isEqualTo(0);
-        assertThat(date.getOffset()).isEqualTo(TimezoneOffset.ofHoursMinutes(20, 0));
+        assertThat(date.getOffset().get().getHours()).isEqualTo(20);
+        assertThat(date.getOffset().get().getMinutes()).isEqualTo(0);
+        assertThat(date.getOffset()).hasValue(TimezoneOffset.ofHoursMinutes(20, 0));
     }
 
     @Test
@@ -146,7 +146,7 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getHour()).isEqualTo(17);
         assertThat(date.getMinute()).isEqualTo(22);
         assertThat(date.getField()).isEqualTo(Field.MINUTE);
-        assertThat(date.getOffset()).isEqualTo(TimezoneOffset.UTC);
+        assertThat(date.getOffset()).hasValue(TimezoneOffset.UTC);
     }
 
     @Test
@@ -159,8 +159,7 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getHour()).isEqualTo(17);
         assertThat(date.getMinute()).isEqualTo(22);
         assertThat(date.getField()).isEqualTo(Field.MINUTE);
-        assertThat(date.getOffset()).isNull();
-        assertThat(date.getOffset()).isNull();
+        assertThat(date.getOffset()).isEmpty();
 
         final DateTimeException excOffsetDateTime = assertThrows(DateTimeException.class, date::toOffsetDatetime);
         assertThat(excOffsetDateTime).hasMessage("No zone offset information found");
@@ -184,7 +183,7 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getMinute()).isEqualTo(22);
         assertThat(date.getSecond()).isEqualTo(39);
         assertThat(date.getField()).isEqualTo(Field.SECOND);
-        assertThat(date.getOffset()).isNull();
+        assertThat(date.getOffset()).isEmpty();
         final LocalDateTime localDateTime = date.toLocalDatetime();
         assertThat(localDateTime.getYear()).isEqualTo(2012);
         assertThat(localDateTime.getMonthValue()).isEqualTo(10);
