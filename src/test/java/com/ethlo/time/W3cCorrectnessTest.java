@@ -194,9 +194,24 @@ public class W3cCorrectnessTest extends AbstractTest
     }
 
     @Test
+    public void testConvertOffsetDateTimeToDateTime()
+    {
+        final OffsetDateTime input = OffsetDateTime.parse("2012-10-27T17:22:39+10:00");
+        final DateTime dateTime = DateTime.of(input);
+        assertThat(dateTime.toOffsetDatetime()).isEqualTo(input);
+    }
+
+    @Test
+    public void testToOffsetDateTimeWithoutGranularEnoughData()
+    {
+        final DateTime dateTime = w3cDateUtil.parse("2012-10-27");
+        assertThrows(DateTimeException.class, dateTime::toOffsetDatetime);
+    }
+
+    @Test
     public void testParseLenientWithTimeToLocalDate()
     {
-        final LocalDate date = w3cDateUtil.parse("2012-10-27T17:22:39+20:00").toLocalDate();
+        final LocalDate date = w3cDateUtil.parse("2012-10-27T17:22:39+10:00").toLocalDate();
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonthValue()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);

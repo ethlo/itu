@@ -31,9 +31,6 @@ import java.time.OffsetDateTime;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.Date;
-
-import com.ethlo.time.jdk.JdkRfc3339;
 
 public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 {
@@ -50,7 +47,6 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
-    private final JdkRfc3339 delegate = new JdkRfc3339();
     private final LeapSecondHandler leapSecondHandler = new DefaultLeapSecondHandler();
 
     private EthloITU()
@@ -271,18 +267,6 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     }
 
     @Override
-    public String formatUtc(Date date)
-    {
-        return formatUtc(OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC), 3);
-    }
-
-    @Override
-    public String format(Date date, String timezone)
-    {
-        return delegate.format(date, timezone);
-    }
-
-    @Override
     public OffsetDateTime parseDateTime(final String dateTime)
     {
         return parse(dateTime).assertMinGranularity(Field.SECOND).toOffsetDatetime();
@@ -310,18 +294,6 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     public String formatUtc(OffsetDateTime date)
     {
         return formatUtc(date, 0);
-    }
-
-    @Override
-    public String formatUtcMilli(Date date)
-    {
-        return formatUtcMilli(OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC));
-    }
-
-    @Override
-    public String format(Date date, String timezone, int fractionDigits)
-    {
-        return delegate.format(date, timezone, fractionDigits);
     }
 
     @Override

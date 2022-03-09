@@ -187,14 +187,6 @@ public class ITU
         }
     }
 
-    private static void assertIsAllowed(TemporalType needle, TemporalType... allowed)
-    {
-        if (!isAllowed(needle, allowed))
-        {
-            throw new DateTimeException("Is not a valid representation of " + needle);
-        }
-    }
-
     private static boolean isAllowed(TemporalType needle, TemporalType... allowed)
     {
         for (TemporalType t : allowed)

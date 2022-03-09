@@ -34,41 +34,6 @@ public interface Rfc3339Formatter
     String formatUtc(OffsetDateTime date);
 
     /**
-     * See {@link #formatUtc(OffsetDateTime)}
-     *
-     * @param date The date to format
-     * @return The formatted string
-     */
-    String formatUtc(Date date);
-
-    /**
-     * See {@link #formatUtcMilli(OffsetDateTime)}
-     *
-     * @param date The date to format
-     * @return The formatted string
-     */
-    String formatUtcMilli(Date date);
-
-    /**
-     * Format a date in the given time-zone
-     *
-     * @param date     The date to format
-     * @param timezone The time-zone
-     * @return the formatted string
-     */
-    String format(Date date, String timezone);
-
-    /**
-     * Format the date as a date-time String with specified resolution and time-zone offset, for example 1999-12-31T16:48:36[.123456789]-05:00
-     *
-     * @param date           The date to format
-     * @param timezone       The time-zone
-     * @param fractionDigits The number of fraction digits
-     * @return the formatted string
-     */
-    String format(Date date, String timezone, int fractionDigits);
-
-    /**
      * Format the date as a date-time String  with millisecond resolution, for example 1999-12-31T16:48:36.123Z
      *
      * @param date The date to format

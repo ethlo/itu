@@ -20,15 +20,11 @@ package com.ethlo.time.jdk;
  * #L%
  */
 
-import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.TimeZone;
 
 import com.ethlo.time.AbstractRfc3339;
 
@@ -39,8 +35,6 @@ import com.ethlo.time.AbstractRfc3339;
  */
 public class JdkRfc3339 extends AbstractRfc3339
 {
-    private final SimpleDateFormat[] formats = new SimpleDateFormat[MAX_FRACTION_DIGITS];
-
     private final DateTimeFormatter rfc3339baseFormatter = new DateTimeFormatterBuilder()
             .appendValue(ChronoField.YEAR, 4)
             .appendLiteral('-')
@@ -87,21 +81,6 @@ public class JdkRfc3339 extends AbstractRfc3339
             .optionalEnd()
             .toFormatter();
 
-    public JdkRfc3339()
-    {
-        for (int i = 1; i < MAX_FRACTION_DIGITS; i++)
-        {
-            this.formats[i] = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss." + repeat(i) + "XXX");
-        }
-    }
-
-    private String repeat(int repeats)
-    {
-        final char[] chars = new char[repeats];
-        Arrays.fill(chars, 'S');
-        return new String(chars);
-    }
-
     private DateTimeFormatter getFormatter(int fractionDigits)
     {
         if (fractionDigits == 0)
@@ -122,12 +101,6 @@ public class JdkRfc3339 extends AbstractRfc3339
                 .appendOffset("+HH:MM", "Z")
                 .toFormatter()
                 .withZone(ZoneOffset.UTC);
-    }
-
-    @Override
-    public String formatUtc(Date date)
-    {
-        return formatUtc(OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC), 3);
     }
 
     @Override
@@ -165,25 +138,5 @@ public class JdkRfc3339 extends AbstractRfc3339
     {
         assertMaxFractionDigits(fractionDigits);
         return getFormatter(fractionDigits).format(date);
-    }
-
-    @Override
-    public String formatUtcMilli(Date date)
-    {
-        return formatUtcMilli(OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC));
-    }
-
-    @Override
-    public String format(Date date, String timezone)
-    {
-        return format(date, timezone, 3);
-    }
-
-    @Override
-    public String format(Date date, String timezone, int fractionDigits)
-    {
-        final SimpleDateFormat formatter = (SimpleDateFormat) formats[fractionDigits].clone();
-        formatter.setTimeZone(TimeZone.getTimeZone(timezone));
-        return formatter.format(date);
     }
 }

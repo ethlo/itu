@@ -25,8 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.Date;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -188,8 +186,6 @@ public abstract class CorrectnessTest extends AbstractTest
         final String s = "2017-02-21T15:00:00.123Z";
         final OffsetDateTime date = parser.parseDateTime(s);
         assertThat(formatter.formatUtcMilli(date)).isEqualTo("2017-02-21T15:00:00.123Z");
-        assertThat(formatter.format(Date.from(date.atZoneSameInstant(ZoneOffset.UTC).toInstant()), "CET", 3)).isEqualTo("2017-02-21T16:00:00.123+01:00");
-        assertThat(formatter.format(new Date(date.toInstant().toEpochMilli()), "EST", 3)).isEqualTo("2017-02-21T10:00:00.123-05:00");
     }
 
     @Test
@@ -259,14 +255,6 @@ public abstract class CorrectnessTest extends AbstractTest
         final String s = "2017-02-21T15:00:00.123456789Z";
         final OffsetDateTime date = parser.parseDateTime(s);
         assertThat(formatter.formatUtcMilli(date)).isEqualTo("2017-02-21T15:00:00.123Z");
-    }
-
-    @Test
-    public void testFormatUtcMilliWithDate()
-    {
-        final String s = "2017-02-21T15:00:00.123456789Z";
-        final OffsetDateTime date = parser.parseDateTime(s);
-        assertThat(formatter.formatUtcMilli(new Date(date.toInstant().toEpochMilli()))).isEqualTo("2017-02-21T15:00:00.123Z");
     }
 
     @Test
@@ -380,30 +368,5 @@ public abstract class CorrectnessTest extends AbstractTest
     public void testParseLowercaseZ()
     {
         parser.parseDateTime("2017-02-21T15:27:39.000z");
-    }
-
-    @Test
-    public void testFormatWithNamedTimeZoneDate()
-    {
-        final OffsetDateTime d = parser.parseDateTime("2017-02-21T15:27:39.321+00:00");
-        final String formatted = formatter.format(new Date(d.toInstant().toEpochMilli()), "EST");
-        assertThat(formatted).isEqualTo("2017-02-21T10:27:39.321-05:00");
-    }
-
-    @Test
-    public void testFormatUtcDate()
-    {
-        final OffsetDateTime d = parser.parseDateTime("2017-02-21T15:27:39.321+00:00");
-        final String formatted = formatter.formatUtc(new Date(d.toInstant().toEpochMilli()));
-        assertThat(formatted).isEqualTo("2017-02-21T15:27:39.321Z");
-    }
-
-    @Test
-    public void testFormatWithNamedTimeZone()
-    {
-        final String s = "2017-02-21T15:27:39.321+00:00";
-        final OffsetDateTime d = parser.parseDateTime(s);
-        final String formatted = formatter.format(Date.from(d.toInstant()), "America/New_York", 3);
-        assertThat(formatted).isEqualTo("2017-02-21T10:27:39.321-05:00");
     }
 }

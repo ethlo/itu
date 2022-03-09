@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ethlo.time</groupId>
     <artifactId>itu</artifactId>
-    <version>1.6.1</version>
+    <version>1.6.2-SNAPSHOT</version>
     <name>Internet Time Utility</name>
     <description>Extremely fast date/time parser and formatter - RFC 3339 (ISO 8601 profile) and W3C format
     </description>
@@ -146,7 +146,12 @@
                     <options>
                         <option>-allowaccessmodification</option>
                         <option>-keep public class com.ethlo.time.ITU { *; }</option>
+                        <option>-keep public class com.ethlo.time.DateTime { *; }</option>
                         <option>-keep public class com.ethlo.time.Field { *; }</option>
+                        <option>-keep public class com.ethlo.time.TemporalType { *; }</option>
+                        <option>-keep public class com.ethlo.time.TemporalConsumer { *; }</option>
+                        <option>-keep public class com.ethlo.time.TemporalHandler { *; }</option>
+                        <option>-keep public class com.ethlo.time.TimezoneOffset { *; }</option>
                     </options>
                     <libs>
                         <lib>${java.home}/jmods/java.base.jmod</lib>
