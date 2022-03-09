@@ -43,7 +43,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.6.0</version>
+  <version>1.6.1</version>
 </dependency>
 ```
 
@@ -144,3 +144,92 @@ encountered to signal that this is a leap second. The exception can then be quer
 values is not possible in a `java.time.OffsetDateTime`, the `60` is therefore abandoned and the date-time will use `59`
 instead of `60`. 
 
+
+## Changelog
+### Version 1.6.1
+
+2022-09-03
+
+New helper methods were added to deal with different granularity.
+
+Validate to different required granularity:
+```java
+ITU.isValid("2017-12-06", TemporalType.LOCAL_DATE_TIME);
+``` 
+
+Allowing handling different levels of granularity:
+```java
+return ITU.parse("2017-12-06", new TemporalHandler<>()
+{
+    @Override
+    public OffsetDateTime handle(final LocalDate localDate)
+    {
+        return localDate.atTime(OffsetTime.of(LocalTime.of(0, 0), ZoneOffset.UTC));
+    }
+
+    @Override
+    public OffsetDateTime handle(final OffsetDateTime offsetDateTime)
+    {
+        return offsetDateTime;
+    }
+});
+```
+
+### Version 1.6.0
+
+2022-03-08
+
+* `ITU.parseLenient(String)` now returns a custom `DateTime` object, which can be transformed to OffsetDateTime, LocalDateTime, etc, depending on how granular the fields in the input.
+* Removed methods supporting the handling of `java.util.Date`.
+
+### Version 1.5.2
+
+2022-03-02
+
+* Performance optimizations, especially formatting performance nearly doubled.
+* Better error message for date-times with fractions, but missing time-zone.
+* Rewrote benchmarks using [JMH](https://github.com/openjdk/jmh).
+
+### Version 1.5.1
+
+2022-02-28
+
+ITU is now using a list of known leap-second dates in the past and keeps the current rule for date-times after the last known leap-second year/date. This will avoid breaking the parsing of valid leap second due to not having the very last updated list of leap-seconds. 
+
+The `LeapSecondException` now has a new method to allow for checking if this is indeed a valid leap-second according to the list, via `isVerifiedValidLeapYearMonth()`.
+
+### Version 1.5.0
+
+2022-02-27
+
+* Massive performance improvement for formatting
+* IMPORTANT: Breaking change where previous versions returned null for null/empty input when parsing. This now throws an exception in line with the `java.time` classes.
+
+### Version 1.4.0
+2022-02-26
+Upgrade test dependencies and restructure internals to be able to write more fine-grained tests.
+
+### Version 1.3.0
+
+2020-07-10
+
+Support the parsing of leap seconds
+
+### Version 1.2.0
+
+2020-07-10
+
+* Support parsing of sub-date formats (`Year` and `YearMonth`).ITU utility class with static methods
+* No longer a need to create parser/formatter objects. Use static methods on `com.ethlo.time.ITU`.
+
+### Version 1.1.0
+
+2018-01-24
+
+Support for space as date/time separator for parsing, as specified as optional in the RFC-3339.
+
+### Version 1.0
+
+2017-02-27
+
+Initial release.
