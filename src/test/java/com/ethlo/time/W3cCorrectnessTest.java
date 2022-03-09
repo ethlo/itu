@@ -101,9 +101,9 @@ public class W3cCorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testParseDateTime()
+    public void testParseDateTimeNanos()
     {
-        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22:39.123456789+20:00");
+        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22:39.123456789+13:30");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -111,10 +111,29 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getMinute()).isEqualTo(22);
         assertThat(date.getSecond()).isEqualTo(39);
         assertThat(date.getNano()).isEqualTo(123456789);
+        assertThat(date.getField()).isEqualTo(Field.NANO);
+        assertThat(date.getOffset()).isPresent();
+        assertThat(date.getOffset().get().getHours()).isEqualTo(13);
+        assertThat(date.getOffset().get().getMinutes()).isEqualTo(30);
+        assertThat(date.getOffset()).hasValue(TimezoneOffset.ofHoursMinutes(13, 30));
+    }
+
+    @Test
+    public void testParseDateTimeWithoutFractions()
+    {
+        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22:39+13:30");
+        assertThat(date.getYear()).isEqualTo(2012);
+        assertThat(date.getMonth()).isEqualTo(10);
+        assertThat(date.getDayOfMonth()).isEqualTo(27);
+        assertThat(date.getHour()).isEqualTo(17);
+        assertThat(date.getMinute()).isEqualTo(22);
+        assertThat(date.getSecond()).isEqualTo(39);
+        assertThat(date.getNano()).isEqualTo(0);
         assertThat(date.getField()).isEqualTo(Field.SECOND);
-        assertThat(date.getOffset().get().getHours()).isEqualTo(20);
-        assertThat(date.getOffset().get().getMinutes()).isEqualTo(0);
-        assertThat(date.getOffset()).hasValue(TimezoneOffset.ofHoursMinutes(20, 0));
+        assertThat(date.getOffset()).isPresent();
+        assertThat(date.getOffset().get().getHours()).isEqualTo(13);
+        assertThat(date.getOffset().get().getMinutes()).isEqualTo(30);
+        assertThat(date.getOffset()).hasValue(TimezoneOffset.ofHoursMinutes(13, 30));
     }
 
     @Test

@@ -28,7 +28,7 @@ import java.time.YearMonth;
 import java.util.Optional;
 
 /**
- * Holder class for parsed data. The {@link #getField()} contains the last found field, like MONTH, MINUTE, SECOND.
+ * Container class for parsed date/date-time data. The {@link #getField()} contains the highest granularity field found, like MONTH, MINUTE, SECOND.
  */
 public class DateTime
 {
@@ -55,9 +55,14 @@ public class DateTime
         this.offset = offset;
     }
 
+    public static DateTime of(int year, int month, int day, int hour, int minute, int second, TimezoneOffset offset)
+    {
+        return new DateTime(Field.SECOND, year, month, day, hour, minute, second, 0, offset);
+    }
+
     public static DateTime of(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
     {
-        return new DateTime(Field.SECOND, year, month, day, hour, minute, second, nanos, offset);
+        return new DateTime(Field.NANO, year, month, day, hour, minute, second, nanos, offset);
     }
 
     public static DateTime ofYear(int year)
@@ -94,6 +99,12 @@ public class DateTime
         return value;
     }
 
+    /**
+     * Returns if the specified field is part of this date/date-time
+     *
+     * @param field The field to check for
+     * @return True if included, otherwise false
+     */
     public boolean includesGranularity(Field field)
     {
         return field.ordinal() <= this.field.ordinal();

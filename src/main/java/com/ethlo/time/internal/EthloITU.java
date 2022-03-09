@@ -20,11 +20,6 @@ package com.ethlo.time.internal;
  * #L%
  */
 
-import com.ethlo.time.DateTime;
-import com.ethlo.time.Field;
-import com.ethlo.time.LeapSecondException;
-import com.ethlo.time.TimezoneOffset;
-
 import static com.ethlo.time.internal.LeapSecondHandler.LEAP_SECOND_SECONDS;
 import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.indexOfNonDigit;
 import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.parsePositiveInt;
@@ -36,6 +31,11 @@ import java.time.OffsetDateTime;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+
+import com.ethlo.time.DateTime;
+import com.ethlo.time.Field;
+import com.ethlo.time.LeapSecondException;
+import com.ethlo.time.TimezoneOffset;
 
 public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 {
@@ -376,12 +376,12 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         if (remaining == 0)
         {
             final int seconds = getSeconds(chars);
-            return leapSecondCheck(year, month, day, hour, minute, seconds, 0, null);
+            return leapSecondCheck(year, month, day, hour, minute, seconds, 0, null, false);
         }
 
         TimezoneOffset offset = null;
         int fractions = 0;
-
+        boolean hasFractions = false;
         final char c = chars[19];
         if (remaining == 1 && (c == ZULU_UPPER || c == ZULU_LOWER))
         {
@@ -398,6 +398,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
                 // We have an end of fractions
                 final int len = idx - 20;
                 fractions = getFractions(chars, idx, len);
+                hasFractions = true;
                 offset = parseTimezone(chars, idx);
             }
             else
@@ -415,10 +416,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             raiseDateTimeException(chars, "Unexpected character at position 19");
         }
 
-        return leapSecondCheck(year, month, day, hour, minute, getSeconds(chars), fractions, offset);
+        return leapSecondCheck(year, month, day, hour, minute, getSeconds(chars), fractions, offset, hasFractions);
     }
 
-    private DateTime leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
+    private DateTime leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset, final boolean hasFractions)
     {
         if (second == LEAP_SECOND_SECONDS)
         {
@@ -434,11 +435,12 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
                         && utcMinute == 59)
                 {
                     // Consider it a leap second
-                    throw new LeapSecondException(OffsetDateTime.of(year, month, day, hour, minute, 59, nanos, offset.asJavaTimeOffset()).plusSeconds(1), second, isValidLeapYearMonth);
+                    final OffsetDateTime nearest = OffsetDateTime.of(year, month, day, hour, minute, 59, nanos, offset.asJavaTimeOffset()).plusSeconds(1);
+                    throw new LeapSecondException(nearest, second, isValidLeapYearMonth);
                 }
             }
         }
-        return DateTime.of(year, month, day, hour, minute, second, nanos, offset);
+        return hasFractions ? DateTime.of(year, month, day, hour, minute, second, nanos, offset) : DateTime.of(year, month, day, hour, minute, second, offset);
     }
 
     private void raiseDateTimeException(char[] chars, String message)
