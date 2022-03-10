@@ -95,17 +95,20 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseDate()
     {
-        final DateTime date = w3cDateUtil.parse("2012-03-29");
+        final String input = "2012-03-29";
+        final DateTime date = w3cDateUtil.parse(input);
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(3);
         assertThat(date.getDayOfMonth()).isEqualTo(29);
         assertThat(date.getField()).isEqualTo(Field.DAY);
+        assertThat(date.toString()).isEqualTo(input);
     }
 
     @Test
     public void testParseDateTimeNanos()
     {
-        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22:39.123456789+13:30");
+        final String input = "2012-10-27T17:22:39.123456789+13:30";
+        final DateTime date = w3cDateUtil.parse(input);
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -118,6 +121,7 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getOffset().get().getHours()).isEqualTo(13);
         assertThat(date.getOffset().get().getMinutes()).isEqualTo(30);
         assertThat(date.getOffset()).hasValue(TimezoneOffset.ofHoursMinutes(13, 30));
+        assertThat(date.toString(9)).isEqualTo(input);
     }
 
     @Test

@@ -256,14 +256,14 @@ public class DateTime
         {
             throw new DateTimeException("Requested granularity was " + lastIncluded.name() + ", but contains only granularity " + date.getField().name());
         }
-        final boolean hasTz = date.getOffset().isPresent();
-        final char[] buffer = new char[32];
+        final TimezoneOffset tz = date.getOffset().orElse(null);
+        final char[] buffer = new char[35];
 
         // YEAR
         LimitedCharArrayIntegerUtil.toString(date.getYear(), buffer, 0, 4);
         if (lastIncluded == Field.YEAR)
         {
-            return finish(buffer, Field.YEAR.getRequiredLength(), false);
+            return finish(buffer, Field.YEAR.getRequiredLength(), null);
         }
 
         // MONTH
@@ -274,7 +274,7 @@ public class DateTime
         }
         if (lastIncluded == Field.MONTH)
         {
-            return finish(buffer, Field.MONTH.getRequiredLength(), false);
+            return finish(buffer, Field.MONTH.getRequiredLength(), null);
         }
 
         // DAY
@@ -285,7 +285,7 @@ public class DateTime
         }
         if (lastIncluded == Field.DAY)
         {
-            return finish(buffer, Field.DAY.getRequiredLength(), false);
+            return finish(buffer, Field.DAY.getRequiredLength(), null);
         }
 
         // HOUR
@@ -296,7 +296,7 @@ public class DateTime
         }
         if (lastIncluded == Field.HOUR)
         {
-            return finish(buffer, Field.HOUR.getRequiredLength(), hasTz);
+            return finish(buffer, Field.HOUR.getRequiredLength(), tz);
         }
 
         // MINUTE
@@ -307,7 +307,7 @@ public class DateTime
         }
         if (lastIncluded == Field.MINUTE)
         {
-            return finish(buffer, Field.MINUTE.getRequiredLength(), hasTz);
+            return finish(buffer, Field.MINUTE.getRequiredLength(), tz);
         }
 
         // SECOND
@@ -318,7 +318,7 @@ public class DateTime
         }
         if (lastIncluded == Field.SECOND)
         {
-            return finish(buffer, Field.SECOND.getRequiredLength(), hasTz);
+            return finish(buffer, Field.SECOND.getRequiredLength(), tz);
         }
 
         // Fractions
@@ -327,7 +327,12 @@ public class DateTime
             buffer[19] = '.';
             LimitedCharArrayIntegerUtil.toString(date.getNano(), buffer, 20, fractionDigits);
         }
-        return finish(buffer, 20 + fractionDigits, hasTz);
+        return finish(buffer, 20 + fractionDigits, tz);
     }
 
+    @Override
+    public String toString()
+    {
+        return toString(field);
+    }
 }

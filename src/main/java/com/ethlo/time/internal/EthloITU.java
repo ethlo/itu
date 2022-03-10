@@ -202,24 +202,25 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             utc = date.atZoneSameInstant(FastUTCZoneId.get()).toOffsetDateTime();
         }
+        final TimezoneOffset tz = TimezoneOffset.UTC;
 
         final char[] buffer = new char[31];
 
         if (handleDatePart(lastIncluded, buffer, utc.getYear(), 0, 4, Field.YEAR))
         {
-            return finish(buffer, Field.YEAR.getRequiredLength(), false);
+            return finish(buffer, Field.YEAR.getRequiredLength(), null);
         }
 
         buffer[4] = DATE_SEPARATOR;
         if (handleDatePart(lastIncluded, buffer, utc.getMonthValue(), 5, 2, Field.MONTH))
         {
-            return finish(buffer, Field.MONTH.getRequiredLength(), false);
+            return finish(buffer, Field.MONTH.getRequiredLength(), null);
         }
 
         buffer[7] = DATE_SEPARATOR;
         if (handleDatePart(lastIncluded, buffer, utc.getDayOfMonth(), 8, 2, Field.DAY))
         {
-            return finish(buffer, Field.DAY.getRequiredLength(), false);
+            return finish(buffer, Field.DAY.getRequiredLength(), null);
         }
 
         // T separator
@@ -230,7 +231,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         buffer[13] = TIME_SEPARATOR;
         if (handleDatePart(lastIncluded, buffer, utc.getMinute(), 14, 2, Field.MINUTE))
         {
-            return finish(buffer, Field.MINUTE.getRequiredLength(), true);
+            return finish(buffer, Field.MINUTE.getRequiredLength(), tz);
         }
         buffer[16] = TIME_SEPARATOR;
         LimitedCharArrayIntegerUtil.toString(utc.getSecond(), buffer, 17, 2);
@@ -241,9 +242,9 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             buffer[19] = FRACTION_SEPARATOR;
             addFractions(buffer, fractionDigits, utc.getNano());
-            return finish(buffer, 20 + fractionDigits, true);
+            return finish(buffer, 20 + fractionDigits, tz);
         }
-        return finish(buffer, 19, true);
+        return finish(buffer, 19, tz);
     }
 
     private boolean handleDatePart(final Field lastIncluded, final char[] buffer, final int value, final int offset, final int length, final Field field)
@@ -252,13 +253,31 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return lastIncluded == field;
     }
 
-    public static String finish(char[] buf, int length, final boolean tz)
+    public static String finish(char[] buf, int length, final TimezoneOffset tz)
     {
-        if (tz)
+        int tzLen = 0;
+        if (tz != null)
         {
-            buf[length] = ZULU_UPPER;
+            tzLen = writeTz(buf, length, tz);
         }
-        return new String(buf, 0, length + (tz ? 1 : 0));
+        return new String(buf, 0, length + tzLen);
+    }
+
+    private static int writeTz(char[] buf, int start, TimezoneOffset tz)
+    {
+        if (tz.equals(TimezoneOffset.UTC))
+        {
+            buf[start] = ZULU_UPPER;
+            return 1;
+        }
+        else
+        {
+            buf[start] = tz.getTotalSeconds() < 0 ? MINUS : PLUS;
+            LimitedCharArrayIntegerUtil.toString(tz.getHours(), buf, start + 1, 2);
+            buf[start + 3] = TIME_SEPARATOR;
+            LimitedCharArrayIntegerUtil.toString(tz.getMinutes(), buf, start + 4, 2);
+            return 6;
+        }
     }
 
     private void addFractions(char[] buf, int fractionDigits, int nano)
