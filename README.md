@@ -147,6 +147,13 @@ instead of `60`.
 
 
 ## Changelog
+
+### Version 1.7.0
+* Added support for keeping number of significant fraction digits in second
+* Added toString methods to `DateTime` for formatting.
+* Added support for formatting date-times with other time-offsets than UTC.
+* Vastly improved javadoc.
+
 ### Version 1.6.1
 
 2022-09-03
@@ -175,11 +182,6 @@ return ITU.parse("2017-12-06", new TemporalHandler<>()
     }
 });
 ```
-
-### Version 1.7.0
-* Added support for keeping number of significant fraction digits in second
-* Added toString methods to `DateTime` for formatting.
-* Added support for formatting date-times with other time-offsets than UTC.
 
 ### Version 1.6.0
 
