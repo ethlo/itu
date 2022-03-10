@@ -1,6 +1,9 @@
 # Internet Time Utility
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.ethlo.time/itu.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ethlo.time%22%20a%3A%22itu%22)
+
+[![javadoc](https://javadoc.io/badge2/com.ethlo.time/itu/javadoc.svg)](https://javadoc.io/doc/org.springframework/spring-core)
+
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
 
 An extremely fast parser and formatter of ISO format date-times.
@@ -43,7 +46,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.6.1</version>
+  <version>1.7.0</version>
 </dependency>
 ```
 
@@ -174,6 +177,11 @@ return ITU.parse("2017-12-06", new TemporalHandler<>()
     }
 });
 ```
+
+### Version 1.7.0
+* Added support for keeping number of significant fraction digits in second
+* Added toString methods to `DateTime` for formatting.
+* Added support for formatting date-times with other time-offsets than UTC.
 
 ### Version 1.6.0
 
