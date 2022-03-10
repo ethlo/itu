@@ -1,7 +1,7 @@
 # Internet Time Utility
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.ethlo.time/itu.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ethlo.time%22%20a%3A%22itu%22)
-[![javadoc](https://javadoc.io/badge2/com.ethlo.time/itu/javadoc.svg)](https://javadoc.io/doc/org.springframework/spring-core)
+[![javadoc](https://javadoc.io/badge2/com.ethlo.time/itu/javadoc.svg)](https://javadoc.io/doc/com.ethlo.time/itu)
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
 
 An extremely fast parser and formatter of ISO format date-times.
