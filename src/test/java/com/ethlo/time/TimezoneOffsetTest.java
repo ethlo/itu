@@ -4,7 +4,7 @@ package com.ethlo.time;
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 - 2022 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 Morten Haraldsen (ethlo)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ class TimezoneOffsetTest
     @Test
     void asJavaTimeOffset()
     {
-        assertThat(a.asJavaTimeOffset()).isEqualTo(ZoneOffset.ofHoursMinutes(10, 30));
+        assertThat(a.toZoneOffset()).isEqualTo(ZoneOffset.ofHoursMinutes(10, 30));
     }
 
     @Test

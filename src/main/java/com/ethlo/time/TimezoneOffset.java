@@ -4,7 +4,7 @@ package com.ethlo.time;
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 - 2022 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 Morten Haraldsen (ethlo)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ public class TimezoneOffset
         return hours * 60 * 60 + minutes * 60;
     }
 
-    public ZoneOffset asJavaTimeOffset()
+    public ZoneOffset toZoneOffset()
     {
         if (this.equals(UTC))
         {

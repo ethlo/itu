@@ -4,7 +4,7 @@ package com.ethlo.time;
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 - 2018 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 Morten Haraldsen (ethlo)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import java.time.YearMonth;
 import com.ethlo.time.internal.EthloITU;
 
 /**
- * The main class for accessing the functions in this library
+ * The main access to the parse and formatting functions in this library.
  */
 public class ITU
 {
@@ -86,40 +86,98 @@ public class ITU
      * Format the input as an RFC-3339 formatted date-time in the UTC timezone
      *
      * @param offsetDateTime The date-time to format
-     * @param fractionDigits The Nuber of fraction digits in the second
-     * @return A formatted string
+     * @param fractionDigits The number of fraction digits in the second field
+     * @return The formatted string
      */
     public static String formatUtc(OffsetDateTime offsetDateTime, int fractionDigits)
     {
         return delegate.formatUtc(offsetDateTime, fractionDigits);
     }
 
-    public static String formatUtc(OffsetDateTime date, Field lastIncluded)
+    /**
+     * Format the input as an ISO format string, limited to the granularity of the specified field, in the UTC timezone.
+     * @param offsetDateTime The date-time to format
+     * @param lastIncluded The last included field
+     * @return The formatted string
+     */
+    public static String formatUtc(OffsetDateTime offsetDateTime, Field lastIncluded)
     {
-        return delegate.formatUtc(date, lastIncluded);
+        return delegate.formatUtc(offsetDateTime, lastIncluded);
     }
 
-    public static String formatUtc(OffsetDateTime date)
+    /**
+     * Format the input as an RFC-3339 formatted date-time in the timezone of the input.
+     *
+     * @param offsetDateTime The date-time to format
+     * @return The formatted string
+     */
+    public static String format(OffsetDateTime offsetDateTime)
     {
-        return delegate.formatUtc(date);
+        return delegate.format(offsetDateTime, offsetDateTime.getOffset(), 0);
     }
 
-    public static String formatUtcMilli(OffsetDateTime date)
+    /**
+     * Format the input as an RFC-3339 formatted date-time in the timezone of the input, with the specified number of fraction digits.
+     *
+     * @param offsetDateTime The date-time to format
+     * @param fractionDigits The number of fraction digits in the second field
+     * @return The formatted string
+     */
+    public static String format(OffsetDateTime offsetDateTime, int fractionDigits)
     {
-        return delegate.formatUtcMilli(date);
+        return delegate.format(offsetDateTime, offsetDateTime.getOffset(), fractionDigits);
     }
 
-    public static String formatUtcMicro(OffsetDateTime date)
+    /**
+     * Format the input as an RFC-3339 formatted date-time in the UTC timezone with second resolution.
+     *
+     * @param offsetDateTime The date-time to format.
+     * @return The formatted string with second resolution.
+     */
+    public static String formatUtc(OffsetDateTime offsetDateTime)
     {
-        return delegate.formatUtcMicro(date);
+        return delegate.formatUtc(offsetDateTime);
     }
 
-    public static String formatUtcNano(OffsetDateTime date)
+    /**
+     * Format the input as an RFC-3339 formatted date-time in the UTC timezone with millisecond resolution.
+     *
+     * @param offsetDateTime The date-time to format.
+     * @return The formatted string with millisecond resolution.
+     */
+    public static String formatUtcMilli(final OffsetDateTime offsetDateTime)
     {
-        return delegate.formatUtcNano(date);
+        return delegate.formatUtcMilli(offsetDateTime);
     }
 
-    public static void parse(String text, TemporalConsumer temporalConsumer)
+    /**
+     * Format the input as an RFC-3339 formatted date-time in the UTC timezone with microsecond resolution.
+     *
+     * @param offsetDateTime The date-time to format
+     * @return The formatted string with microsecond resolution
+     */
+    public static String formatUtcMicro(final OffsetDateTime offsetDateTime)
+    {
+        return delegate.formatUtcMicro(offsetDateTime);
+    }
+
+    /**
+     * Format the input as an RFC-3339 formatted date-time in the UTC timezone with nanosecond resolution
+     *
+     * @param offsetDateTime The date-time to format
+     * @return The formatted string with nanosecond resolution
+     */
+    public static String formatUtcNano(final OffsetDateTime offsetDateTime)
+    {
+        return delegate.formatUtcNano(offsetDateTime);
+    }
+
+    /**
+     * Parse the input, and use callbacks for the type of date/date-time it contains. This allows you to handle different granularity inputs with ease!
+     * @param text The text to parse as a date/date-time
+     * @param temporalConsumer The consumer of the found date/date-time
+     */
+    public static void parse(final String text, final TemporalConsumer temporalConsumer)
     {
         final DateTime dateTime = delegate.parse(text);
         if (dateTime.includesGranularity(Field.MINUTE))
@@ -146,6 +204,12 @@ public class ITU
             temporalConsumer.handle(Year.of(dateTime.getYear()));
         }
     }
+
+    /**
+     * Parse the input, and use callbacks for the type of date/date-time it contains. This allows you to handle different granularity inputs with ease!
+     * @param text The text to parse as a date/date-time
+     * @param temporalHandler The handler of the found date/date-time
+     */
 
     public static <T> T parse(String text, TemporalHandler<T> temporalHandler)
     {
@@ -175,6 +239,12 @@ public class ITU
         }
     }
 
+    /**
+     * Check if the input is valid for one of the specified types
+     * @param text The input to check
+     * @param types The types that are considered valid
+     * @return True if valid, otherwise false
+     */
     public static boolean isValid(final String text, TemporalType... types)
     {
         try

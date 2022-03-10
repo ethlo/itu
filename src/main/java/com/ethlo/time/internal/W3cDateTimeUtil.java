@@ -21,6 +21,7 @@ package com.ethlo.time.internal;
  */
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 
 import com.ethlo.time.DateTime;
@@ -77,6 +78,8 @@ public interface W3cDateTimeUtil
      * @return the formatted date/date-time
      */
     String formatUtc(OffsetDateTime date, int fractionDigits);
+
+    String format(OffsetDateTime date, ZoneOffset adjustTo, int fractionDigits);
 
     /**
      * Parse the format and return it as a fitting sub-class of {@link Temporal}

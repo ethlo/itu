@@ -74,7 +74,7 @@ public class W3cCorrectnessTest extends AbstractTest
     {
         final DateTime date = w3cDateUtil.parse("2012");
         assertThat(date.getYear()).isEqualTo(2012);
-        assertThat(date.getField()).isEqualTo(Field.YEAR);
+        assertThat(date.getMostGranularField()).isEqualTo(Field.YEAR);
         assertThat(date.toYear()).isEqualTo(Year.of(2012));
     }
 
@@ -84,7 +84,7 @@ public class W3cCorrectnessTest extends AbstractTest
         final DateTime date = w3cDateUtil.parse("2012-10");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
-        assertThat(date.getField()).isEqualTo(Field.MONTH);
+        assertThat(date.getMostGranularField()).isEqualTo(Field.MONTH);
         final YearMonth yearMonth = w3cDateUtil.parse("2012-10").toYearMonth();
         assertThat(yearMonth.getYear()).isEqualTo(2012);
         assertThat(yearMonth.getMonthValue()).isEqualTo(10);
@@ -100,7 +100,7 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(3);
         assertThat(date.getDayOfMonth()).isEqualTo(29);
-        assertThat(date.getField()).isEqualTo(Field.DAY);
+        assertThat(date.getMostGranularField()).isEqualTo(Field.DAY);
         assertThat(date.toString()).isEqualTo(input);
     }
 
@@ -116,7 +116,7 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getMinute()).isEqualTo(22);
         assertThat(date.getSecond()).isEqualTo(39);
         assertThat(date.getNano()).isEqualTo(123456789);
-        assertThat(date.getField()).isEqualTo(Field.NANO);
+        assertThat(date.getMostGranularField()).isEqualTo(Field.NANO);
         assertThat(date.getOffset()).isPresent();
         assertThat(date.getOffset().get().getHours()).isEqualTo(13);
         assertThat(date.getOffset().get().getMinutes()).isEqualTo(30);
@@ -135,7 +135,7 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getMinute()).isEqualTo(22);
         assertThat(date.getSecond()).isEqualTo(39);
         assertThat(date.getNano()).isEqualTo(0);
-        assertThat(date.getField()).isEqualTo(Field.SECOND);
+        assertThat(date.getMostGranularField()).isEqualTo(Field.SECOND);
         assertThat(date.getOffset()).isPresent();
         assertThat(date.getOffset().get().getHours()).isEqualTo(13);
         assertThat(date.getOffset().get().getMinutes()).isEqualTo(30);
@@ -175,7 +175,7 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getDayOfMonth()).isEqualTo(27);
         assertThat(date.getHour()).isEqualTo(17);
         assertThat(date.getMinute()).isEqualTo(22);
-        assertThat(date.getField()).isEqualTo(Field.MINUTE);
+        assertThat(date.getMostGranularField()).isEqualTo(Field.MINUTE);
         assertThat(date.getOffset()).hasValue(TimezoneOffset.UTC);
     }
 
@@ -188,7 +188,7 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getDayOfMonth()).isEqualTo(27);
         assertThat(date.getHour()).isEqualTo(17);
         assertThat(date.getMinute()).isEqualTo(22);
-        assertThat(date.getField()).isEqualTo(Field.MINUTE);
+        assertThat(date.getMostGranularField()).isEqualTo(Field.MINUTE);
         assertThat(date.getOffset()).isEmpty();
 
         final DateTimeException excOffsetDateTime = assertThrows(DateTimeException.class, date::toOffsetDatetime);
@@ -212,7 +212,7 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getHour()).isEqualTo(17);
         assertThat(date.getMinute()).isEqualTo(22);
         assertThat(date.getSecond()).isEqualTo(39);
-        assertThat(date.getField()).isEqualTo(Field.SECOND);
+        assertThat(date.getMostGranularField()).isEqualTo(Field.SECOND);
         assertThat(date.getOffset()).isEmpty();
         final LocalDateTime localDateTime = date.toLocalDatetime();
         assertThat(localDateTime.getYear()).isEqualTo(2012);

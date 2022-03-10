@@ -4,7 +4,7 @@ package com.ethlo.time;
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 - 2022 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 Morten Haraldsen (ethlo)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,12 +31,13 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.ethlo.time.internal.LimitedCharArrayIntegerUtil;
 
 /**
- * Container class for parsed date/date-time data. The {@link #getField()} contains the highest granularity field found, like MONTH, MINUTE, SECOND.
+ * Container class for parsed date/date-time data. The {@link #getMostGranularField()} contains the highest granularity field found, like MONTH, MINUTE, SECOND.
  */
 public class DateTime
 {
@@ -63,36 +64,60 @@ public class DateTime
         this.offset = offset;
     }
 
+    /**
+     * Create a new instance with second granularity from the input parameters
+     */
     public static DateTime of(int year, int month, int day, int hour, int minute, int second, TimezoneOffset offset)
     {
         return new DateTime(Field.SECOND, year, month, day, hour, minute, second, 0, offset);
     }
 
+    /**
+     * Create a new instance with nanosecond granularity from the input parameters
+     */
     public static DateTime of(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
     {
         return new DateTime(Field.NANO, year, month, day, hour, minute, second, nanos, offset);
     }
 
+    /**
+     * Create a new instance with year granularity from the input parameters
+     */
     public static DateTime ofYear(int year)
     {
         return new DateTime(Field.YEAR, year, 0, 0, 0, 0, 0, 0, null);
     }
 
+    /**
+     * Create a new instance with year-month granularity from the input parameters
+     */
     public static DateTime ofYearMonth(int years, int months)
     {
         return new DateTime(Field.MONTH, years, months, 0, 0, 0, 0, 0, null);
     }
 
+    /**
+     * Create a new instance with day granularity from the input parameters
+     */
     public static DateTime ofDate(int years, int months, int days)
     {
         return new DateTime(Field.DAY, years, months, days, 0, 0, 0, 0, null);
     }
 
+    /**
+     * Create a new instance with minute granularity from the input parameters
+     */
     public static DateTime of(int years, int months, int days, int hours, int minute, TimezoneOffset offset)
     {
         return new DateTime(Field.MINUTE, years, months, days, hours, minute, 0, 0, offset);
     }
 
+    /**
+     * Create a new instance with data from the specified date-time.
+     *
+     * @param dateTime The date-time to copy data from
+     * @return A new instance
+     */
     public static DateTime of(OffsetDateTime dateTime)
     {
         return DateTime.of(dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond(), dateTime.getNano(), TimezoneOffset.of(dateTime.getOffset()));
@@ -164,7 +189,7 @@ public class DateTime
     }
 
     /**
-     * Creates a {@link Year} discarding any higher resolution fields
+     * Creates a {@link Year} discarding any higher granularity fields
      *
      * @return the {@link Year}
      */
@@ -174,7 +199,7 @@ public class DateTime
     }
 
     /**
-     * Creates a {@link YearMonth} discarding any higher resolution fields
+     * Creates a {@link YearMonth} discarding any higher granularity fields
      *
      * @return the {@link YearMonth}
      */
@@ -205,13 +230,13 @@ public class DateTime
         assertMinGranularity(Field.MINUTE);
         if (offset != null)
         {
-            return OffsetDateTime.of(year, month, day, hour, minute, second, nano, offset.asJavaTimeOffset());
+            return OffsetDateTime.of(year, month, day, hour, minute, second, nano, offset.toZoneOffset());
         }
         throw new DateTimeException("No zone offset information found");
     }
 
     /**
-     * Creates a {@link LocalDate}, discarding any higher resolution fields
+     * Creates a {@link LocalDate}, discarding any higher granularity fields
      *
      * @return the {@link LocalDate}
      */
@@ -222,29 +247,40 @@ public class DateTime
     }
 
     /**
-     * Returns the minimum field found during parsing
+     * Returns the most granular field found during parsing
      *
-     * @return The minimum field found
+     * @return The field found
      */
-    public Field getField()
+    public Field getMostGranularField()
     {
         return field;
     }
 
-    public DateTime assertMinGranularity(Field field)
+    private void assertMinGranularity(Field field)
     {
         if (!includesGranularity(field))
         {
             throw new DateTimeException("No " + field.name() + " field found");
         }
-        return this;
     }
 
+    /**
+     * Formats this date-time as an ISO formatted string with the last included field as specified.
+     *
+     * @param lastIncluded The last specified field to include
+     * @return The formatted date/date-time string
+     */
     public String toString(final Field lastIncluded)
     {
         return toString(this, lastIncluded, 0);
     }
 
+    /**
+     * Formats this date-time as an RFC-3339 compatible string with the specified number of fractions in the second.
+     *
+     * @param fractionDigits The number of fractions to include
+     * @return The formatted date/date-time string
+     */
     public String toString(final int fractionDigits)
     {
         return toString(this, Field.NANO, fractionDigits);
@@ -252,9 +288,9 @@ public class DateTime
 
     private String toString(final DateTime date, final Field lastIncluded, final int fractionDigits)
     {
-        if (lastIncluded.ordinal() > date.getField().ordinal())
+        if (lastIncluded.ordinal() > date.getMostGranularField().ordinal())
         {
-            throw new DateTimeException("Requested granularity was " + lastIncluded.name() + ", but contains only granularity " + date.getField().name());
+            throw new DateTimeException("Requested granularity was " + lastIncluded.name() + ", but contains only granularity " + date.getMostGranularField().name());
         }
         final TimezoneOffset tz = date.getOffset().orElse(null);
         final char[] buffer = new char[35];
@@ -330,9 +366,49 @@ public class DateTime
         return finish(buffer, 20 + fractionDigits, tz);
     }
 
+    /**
+     * Formats this date-time as a date/date-time with the same fields as was parsed and no fractions in the second.
+     *
+     * @return The formatted date/date-time string
+     */
     @Override
     public String toString()
     {
         return toString(field);
+    }
+
+    /**
+     * * @hidden
+     */
+    @Override
+    public boolean equals(final Object o)
+    {
+        if (this == o)
+        {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
+        DateTime dateTime = (DateTime) o;
+        return year == dateTime.year
+                && month == dateTime.month
+                && day == dateTime.day
+                && hour == dateTime.hour
+                && minute == dateTime.minute
+                && second == dateTime.second
+                && nano == dateTime.nano
+                && field == dateTime.field
+                && Objects.equals(offset, dateTime.offset);
+    }
+
+    /**
+     * @hidden
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(field.ordinal(), year, month, day, hour, minute, second, nano, offset);
     }
 }

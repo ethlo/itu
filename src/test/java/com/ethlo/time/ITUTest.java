@@ -4,7 +4,7 @@ package com.ethlo.time;
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 - 2019 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 Morten Haraldsen (ethlo)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 
 import org.junit.jupiter.api.Tag;
@@ -79,6 +80,13 @@ public class ITUTest
     void formatDateTimeWithFullGranularity()
     {
         assertThat(DateTime.of(2012, 11, 31, 22, 50, 46, 123456789, TimezoneOffset.UTC).toString(9)).isEqualTo("2012-11-31T22:50:46.123456789Z");
+    }
+
+    @Test
+    void formatDateTimeWithSecondGranularity()
+    {
+        final OffsetDateTime input = OffsetDateTime.of(2012, 11, 30, 22, 50, 46, 123456789, ZoneOffset.ofHoursMinutes(-9, -30));
+        assertThat(ITU.format(input)).isEqualTo("2012-11-30T22:50:46-09:30");
     }
 
     @Test

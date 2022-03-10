@@ -20,45 +20,39 @@ package com.ethlo.time;
  * #L%
  */
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
 
-/**
- * Consumer for flexibly dealing with different granularity date/date-times
- */
-public interface TemporalConsumer
+import static org.assertj.core.api.Assertions.assertThat;
+
+@Tag("CorrectnessTest")
+public class DateTimeTest
 {
-    default void handle(LocalDateTime localDateTime)
+    final DateTime a = ITU.parseLenient("2018-01-06T23:59:12-04:30");
+    final DateTime b = ITU.parseLenient("2018-01-06T23:59:12-04:30");
+    final DateTime c = ITU.parseLenient("2018-01-06T23:59:12-05:30");
+
+    @Test
+    public void testEquals()
     {
-        fallback(localDateTime);
+        assertThat(a).isEqualTo(a);
+        assertThat(a).isEqualTo(b);
+        assertThat(b).isEqualTo(a);
+        assertThat(a).isNotEqualTo(c);
+        assertThat(a).isNotEqualTo("");
     }
 
-    default void handle(LocalDate localDate)
+    @Test
+    public void testHashcode()
     {
-        fallback(localDate);
-    }
-
-    default void handle(YearMonth yearMonth)
-    {
-        fallback(yearMonth);
-    }
-
-    default void handle(Year year)
-    {
-        fallback(year);
-    }
-
-    default void handle(OffsetDateTime offsetDateTime)
-    {
-        fallback(offsetDateTime);
-    }
-
-    default void fallback(final Temporal temporal)
-    {
-        throw new UnsupportedOperationException("Unhandled type " + temporal.getClass());
+        System.out.println(a);
+        assertThat(a.hashCode()).isEqualTo(-148521044);
     }
 }

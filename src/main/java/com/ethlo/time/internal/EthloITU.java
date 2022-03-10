@@ -159,6 +159,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         if (sign == MINUS)
         {
             hours = -hours;
+            minutes = -minutes;
         }
         else if (sign != PLUS)
         {
@@ -184,41 +185,47 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     @Override
     public String formatUtc(OffsetDateTime date, int fractionDigits)
     {
-        return doFormatUtc(date, Field.SECOND, fractionDigits);
+        return doFormat(date, ZoneOffset.UTC, Field.SECOND, fractionDigits);
     }
 
     @Override
     public String formatUtc(OffsetDateTime date, Field lastIncluded)
     {
-        return doFormatUtc(date, lastIncluded, 0);
+        return doFormat(date, ZoneOffset.UTC, lastIncluded, 0);
     }
 
-    private String doFormatUtc(OffsetDateTime date, Field lastIncluded, int fractionDigits)
+    @Override
+    public String format(OffsetDateTime date, ZoneOffset adjustTo, final int fractionDigits)
+    {
+        return doFormat(date, adjustTo, Field.NANO, fractionDigits);
+    }
+
+    private String doFormat(OffsetDateTime date, ZoneOffset adjustTo, Field lastIncluded, int fractionDigits)
     {
         assertMaxFractionDigits(fractionDigits);
 
-        OffsetDateTime utc = date;
-        if (date.getOffset() != ZoneOffset.UTC)
+        OffsetDateTime adjusted = date;
+        if (!date.getOffset().equals(adjustTo))
         {
-            utc = date.atZoneSameInstant(FastUTCZoneId.get()).toOffsetDateTime();
+            adjusted = date.atZoneSameInstant(adjustTo).toOffsetDateTime();
         }
-        final TimezoneOffset tz = TimezoneOffset.UTC;
+        final TimezoneOffset tz = TimezoneOffset.of(adjustTo);
 
         final char[] buffer = new char[31];
 
-        if (handleDatePart(lastIncluded, buffer, utc.getYear(), 0, 4, Field.YEAR))
+        if (handleDatePart(lastIncluded, buffer, adjusted.getYear(), 0, 4, Field.YEAR))
         {
             return finish(buffer, Field.YEAR.getRequiredLength(), null);
         }
 
         buffer[4] = DATE_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, utc.getMonthValue(), 5, 2, Field.MONTH))
+        if (handleDatePart(lastIncluded, buffer, adjusted.getMonthValue(), 5, 2, Field.MONTH))
         {
             return finish(buffer, Field.MONTH.getRequiredLength(), null);
         }
 
         buffer[7] = DATE_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, utc.getDayOfMonth(), 8, 2, Field.DAY))
+        if (handleDatePart(lastIncluded, buffer, adjusted.getDayOfMonth(), 8, 2, Field.DAY))
         {
             return finish(buffer, Field.DAY.getRequiredLength(), null);
         }
@@ -227,21 +234,21 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         buffer[10] = SEPARATOR_UPPER;
 
         // Time
-        LimitedCharArrayIntegerUtil.toString(utc.getHour(), buffer, 11, 2);
+        LimitedCharArrayIntegerUtil.toString(adjusted.getHour(), buffer, 11, 2);
         buffer[13] = TIME_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, utc.getMinute(), 14, 2, Field.MINUTE))
+        if (handleDatePart(lastIncluded, buffer, adjusted.getMinute(), 14, 2, Field.MINUTE))
         {
             return finish(buffer, Field.MINUTE.getRequiredLength(), tz);
         }
         buffer[16] = TIME_SEPARATOR;
-        LimitedCharArrayIntegerUtil.toString(utc.getSecond(), buffer, 17, 2);
+        LimitedCharArrayIntegerUtil.toString(adjusted.getSecond(), buffer, 17, 2);
 
         // Second fractions
         final boolean hasFractionDigits = fractionDigits > 0;
         if (hasFractionDigits)
         {
             buffer[19] = FRACTION_SEPARATOR;
-            addFractions(buffer, fractionDigits, utc.getNano());
+            addFractions(buffer, fractionDigits, adjusted.getNano());
             return finish(buffer, 20 + fractionDigits, tz);
         }
         return finish(buffer, 19, tz);
@@ -273,9 +280,9 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         else
         {
             buf[start] = tz.getTotalSeconds() < 0 ? MINUS : PLUS;
-            LimitedCharArrayIntegerUtil.toString(tz.getHours(), buf, start + 1, 2);
+            LimitedCharArrayIntegerUtil.toString(Math.abs(tz.getHours()), buf, start + 1, 2);
             buf[start + 3] = TIME_SEPARATOR;
-            LimitedCharArrayIntegerUtil.toString(tz.getMinutes(), buf, start + 4, 2);
+            LimitedCharArrayIntegerUtil.toString(Math.abs(tz.getMinutes()), buf, start + 4, 2);
             return 6;
         }
     }
@@ -289,8 +296,18 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     @Override
     public OffsetDateTime parseDateTime(final String dateTime)
     {
-        return parse(dateTime).assertMinGranularity(Field.SECOND).toOffsetDatetime();
+        return assertSecondsGranularity(parse(dateTime)).toOffsetDatetime();
     }
+
+    private DateTime assertSecondsGranularity(DateTime dt)
+    {
+        if (!dt.includesGranularity(Field.SECOND))
+        {
+            throw new DateTimeException("No " + Field.SECOND.name() + " field found");
+        }
+        return dt;
+    }
+
 
     @Override
     public String formatUtcMilli(OffsetDateTime date)
@@ -444,7 +461,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
                         && utcMinute == 59)
                 {
                     // Consider it a leap second
-                    final OffsetDateTime nearest = OffsetDateTime.of(year, month, day, hour, minute, 59, nanos, offset.asJavaTimeOffset()).plusSeconds(1);
+                    final OffsetDateTime nearest = OffsetDateTime.of(year, month, day, hour, minute, 59, nanos, offset.toZoneOffset()).plusSeconds(1);
                     throw new LeapSecondException(nearest, second, isValidLeapYearMonth);
                 }
             }
