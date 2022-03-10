@@ -50,8 +50,9 @@ public class DateTime
     private final int second;
     private final int nano;
     private final TimezoneOffset offset;
+    private final int fractionDigits;
 
-    public DateTime(final Field field, final int year, final int month, final int day, final int hour, final int minute, final int second, final int nano, final TimezoneOffset offset)
+    public DateTime(final Field field, final int year, final int month, final int day, final int hour, final int minute, final int second, final int nano, final TimezoneOffset offset, final int fractionDigits)
     {
         this.field = field;
         this.year = year;
@@ -62,6 +63,7 @@ public class DateTime
         this.second = assertSize(second, 0, 60, Field.SECOND);
         this.nano = assertSize(nano, 0, 999_999_999, Field.NANO);
         this.offset = offset;
+        this.fractionDigits = fractionDigits;
     }
 
     /**
@@ -69,15 +71,15 @@ public class DateTime
      */
     public static DateTime of(int year, int month, int day, int hour, int minute, int second, TimezoneOffset offset)
     {
-        return new DateTime(Field.SECOND, year, month, day, hour, minute, second, 0, offset);
+        return new DateTime(Field.SECOND, year, month, day, hour, minute, second, 0, offset, 0);
     }
 
     /**
      * Create a new instance with nanosecond granularity from the input parameters
      */
-    public static DateTime of(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
+    public static DateTime of(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset, final int fractionDigits)
     {
-        return new DateTime(Field.NANO, year, month, day, hour, minute, second, nanos, offset);
+        return new DateTime(Field.NANO, year, month, day, hour, minute, second, nanos, offset, fractionDigits);
     }
 
     /**
@@ -85,7 +87,7 @@ public class DateTime
      */
     public static DateTime ofYear(int year)
     {
-        return new DateTime(Field.YEAR, year, 0, 0, 0, 0, 0, 0, null);
+        return new DateTime(Field.YEAR, year, 0, 0, 0, 0, 0, 0, null, 0);
     }
 
     /**
@@ -93,7 +95,7 @@ public class DateTime
      */
     public static DateTime ofYearMonth(int years, int months)
     {
-        return new DateTime(Field.MONTH, years, months, 0, 0, 0, 0, 0, null);
+        return new DateTime(Field.MONTH, years, months, 0, 0, 0, 0, 0, null, 0);
     }
 
     /**
@@ -101,7 +103,7 @@ public class DateTime
      */
     public static DateTime ofDate(int years, int months, int days)
     {
-        return new DateTime(Field.DAY, years, months, days, 0, 0, 0, 0, null);
+        return new DateTime(Field.DAY, years, months, days, 0, 0, 0, 0, null, 0);
     }
 
     /**
@@ -109,7 +111,7 @@ public class DateTime
      */
     public static DateTime of(int years, int months, int days, int hours, int minute, TimezoneOffset offset)
     {
-        return new DateTime(Field.MINUTE, years, months, days, hours, minute, 0, 0, offset);
+        return new DateTime(Field.MINUTE, years, months, days, hours, minute, 0, 0, offset, 0);
     }
 
     /**
@@ -120,7 +122,7 @@ public class DateTime
      */
     public static DateTime of(OffsetDateTime dateTime)
     {
-        return DateTime.of(dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond(), dateTime.getNano(), TimezoneOffset.of(dateTime.getOffset()));
+        return DateTime.of(dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond(), dateTime.getNano(), TimezoneOffset.of(dateTime.getOffset()), 9);
     }
 
     private int assertSize(int value, int min, int max, Field field)
@@ -367,14 +369,24 @@ public class DateTime
     }
 
     /**
-     * Formats this date-time as a date/date-time with the same fields as was parsed and no fractions in the second.
+     * Return the number of significant fraction digits in the second.
+     *
+     * @return The number of significant fraction digits
+     */
+    public int getFractionDigits()
+    {
+        return fractionDigits;
+    }
+
+    /**
+     * Formats this date-time as a date/date-time with the same fields as was parsed
      *
      * @return The formatted date/date-time string
      */
     @Override
     public String toString()
     {
-        return toString(field);
+        return fractionDigits > 0 ? toString(fractionDigits) : toString(field);
     }
 
     /**
@@ -399,6 +411,7 @@ public class DateTime
                 && minute == dateTime.minute
                 && second == dateTime.second
                 && nano == dateTime.nano
+                && fractionDigits == dateTime.fractionDigits
                 && field == dateTime.field
                 && Objects.equals(offset, dateTime.offset);
     }
@@ -409,6 +422,6 @@ public class DateTime
     @Override
     public int hashCode()
     {
-        return Objects.hash(field.ordinal(), year, month, day, hour, minute, second, nano, offset);
+        return Objects.hash(field.ordinal(), year, month, day, hour, minute, second, nano, offset, fractionDigits);
     }
 }

@@ -20,17 +20,10 @@ package com.ethlo.time;
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.temporal.Temporal;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("CorrectnessTest")
 public class DateTimeTest

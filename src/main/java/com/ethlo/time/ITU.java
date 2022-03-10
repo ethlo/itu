@@ -96,8 +96,9 @@ public class ITU
 
     /**
      * Format the input as an ISO format string, limited to the granularity of the specified field, in the UTC timezone.
+     *
      * @param offsetDateTime The date-time to format
-     * @param lastIncluded The last included field
+     * @param lastIncluded   The last included field
      * @return The formatted string
      */
     public static String formatUtc(OffsetDateTime offsetDateTime, Field lastIncluded)
@@ -174,7 +175,8 @@ public class ITU
 
     /**
      * Parse the input, and use callbacks for the type of date/date-time it contains. This allows you to handle different granularity inputs with ease!
-     * @param text The text to parse as a date/date-time
+     *
+     * @param text             The text to parse as a date/date-time
      * @param temporalConsumer The consumer of the found date/date-time
      */
     public static void parse(final String text, final TemporalConsumer temporalConsumer)
@@ -207,7 +209,8 @@ public class ITU
 
     /**
      * Parse the input, and use callbacks for the type of date/date-time it contains. This allows you to handle different granularity inputs with ease!
-     * @param text The text to parse as a date/date-time
+     *
+     * @param text            The text to parse as a date/date-time
      * @param temporalHandler The handler of the found date/date-time
      */
 
@@ -241,7 +244,8 @@ public class ITU
 
     /**
      * Check if the input is valid for one of the specified types
-     * @param text The input to check
+     *
+     * @param text  The input to check
      * @param types The types that are considered valid
      * @return True if valid, otherwise false
      */

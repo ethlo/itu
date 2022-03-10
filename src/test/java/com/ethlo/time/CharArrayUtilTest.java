@@ -24,8 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 
-import com.ethlo.time.internal.LimitedCharArrayIntegerUtil;
 import org.junit.jupiter.api.Test;
+
+import com.ethlo.time.internal.LimitedCharArrayIntegerUtil;
 
 public class CharArrayUtilTest
 {

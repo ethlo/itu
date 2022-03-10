@@ -20,9 +20,10 @@ package com.ethlo.time;
  * #L%
  */
 
+import org.junit.jupiter.api.BeforeEach;
+
 import com.ethlo.time.internal.Rfc3339Formatter;
 import com.ethlo.time.internal.Rfc3339Parser;
-import org.junit.jupiter.api.BeforeEach;
 
 public abstract class AbstractTest
 {

@@ -20,8 +20,8 @@ package com.ethlo.time.itu;
  * #L%
  */
 
-import com.ethlo.time.internal.EthloITU;
 import com.ethlo.time.ParserBenchmarkTest;
+import com.ethlo.time.internal.EthloITU;
 
 public class ITURfc3339ParserBenchmarkTest extends ParserBenchmarkTest
 {
