@@ -46,6 +46,6 @@ public class DateTimeTest
     public void testHashcode()
     {
         System.out.println(a);
-        assertThat(a.hashCode()).isEqualTo(-148521044);
+        assertThat(a.hashCode()).isEqualTo(-309185068);
     }
 }
