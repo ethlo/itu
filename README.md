@@ -48,6 +48,9 @@ Add dependency
 </dependency>
 ```
 
+Below you find some samples of usage of this library. Please check out the [javadoc](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html) for more details.
+
+
 ```java
 import java.time.OffsetDateTime;
 import com.ethlo.time.DateTime;
@@ -64,7 +67,6 @@ final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:
 
 // Parse lenient, raw data
 final DateTime dateTime = ITU.parse("2012-12-27T19:07Z");
-
 ```
 
 ### Handle leap-seconds
@@ -81,6 +83,31 @@ catch (LeapSecondException exc)
   exc.isVerifiedValidLeapYearMonth() // true
 }
 ```
+
+### Handle different granularity (ISO format)
+Validate to different required granularity:
+```java
+ITU.isValid("2017-12-06", TemporalType.LOCAL_DATE_TIME);
+``` 
+
+Allowing handling different levels of granularity:
+```java
+return ITU.parse("2017-12-06", new TemporalHandler<>()
+{
+    @Override
+    public OffsetDateTime handle(final LocalDate localDate)
+    {
+        return localDate.atTime(OffsetTime.of(LocalTime.of(0, 0), ZoneOffset.UTC));
+    }
+
+    @Override
+    public OffsetDateTime handle(final OffsetDateTime offsetDateTime)
+    {
+        return offsetDateTime;
+    }
+});
+```
+
 
 ## Q & A
 
@@ -149,10 +176,13 @@ instead of `60`.
 ## Changelog
 
 ### Version 1.7.0
+
+2022-09-03
+
 * Added support for keeping number of significant fraction digits in second
 * Added toString methods to `DateTime` for formatting.
 * Added support for formatting date-times with other time-offsets than UTC.
-* Vastly improved javadoc.
+* Vastly [improved javadoc](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
 
 ### Version 1.6.1
 
@@ -160,28 +190,8 @@ instead of `60`.
 
 New helper methods were added to deal with different granularity.
 
-Validate to different required granularity:
-```java
-ITU.isValid("2017-12-06", TemporalType.LOCAL_DATE_TIME);
-``` 
-
-Allowing handling different levels of granularity:
-```java
-return ITU.parse("2017-12-06", new TemporalHandler<>()
-{
-    @Override
-    public OffsetDateTime handle(final LocalDate localDate)
-    {
-        return localDate.atTime(OffsetTime.of(LocalTime.of(0, 0), ZoneOffset.UTC));
-    }
-
-    @Override
-    public OffsetDateTime handle(final OffsetDateTime offsetDateTime)
-    {
-        return offsetDateTime;
-    }
-});
-```
+* Validate to different required granularity.
+* Allowing handling different levels of granularity.
 
 ### Version 1.6.0
 
