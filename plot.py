@@ -15,9 +15,9 @@ class ReportGenerator(object):
         self.settings = {}
         self.parser = argparse.ArgumentParser(description='ReportGenerator')
         self.parser.add_argument('-i', default='target/itu_performance.json', help='The JMH result (JSON) file')
-        self.parser.add_argument('-o', help='Output file path for bar chart image')
+        self.parser.add_argument('-o', default='output.png', help='Output file path for bar chart image')
         self.parser.add_argument('--size', default='10,16', help='Plot size')
-        self.parser.add_argument('--theme', default='seaborn', help='Output theme for bar chart image')
+        self.parser.add_argument('--theme', default='default', help='Output theme for bar chart image')
         self.parser.add_argument('--include', default='parse,parseRaw,format',
                                  help='Prefix for test methods to include')
 
