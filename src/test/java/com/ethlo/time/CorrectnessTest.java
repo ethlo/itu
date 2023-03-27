@@ -28,46 +28,40 @@ import java.time.OffsetDateTime;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @Tag("CorrectnessTest")
 public abstract class CorrectnessTest extends AbstractTest
 {
-    private final String[] validFormats =
-            {
-                    "2017-02-21T15:27:39Z", "2017-02-21T15:27:39.123Z",
-                    "2017-02-21T15:27:39.123456Z", "2017-02-21T15:27:39.123456789Z",
-                    "2017-02-21T15:27:39+00:00", "2017-02-21T15:27:39.123+00:00",
-                    "2017-02-21T15:27:39.123456+00:00", "2017-02-21T15:27:39.123456789+00:00",
-                    "2017-02-21T15:27:39.1+00:00", "2017-02-21T15:27:39.12+00:00",
-                    "2017-02-21T15:27:39.123+00:00", "2017-02-21T15:27:39.1234+00:00",
-                    "2017-02-21T15:27:39.12345+00:00", "2017-02-21T15:27:39.123456+00:00",
-                    "2017-02-21T15:27:39.1234567+00:00", "2017-02-21T15:27:39.12345678+00:00",
-                    "2017-02-21T15:27:39.123456789+00:00"
-            };
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "2017-02-21T15:27:39Z", "2017-02-21T15:27:39.123Z",
+            "2017-02-21T15:27:39.123456Z", "2017-02-21T15:27:39.123456789Z",
+            "2017-02-21T15:27:39+00:00", "2017-02-21T15:27:39.123+00:00",
+            "2017-02-21T15:27:39.123456+00:00", "2017-02-21T15:27:39.123456789+00:00",
+            "2017-02-21T15:27:39.1+00:00", "2017-02-21T15:27:39.12+00:00",
+            "2017-02-21T15:27:39.123+00:00", "2017-02-21T15:27:39.1234+00:00",
+            "2017-02-21T15:27:39.12345+00:00", "2017-02-21T15:27:39.123456+00:00",
+            "2017-02-21T15:27:39.1234567+00:00", "2017-02-21T15:27:39.12345678+00:00",
+            "2017-02-21T15:27:39.123456789+00:00"
+    })
+    void testValid(String valid)
+    {
+        final OffsetDateTime result = parser.parseDateTime(valid);
+        assertThat(result).isNotNull();
+    }
 
-    private final String[] invalidFormats = {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "2017-02-21T15:27:39.+00:00",
             "2017-02-21T15:27:39", "2017-02-21T15:27:39.123",
             "2017-02-21T15:27:39.123456", "2017-02-21T15:27:39.123456789",
             "2017-02-21T15:27:39+0000", "2017-02-21T15:27:39.123+0000",
-            "201702-21T15:27:39.123456+0000", "20170221T15:27:39.123456789+0000"};
-
-    @Test
-    void testValid()
+            "201702-21T15:27:39.123456+0000", "20170221T15:27:39.123456789+0000"})
+    void testInvalid(final String invalid)
     {
-        for (final String valid : validFormats)
-        {
-            final OffsetDateTime result = parser.parseDateTime(valid);
-            assertThat(result).isNotNull();
-        }
-    }
-
-    @Test
-    void testInvalid()
-    {
-        for (final String valid : invalidFormats)
-        {
-            assertThrows(DateTimeException.class, () -> parser.parseDateTime(valid));
-        }
+        assertThrows(DateTimeException.class, () -> parser.parseDateTime(invalid));
     }
 
     @Test

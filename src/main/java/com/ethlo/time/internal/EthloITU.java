@@ -484,6 +484,8 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         fractions = uncheckedParsePositiveInt(chars, 20, idx);
         switch (len)
         {
+            case 0:
+                throw new DateTimeException("Must have at least 1 fraction digit");
             case 1:
                 return fractions * 100_000_000;
             case 2:
