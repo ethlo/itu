@@ -22,7 +22,7 @@ limitations under the License.
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ethlo.time</groupId>
     <artifactId>itu</artifactId>
-    <version>1.7.1</version>
+    <version>1.7.3-SNAPSHOT</version>
     <name>Internet Time Utility</name>
     <description>Extremely fast date/time parser and formatter - RFC 3339 (ISO 8601 profile) and W3C format
     </description>
@@ -312,7 +312,7 @@ limitations under the License.
                         <artifactId>moditect-maven-plugin</artifactId>
                         <version>1.0.0.RC3</version>
                         <executions>
-                                cution>
+                            <execution>
                                 <id>add-module-infos</id>
                                 <phase>package</phase>
                                 <goals>
