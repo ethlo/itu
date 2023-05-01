@@ -324,9 +324,7 @@ limitations under the License.
                                     <module>
                                         <moduleInfo>
                                             <name>com.ethlo.time</name>
-                                            <!-- export everything -->
-                                            <exports>*;</exports>
-                                            <!-- declare services consumed by the artifact -->
+                                            <exports>com.ethlo.time;</exports>
                                             <addServiceUses>true</addServiceUses>
                                         </moduleInfo>
                                     </module>
