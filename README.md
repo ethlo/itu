@@ -24,10 +24,10 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 Your mileage may vary, but tests indicate comfortably 10x faster than JDK classes.
 <img src="doc/performance.png" alt="Performance plot">
 
-Tests performed on a Dell XPS 9700
-* Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz
-* Ubuntu 21.10
-* OpenJDK version 11.0.13
+Tests performed on a Lenovo P1 G6 laptop:
+* Intel(R) Core(TM) i9-13900H
+* Ubuntu 23.10
+* OpenJDK version 17.0.9
 
 ### Run tests yourself
 ```shell
@@ -35,6 +35,7 @@ mvn jmh:benchmark
 ```
 
 To plot the result and create the resulting image, you can run `plot.py`.
+`python3 plot.py -i target/itu_performance.json --size=11,5`
 
 ## Example usage
 
