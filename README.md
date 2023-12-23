@@ -34,8 +34,10 @@ Tests performed on a Lenovo P1 G6 laptop:
 mvn jmh:benchmark
 ```
 
-To plot the result and create the resulting image, you can run `plot.py`.
-`python3 plot.py -i target/itu_performance.json --size=11,5`
+To plot the result and create the resulting image, you can run `plot.py`, for example:
+```
+python3 plot.py -i target/itu_performance.json --size=11,5
+```
 
 ## Example usage
 
