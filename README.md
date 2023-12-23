@@ -1,4 +1,4 @@
-# Internet Time Utility
+    # Internet Time Utility
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.ethlo.time/itu.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ethlo.time%22%20a%3A%22itu%22)
 [![javadoc](https://javadoc.io/badge2/com.ethlo.time/itu/javadoc.svg)](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html)
@@ -44,70 +44,96 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.7.0</version>
+  <version>1.7.3</version>
 </dependency>
 ```
 
 Below you find some samples of usage of this library. Please check out the [javadoc](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html) for more details.
-
 
 ```java
 import java.time.OffsetDateTime;
 import com.ethlo.time.DateTime;
 import com.ethlo.time.ITU;
 
-// Parse a string
-final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
+class Test {
+    void smokeTest() {
+        // Parse a string
+        final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
 
-// Format with no fraction digits
-final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
+        // Format with seconds (no fraction digits)
+        final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
 
-// Format with microsecond precision
-final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
+        // Format with microsecond precision
+        final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
 
-// Parse lenient, raw data
-final DateTime dateTime = ITU.parse("2012-12-27T19:07Z");
+        // Parse lenient, raw data
+        final DateTime dateTime = ITU.parseLenient("2012-12-27T19:07Z");
+    }
+}
 ```
 
 ### Handle leap-seconds
 ```java
-try 
-{
-  final OffsetDateTime dateTime = ITU.parseDateTime("1990-12-31T15:59:60-08:00");
-}
-catch (LeapSecondException exc) 
-{
-  // The following helper methods are available let you decide how to progress
-  exc.getSecondsInMinute(); // 60
-  exc.getNearestDateTime() // 1991-01-01T00:00:00Z
-  exc.isVerifiedValidLeapYearMonth() // true
+import com.ethlo.time.ITU;
+import com.ethlo.time.LeapSecondException;
+import java.time.OffsetDateTime;
+
+class Test {
+    void testParseDateTime() {
+        try {
+            final OffsetDateTime dateTime = ITU.parseDateTime("1990-12-31T15:59:60-08:00");
+        } catch (LeapSecondException exc) {
+            // The following helper methods are available let you decide how to progress
+            exc.getSecondsInMinute(); // 60
+            exc.getNearestDateTime(); // 1991-01-01T00:00:00Z
+            exc.isVerifiedValidLeapYearMonth(); // true
+        }
+    }
 }
 ```
 
 ### Handle different granularity (ISO format)
 Validate to different required granularity:
 ```java
-ITU.isValid("2017-12-06", TemporalType.LOCAL_DATE_TIME);
-``` 
+import com.ethlo.time.ITU;
+import com.ethlo.time.TemporalType;
+
+class Test {
+    void test() {
+        ITU.isValid("2017-12-06", TemporalType.LOCAL_DATE_TIME);
+    }
+}
+```
 
 Allowing handling different levels of granularity:
 ```java
-return ITU.parse("2017-12-06", new TemporalHandler<>()
-{
-    @Override
-    public OffsetDateTime handle(final LocalDate localDate)
-    {
-        return localDate.atTime(OffsetTime.of(LocalTime.of(0, 0), ZoneOffset.UTC));
-    }
+import com.ethlo.time.ITU;
+import com.ethlo.time.TemporalHandler;
 
-    @Override
-    public OffsetDateTime handle(final OffsetDateTime offsetDateTime)
-    {
-        return offsetDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
+import java.time.temporal.TemporalAccessor;
+
+class Test {
+    TemporalAccessor extract() {
+        return ITU.parse("2017-12-06", new TemporalHandler<>() {
+            @Override
+            public OffsetDateTime handle(final LocalDate localDate) {
+                return localDate.atTime(OffsetTime.of(LocalTime.of(0, 0), ZoneOffset.UTC));
+            }
+
+            @Override
+            public OffsetDateTime handle(final OffsetDateTime offsetDateTime) {
+                return offsetDateTime;
+            }
+        });
     }
-});
+}
+
 ```
-
 
 ## Q & A
 
