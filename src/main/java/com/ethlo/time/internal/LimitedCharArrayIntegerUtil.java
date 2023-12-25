@@ -59,28 +59,58 @@ public final class LimitedCharArrayIntegerUtil
         for (int i = startInclusive; i < endExclusive; i++)
         {
             final char c = strNum[i];
-            if (isNotDigit(c))
+            if (c < ZERO || c > DIGIT_9)
             {
                 throw new DateTimeException("Character " + c + " is not a digit");
             }
-            int digit = digit(c);
-            result *= RADIX;
-            result -= digit;
+            result = (result << 1) + (result << 3);
+            result -= c - ZERO;
         }
         return -result;
     }
 
-    public static int uncheckedParsePositiveInt(final char[] strNum, int startInclusive, int endExclusive)
+    public static int[] parseSecondFractions(final char[] strNum, int startInclusive)
     {
         int result = 0;
-        for (int i = startInclusive; i < endExclusive; i++)
+        for (int i = startInclusive; i < strNum.length; i++)
         {
             final char c = strNum[i];
-            int digit = digit(c);
-            result *= RADIX;
-            result -= digit;
+            if (c < ZERO || c > '9')
+            {
+                final int val = scale(-result, (i - startInclusive));
+                return new int[]{val, i};
+            }
+            result = (result << 1) + (result << 3);
+            result -= c - ZERO;
         }
-        return -result;
+        return new int[]{scale(-result, (strNum.length - startInclusive)), strNum.length};
+    }
+
+    private static int scale(int fractions, int len)
+    {
+        switch (len)
+        {
+            case 0:
+                throw new DateTimeException("Must have at least 1 fraction digit");
+            case 1:
+                return fractions * 100_000_000;
+            case 2:
+                return fractions * 10_000_000;
+            case 3:
+                return fractions * 1_000_000;
+            case 4:
+                return fractions * 100_000;
+            case 5:
+                return fractions * 10_000;
+            case 6:
+                return fractions * 1_000;
+            case 7:
+                return fractions * 100;
+            case 8:
+                return fractions * 10;
+            default:
+                return fractions;
+        }
     }
 
     public static void toString(final int value, final char[] buf, final int offset, final int charLength)
@@ -148,21 +178,12 @@ public final class LimitedCharArrayIntegerUtil
     {
         for (int i = offset; i < text.length; i++)
         {
-            if (isNotDigit(text[i]))
+            char c = text[i];
+            if (c < ZERO || c > DIGIT_9)
             {
                 return i;
             }
         }
         return -1;
-    }
-
-    private static boolean isNotDigit(char c)
-    {
-        return (c < ZERO || c > DIGIT_9);
-    }
-
-    private static int digit(char c)
-    {
-        return c - ZERO;
     }
 }

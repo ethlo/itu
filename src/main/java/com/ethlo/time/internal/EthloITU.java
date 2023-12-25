@@ -21,9 +21,8 @@ package com.ethlo.time.internal;
  */
 
 import static com.ethlo.time.internal.LeapSecondHandler.LEAP_SECOND_SECONDS;
-import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.indexOfNonDigit;
 import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.parsePositiveInt;
-import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.uncheckedParsePositiveInt;
+import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.parseSecondFractions;
 
 import java.time.DateTimeException;
 import java.time.Month;
@@ -165,6 +164,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
     private TimezoneOffset parseTimezone(char[] chars, int offset)
     {
+        if (offset >= chars.length)
+        {
+            throw new DateTimeException("No timezone information: " + new String(chars));
+        }
         final int len = chars.length;
         final int left = len - offset;
         final char c = chars[offset];
@@ -401,7 +404,8 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         if (remaining == 0)
         {
             final int seconds = getSeconds(chars);
-            return leapSecondCheck(year, month, day, hour, minute, seconds, 0, null, 0);
+            leapSecondCheck(year, month, day, hour, minute, seconds, 0, null);
+            return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0);
         }
 
         TimezoneOffset offset = null;
@@ -417,19 +421,11 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         else if (remaining >= 1 && c == FRACTION_SEPARATOR)
         {
             // We have fractional seconds
-            final int idx = indexOfNonDigit(chars, 20);
-            if (idx != -1)
-            {
-                // We have an end of fractions
-                final int len = idx - 20;
-                fractions = getFractions(chars, idx, len);
-                fractionDigits = len;
-                offset = parseTimezone(chars, idx);
-            }
-            else
-            {
-                raiseDateTimeException(chars, "No timezone information");
-            }
+            final int[] fractionsData = parseSecondFractions(chars, 20);
+            final int idx = fractionsData[1];
+            fractions = fractionsData[0];
+            fractionDigits = idx - 20;
+            offset = parseTimezone(chars, idx);
         }
         else if (remaining >= 1 && (c == PLUS || c == MINUS))
         {
@@ -441,10 +437,14 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             raiseDateTimeException(chars, "Unexpected character at position 19");
         }
 
-        return leapSecondCheck(year, month, day, hour, minute, getSeconds(chars), fractions, offset, fractionDigits);
+        final int second = getSeconds(chars);
+
+        leapSecondCheck(year, month, day, hour, minute, second, fractions, offset);
+
+        return fractionDigits > 0 ? DateTime.of(year, month, day, hour, minute, second, fractions, offset, fractionDigits) : DateTime.of(year, month, day, hour, minute, second, offset);
     }
 
-    private DateTime leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset, final int fractionDigits)
+    private void leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
     {
         if (second == LEAP_SECOND_SECONDS)
         {
@@ -465,7 +465,6 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
                 }
             }
         }
-        return fractionDigits > 0 ? DateTime.of(year, month, day, hour, minute, second, nanos, offset, fractionDigits) : DateTime.of(year, month, day, hour, minute, second, offset);
     }
 
     private void raiseDateTimeException(char[] chars, String message)
@@ -476,34 +475,5 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     private int getSeconds(final char[] chars)
     {
         return parsePositiveInt(chars, 17, 19);
-    }
-
-    private int getFractions(final char[] chars, final int idx, final int len)
-    {
-        final int fractions;
-        fractions = uncheckedParsePositiveInt(chars, 20, idx);
-        switch (len)
-        {
-            case 0:
-                throw new DateTimeException("Must have at least 1 fraction digit");
-            case 1:
-                return fractions * 100_000_000;
-            case 2:
-                return fractions * 10_000_000;
-            case 3:
-                return fractions * 1_000_000;
-            case 4:
-                return fractions * 100_000;
-            case 5:
-                return fractions * 10_000;
-            case 6:
-                return fractions * 1_000;
-            case 7:
-                return fractions * 100;
-            case 8:
-                return fractions * 10;
-            default:
-                return fractions;
-        }
     }
 }
