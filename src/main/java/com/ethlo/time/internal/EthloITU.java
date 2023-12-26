@@ -21,8 +21,9 @@ package com.ethlo.time.internal;
  */
 
 import static com.ethlo.time.internal.LeapSecondHandler.LEAP_SECOND_SECONDS;
+import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.DIGIT_9;
+import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.ZERO;
 import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.parsePositiveInt;
-import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.parseSecondFractions;
 
 import java.time.DateTimeException;
 import java.time.Month;
@@ -89,28 +90,13 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private int getHour(final char[] chars)
+    private DateTime handleTime(String chars, int year, int month, int day, int hour, int minute)
     {
-        return parsePositiveInt(chars, 11, 13);
-    }
-
-    private int getMinute(final char[] chars)
-    {
-        return parsePositiveInt(chars, 14, 16);
-    }
-
-    private int getDay(final char[] chars)
-    {
-        return parsePositiveInt(chars, 8, 10);
-    }
-
-    private DateTime handleTime(char[] chars, int year, int month, int day, int hour, int minute)
-    {
-        switch (chars[16])
+        switch (chars.charAt(16))
         {
             // We have more granularity, keep going
             case TIME_SEPARATOR:
-                return handleSeconds(year, month, day, hour, minute, chars);
+                return handleTime(year, month, day, hour, minute, chars);
 
             case PLUS:
             case MINUS:
@@ -122,34 +108,35 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             default:
                 assertPositionContains(chars, 16, TIME_SEPARATOR, PLUS, MINUS, ZULU_UPPER);
         }
-        throw new DateTimeException(new String(chars));
+        throw new DateTimeException(chars);
     }
 
-    private void assertPositionContains(char[] chars, int offset, char expected)
+    private void assertPositionContains(String chars, int offset, char expected)
     {
-        if (offset >= chars.length)
+        if (offset >= chars.length())
         {
             raiseDateTimeException(chars, "Unexpected end of input");
         }
 
-        if (chars[offset] != expected)
+        if (chars.charAt(offset) != expected)
         {
             throw new DateTimeException("Expected character " + expected
-                    + " at position " + (offset + 1) + " '" + new String(chars) + "'");
+                    + " at position " + (offset + 1) + " '" + chars + "'");
         }
     }
 
-    private void assertPositionContains(char[] chars, int offset, char... expected)
+    private void assertPositionContains(String chars, int offset, char... expected)
     {
-        if (offset >= chars.length)
+        if (offset >= chars.length())
         {
             raiseDateTimeException(chars, "Unexpected end of input");
         }
 
         boolean found = false;
+        final char needle = chars.charAt(offset);
         for (char e : expected)
         {
-            if (chars[offset] == e)
+            if (needle == e)
             {
                 found = true;
                 break;
@@ -158,41 +145,42 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         if (!found)
         {
             throw new DateTimeException("Expected character " + Arrays.toString(expected)
-                    + " at position " + (offset + 1) + " '" + new String(chars) + "'");
+                    + " at position " + (offset + 1) + " '" + chars + "'");
         }
     }
 
-    private TimezoneOffset parseTimezone(char[] chars, int offset)
+    private TimezoneOffset parseTimezone(String chars, int offset)
     {
-        if (offset >= chars.length)
+        if (offset >= chars.length())
         {
-            throw new DateTimeException("No timezone information: " + new String(chars));
+            throw new DateTimeException("No timezone information: " + chars);
         }
-        final int len = chars.length;
+        final int len = chars.length();
         final int left = len - offset;
-        final char c = chars[offset];
+        final char c = chars.charAt(offset);
         if (c == ZULU_UPPER || c == ZULU_LOWER)
         {
             assertNoMoreChars(chars, offset);
             return TimezoneOffset.UTC;
         }
 
-        if (left != 6)
+        final char sign = chars.charAt(offset);
+        if (sign != PLUS && sign != MINUS)
         {
-            throw new DateTimeException("Invalid timezone offset: " + new String(chars, offset, left));
+            throw new DateTimeException("Invalid character starting at position " + offset + ": " + chars);
         }
 
-        final char sign = chars[offset];
+        if (left != 6)
+        {
+            throw new DateTimeException("Invalid timezone offset: " + new String(chars.toCharArray(), offset, left));
+        }
+
         int hours = parsePositiveInt(chars, offset + 1, offset + 3);
         int minutes = parsePositiveInt(chars, offset + 4, offset + 4 + 2);
         if (sign == MINUS)
         {
             hours = -hours;
             minutes = -minutes;
-        }
-        else if (sign != PLUS)
-        {
-            throw new DateTimeException("Invalid character starting at position " + offset + 1);
         }
 
         if (sign == MINUS && hours == 0 && minutes == 0)
@@ -203,11 +191,11 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return TimezoneOffset.ofHoursMinutes(hours, minutes);
     }
 
-    private void assertNoMoreChars(char[] chars, int lastUsed)
+    private void assertNoMoreChars(String chars, int lastUsed)
     {
-        if (chars.length > lastUsed + 1)
+        if (chars.length() > lastUsed + 1)
         {
-            throw new DateTimeException("Trailing junk data after position " + (lastUsed + 1) + ": " + new String(chars));
+            throw new DateTimeException("Trailing junk data after position " + (lastUsed + 1) + ": " + chars);
         }
     }
 
@@ -336,20 +324,19 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     }
 
     @Override
-    public DateTime parse(String text)
+    public DateTime parse(String chars)
     {
-        if (text == null)
+        if (chars == null)
         {
             throw new NullPointerException("text cannot be null");
         }
 
-        final int len = text.length();
-        final char[] chars = text.toCharArray();
+        final int len = chars.length();
 
         // Date portion
 
         // YEAR
-        final int years = getYear(chars);
+        final int years = parsePositiveInt(chars, 0, 4);
         if (4 == len)
         {
             return DateTime.ofYear(years);
@@ -357,7 +344,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
         // MONTH
         assertPositionContains(chars, 4, DATE_SEPARATOR);
-        final int months = getMonth(chars);
+        final int months = parsePositiveInt(chars, 5, 7);
         if (7 == len)
         {
             return DateTime.ofYearMonth(years, months);
@@ -365,7 +352,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
         // DAY
         assertPositionContains(chars, 7, DATE_SEPARATOR);
-        final int days = getDay(chars);
+        final int days = parsePositiveInt(chars, 8, 10);
         if (10 == len)
         {
             return DateTime.ofDate(years, months, days);
@@ -373,37 +360,29 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
         // HOURS
         assertPositionContains(chars, 10, SEPARATOR_UPPER, SEPARATOR_LOWER, SEPARATOR_SPACE);
-        final int hours = getHour(chars);
+        final int hours = parsePositiveInt(chars, 11, 13);
 
         // MINUTES
         assertPositionContains(chars, 13, TIME_SEPARATOR);
-        final int minutes = getMinute(chars);
-        if (16 == len)
+        final int minutes = parsePositiveInt(chars, 14, 16);
+        if (len > 16)
         {
-            return DateTime.of(years, months, days, hours, minutes, null);
+            // SECONDS or TIMEZONE
+            return handleTime(chars, years, months, days, hours, minutes);
         }
 
-        // SECONDS or TIMEZONE
-        return handleTime(chars, years, months, days, hours, minutes);
+        // Have only minutes
+        return DateTime.of(years, months, days, hours, minutes, null);
     }
 
-    private int getMonth(final char[] chars)
-    {
-        return parsePositiveInt(chars, 5, 7);
-    }
-
-    private int getYear(final char[] chars)
-    {
-        return parsePositiveInt(chars, 0, 4);
-    }
-
-    private DateTime handleSeconds(int year, int month, int day, int hour, int minute, char[] chars)
+    private DateTime handleTime(int year, int month, int day, int hour, int minute, String chars)
     {
         // From here the specification is more lenient
-        final int remaining = chars.length - 19;
+        final int len = chars.length();
+        final int remaining = len - 19;
         if (remaining == 0)
         {
-            final int seconds = getSeconds(chars);
+            final int seconds = parsePositiveInt(chars, 17, 19);
             leapSecondCheck(year, month, day, hour, minute, seconds, 0, null);
             return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0);
         }
@@ -411,23 +390,44 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         TimezoneOffset offset = null;
         int fractions = 0;
         int fractionDigits = 0;
-        final char c = chars[19];
-        if (remaining == 1 && (c == ZULU_UPPER || c == ZULU_LOWER))
+        char c = chars.charAt(19);
+        if (c == FRACTION_SEPARATOR)
+        {
+            // We have fractional seconds
+            int result = 0;
+            int idx = 20;
+            boolean nonDigitFound = false;
+            do
+            {
+                c = chars.charAt(idx);
+                if (c < ZERO || c > DIGIT_9)
+                {
+                    nonDigitFound = true;
+                    fractionDigits = idx - 20;
+                    fractions = scale(-result, fractionDigits);
+                    offset = parseTimezone(chars, idx);
+                }
+                else
+                {
+                    result = (result << 1) + (result << 3);
+                    result -= c - ZERO;
+                }
+                idx++;
+            } while (idx < len && !nonDigitFound);
+
+            if (!nonDigitFound)
+            {
+                fractionDigits = idx - 20;
+                fractions = scale(-result, fractionDigits);
+                offset = parseTimezone(chars, idx);
+            }
+        }
+        else if (remaining == 1 && (c == ZULU_UPPER || c == ZULU_LOWER))
         {
             // Do nothing we are done
             offset = TimezoneOffset.UTC;
-            assertNoMoreChars(chars, 19);
         }
-        else if (remaining >= 1 && c == FRACTION_SEPARATOR)
-        {
-            // We have fractional seconds
-            final int[] fractionsData = parseSecondFractions(chars, 20);
-            final int idx = fractionsData[1];
-            fractions = fractionsData[0];
-            fractionDigits = idx - 20;
-            offset = parseTimezone(chars, idx);
-        }
-        else if (remaining >= 1 && (c == PLUS || c == MINUS))
+        else if (c == PLUS || c == MINUS)
         {
             // No fractional sections
             offset = parseTimezone(chars, 19);
@@ -437,11 +437,38 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             raiseDateTimeException(chars, "Unexpected character at position 19");
         }
 
-        final int second = getSeconds(chars);
+        final int second = parsePositiveInt(chars, 17, 19);
 
         leapSecondCheck(year, month, day, hour, minute, second, fractions, offset);
 
         return fractionDigits > 0 ? DateTime.of(year, month, day, hour, minute, second, fractions, offset, fractionDigits) : DateTime.of(year, month, day, hour, minute, second, offset);
+    }
+
+    private static int scale(int fractions, int len)
+    {
+        switch (len)
+        {
+            case 0:
+                throw new DateTimeException("Must have at least 1 fraction digit");
+            case 1:
+                return fractions * 100_000_000;
+            case 2:
+                return fractions * 10_000_000;
+            case 3:
+                return fractions * 1_000_000;
+            case 4:
+                return fractions * 100_000;
+            case 5:
+                return fractions * 10_000;
+            case 6:
+                return fractions * 1_000;
+            case 7:
+                return fractions * 100;
+            case 8:
+                return fractions * 10;
+            default:
+                return fractions;
+        }
     }
 
     private void leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
@@ -467,13 +494,8 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private void raiseDateTimeException(char[] chars, String message)
+    private void raiseDateTimeException(String chars, String message)
     {
-        throw new DateTimeException(message + ": " + new String(chars));
-    }
-
-    private int getSeconds(final char[] chars)
-    {
-        return parsePositiveInt(chars, 17, 19);
+        throw new DateTimeException(message + ": " + chars);
     }
 }

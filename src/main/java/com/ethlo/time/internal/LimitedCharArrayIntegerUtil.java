@@ -26,7 +26,7 @@ import java.util.Arrays;
 public final class LimitedCharArrayIntegerUtil
 {
     public static final char DIGIT_9 = '9';
-    private static final char ZERO = '0';
+    public static final char ZERO = '0';
     private static final char[] DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     private static final int TABLE_WIDTH = 4;
     private static final int RADIX = 10;
@@ -48,17 +48,17 @@ public final class LimitedCharArrayIntegerUtil
     {
     }
 
-    public static int parsePositiveInt(final char[] strNum, int startInclusive, int endExclusive)
+    public static int parsePositiveInt(final String strNum, int startInclusive, int endExclusive)
     {
-        if (endExclusive > strNum.length)
+        if (endExclusive > strNum.length())
         {
-            throw new DateTimeException("Unexpected end of expression at position " + strNum.length + ": '" + new String(strNum) + "'");
+            throw new DateTimeException("Unexpected end of expression at position " + strNum.length() + ": '" + strNum + "'");
         }
 
         int result = 0;
         for (int i = startInclusive; i < endExclusive; i++)
         {
-            final char c = strNum[i];
+            final char c = strNum.charAt(i);
             if (c < ZERO || c > DIGIT_9)
             {
                 throw new DateTimeException("Character " + c + " is not a digit");
@@ -67,50 +67,6 @@ public final class LimitedCharArrayIntegerUtil
             result -= c - ZERO;
         }
         return -result;
-    }
-
-    public static int[] parseSecondFractions(final char[] strNum, int startInclusive)
-    {
-        int result = 0;
-        for (int i = startInclusive; i < strNum.length; i++)
-        {
-            final char c = strNum[i];
-            if (c < ZERO || c > '9')
-            {
-                final int val = scale(-result, (i - startInclusive));
-                return new int[]{val, i};
-            }
-            result = (result << 1) + (result << 3);
-            result -= c - ZERO;
-        }
-        return new int[]{scale(-result, (strNum.length - startInclusive)), strNum.length};
-    }
-
-    private static int scale(int fractions, int len)
-    {
-        switch (len)
-        {
-            case 0:
-                throw new DateTimeException("Must have at least 1 fraction digit");
-            case 1:
-                return fractions * 100_000_000;
-            case 2:
-                return fractions * 10_000_000;
-            case 3:
-                return fractions * 1_000_000;
-            case 4:
-                return fractions * 100_000;
-            case 5:
-                return fractions * 10_000;
-            case 6:
-                return fractions * 1_000;
-            case 7:
-                return fractions * 100;
-            case 8:
-                return fractions * 10;
-            default:
-                return fractions;
-        }
     }
 
     public static void toString(final int value, final char[] buf, final int offset, final int charLength)

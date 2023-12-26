@@ -23,19 +23,12 @@ package com.ethlo.time.itu;
 import java.util.concurrent.TimeUnit;
 
 import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
 import com.ethlo.time.internal.EthloITU;
 
-@Warmup(iterations = 1, time = 30)
-@BenchmarkMode(Mode.SampleTime)
-@Fork(1)
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class ITULenientParserBenchmarkTest
 {
     private static final EthloITU ethloItu = EthloITU.getInstance();

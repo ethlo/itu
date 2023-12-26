@@ -16,7 +16,7 @@ class ReportGenerator(object):
         self.parser = argparse.ArgumentParser(description='ReportGenerator')
         self.parser.add_argument('-i', default='target/itu_performance.json', help='The JMH result (JSON) file')
         self.parser.add_argument('-o', default='output.png', help='Output file path for bar chart image')
-        self.parser.add_argument('--size', default='10,16', help='Plot size')
+        self.parser.add_argument('--size', default='18,8', help='Plot size')
         self.parser.add_argument('--theme', default='default', help='Output theme for bar chart image')
         self.parser.add_argument('--include', default='parse,parseRaw,format',
                                  help='Prefix for test methods to include')
@@ -38,7 +38,7 @@ class ReportGenerator(object):
         plot = dtf.plot(x=0,
                         kind='barh',
                         stacked=False,
-                        title='Nanoseconds per operation (lower is better)',
+                        title='Operations per millisecond (higher is better)',
                         figsize=self.fig_size)
 
         for container in plot.containers:

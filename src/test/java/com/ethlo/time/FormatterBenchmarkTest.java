@@ -29,7 +29,7 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import com.ethlo.time.internal.Rfc3339Formatter;
 
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 public abstract class FormatterBenchmarkTest
 {
     private static final OffsetDateTime input = OffsetDateTime.parse("2017-12-21T12:20:45.987654321Z");

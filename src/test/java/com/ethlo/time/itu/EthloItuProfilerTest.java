@@ -35,7 +35,7 @@ public class EthloItuProfilerTest
         final int runs = 1_000_000_000;
         for (int i = 0; i < runs; i++)
         {
-            ethloItu.parse("2017-12-21T12:20:45.987654321Z");
+            ethloItu.parseDateTime("2017-12-21T12:20:45.987654321Z");
         }
     }
 }
