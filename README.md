@@ -8,7 +8,7 @@ An extremely fast parser and formatter of ISO format date-times.
 
 > Date and time formats cause a lot of confusion and interoperability problems on the Internet. This document addresses many of the problems encountered and makes recommendations to improve consistency and interoperability when representing and using date and time in Internet protocols.
 
-This project's goal it to do one thing and to do it right; make it easy to
+This project's goal is to do one thing and to do it right; make it easy to
 handle [Date and Time on the Internet: Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and
 W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
@@ -21,7 +21,7 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 ## Performance
 
-Your mileage may vary. I've done my very best to make sure these tests are as accurate as possible, but please do your own evaluation.
+Your mileage may vary. I've done my best to make sure these tests are as accurate as possible, but please do your own evaluation.
 * The second resolution test-string is: `2017-12-21T12:20:45Z`
 * The nanosecond-resolution test-string is: `2017-12-21T12:20:45.987654321Z`
 
@@ -54,7 +54,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.8.0</version>
+  <version>1.7.4</version>
 </dependency>
 ```
 
