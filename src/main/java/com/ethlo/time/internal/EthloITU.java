@@ -286,7 +286,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     @Override
     public OffsetDateTime parseDateTime(final String dateTime)
     {
-        return assertSecondsGranularity(parse(dateTime)).toOffsetDatetime();
+        return assertSecondsGranularity(parse(dateTime)).toOffsetDatetimeNoGranularityCheck();
     }
 
     private DateTime assertSecondsGranularity(DateTime dt)

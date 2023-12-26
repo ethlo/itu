@@ -21,8 +21,15 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 ## Performance
 
-Your mileage may vary, but tests indicate comfortably 10x faster than JDK classes.
-<img src="doc/performance.png" alt="Performance plot">
+Your mileage may vary. I've done my very best to make sure these tests are as accurate as possible, but please do your own evaluation.
+* The second resolution test-string is: `2017-12-21T12:20:45Z`
+* The nanosecond-resolution test-string is: `2017-12-21T12:20:45.987654321Z`
+
+### Parsing
+<img src="doc/parse.png" alt="Performance of parsing">
+
+### Formatting
+<img src="doc/format.png" alt="Performance of formatting">
 
 Tests performed on a Lenovo P1 G6 laptop:
 * Intel(R) Core(TM) i9-13900H
@@ -47,7 +54,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.7.3</version>
+  <version>1.8.0</version>
 </dependency>
 ```
 
@@ -203,6 +210,11 @@ instead of `60`.
 
 
 ## Changelog
+
+### Version 1.7.4
+
+2023-12-26
+* Parser performance improvements.
 
 ### Version 1.7.0
 

@@ -34,14 +34,20 @@ public class ITULenientParserBenchmarkTest
     private static final EthloITU ethloItu = EthloITU.getInstance();
 
     @Benchmark
-    public void parseRawDate(final Blackhole blackhole)
+    public void rawDate(final Blackhole blackhole)
     {
         blackhole.consume(ethloItu.parse("2017-12-21"));
     }
 
     @Benchmark
-    public void parseRawSecond(final Blackhole blackhole)
+    public void rawSecond(final Blackhole blackhole)
     {
         blackhole.consume(ethloItu.parse("2017-12-21T12:20:45Z"));
+    }
+
+    @Benchmark
+    public void rawNanos(final Blackhole blackhole)
+    {
+        blackhole.consume(ethloItu.parse("2017-12-21T12:20:45.123123123Z"));
     }
 }
