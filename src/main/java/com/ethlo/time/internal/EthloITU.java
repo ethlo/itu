@@ -90,6 +90,33 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
+    private static int scale(int fractions, int len)
+    {
+        switch (len)
+        {
+            case 0:
+                throw new DateTimeException("Must have at least 1 fraction digit");
+            case 1:
+                return fractions * 100_000_000;
+            case 2:
+                return fractions * 10_000_000;
+            case 3:
+                return fractions * 1_000_000;
+            case 4:
+                return fractions * 100_000;
+            case 5:
+                return fractions * 10_000;
+            case 6:
+                return fractions * 1_000;
+            case 7:
+                return fractions * 100;
+            case 8:
+                return fractions * 10;
+            default:
+                return fractions;
+        }
+    }
+
     private DateTime handleTime(String chars, int year, int month, int day, int hour, int minute)
     {
         switch (chars.charAt(16))
@@ -298,7 +325,6 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return dt;
     }
 
-
     @Override
     public String formatUtcMilli(OffsetDateTime date)
     {
@@ -442,33 +468,6 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         leapSecondCheck(year, month, day, hour, minute, second, fractions, offset);
 
         return fractionDigits > 0 ? DateTime.of(year, month, day, hour, minute, second, fractions, offset, fractionDigits) : DateTime.of(year, month, day, hour, minute, second, offset);
-    }
-
-    private static int scale(int fractions, int len)
-    {
-        switch (len)
-        {
-            case 0:
-                throw new DateTimeException("Must have at least 1 fraction digit");
-            case 1:
-                return fractions * 100_000_000;
-            case 2:
-                return fractions * 10_000_000;
-            case 3:
-                return fractions * 1_000_000;
-            case 4:
-                return fractions * 100_000;
-            case 5:
-                return fractions * 10_000;
-            case 6:
-                return fractions * 1_000;
-            case 7:
-                return fractions * 100;
-            case 8:
-                return fractions * 10;
-            default:
-                return fractions;
-        }
     }
 
     private void leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
