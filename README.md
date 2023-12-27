@@ -31,6 +31,14 @@ Your mileage may vary. I've done my best to make sure these tests are as accurat
 ### Formatting
 <img src="doc/format.png" alt="Performance of formatting">
 
+### Raw parsing
+If you do not need to have the full verification of `java.time.OffsetDateTime`, 
+you can use the raw, parsed data through `com.ethlo.time.DateTime` that incurs less overhead. 
+
+Here it becomes even more visible how the parser scales with the length of the string that is parsed.
+<img src="doc/parse_raw.png" alt="Performance of raw parsing">
+
+### Environment
 Tests performed on a Lenovo P1 G6 laptop:
 * Intel(R) Core(TM) i9-13900H
 * Ubuntu 23.10
@@ -43,7 +51,7 @@ mvn jmh:benchmark
 
 To plot the result and create the resulting image, you can run `plot.py`, for example:
 ```
-python3 plot.py -i target/itu_performance.json --size=11,5
+python3 plot.py -i target/itu_performance.json
 ```
 
 ## Example usage
@@ -188,7 +196,7 @@ serves as a sane subset of ISO-8601, just like RFC-3339.
 Typical formats include:
 
 * `2017-12-27T23:45Z` - Minute resolution, UTC/Zulu time
-* `2017-12-27` - Date only, no timezone (like someones birthday)
+* `2017-12-27` - Date only, no timezone (like someone's birthday)
 * `2017-12` - Year and month only. Like an expiry date.
 
 ## Limitations
