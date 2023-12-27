@@ -20,13 +20,13 @@ package com.ethlo.time.jdk;
  * #L%
  */
 
+import com.ethlo.time.internal.AbstractRfc3339;
+
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-
-import com.ethlo.time.internal.AbstractRfc3339;
 
 /**
  * Java 8 JDK classes. The safe and normally "efficient enough" choice.

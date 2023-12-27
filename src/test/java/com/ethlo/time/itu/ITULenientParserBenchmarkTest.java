@@ -23,32 +23,31 @@ package com.ethlo.time.itu;
 import java.util.concurrent.TimeUnit;
 
 import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
 import com.ethlo.time.internal.EthloITU;
 
-@Warmup(iterations = 1, time = 30)
-@BenchmarkMode(Mode.SampleTime)
-@Fork(1)
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class ITULenientParserBenchmarkTest
 {
     private static final EthloITU ethloItu = EthloITU.getInstance();
 
     @Benchmark
-    public void parseRawDate(final Blackhole blackhole)
+    public void rawDate(final Blackhole blackhole)
     {
         blackhole.consume(ethloItu.parse("2017-12-21"));
     }
 
     @Benchmark
-    public void parseRawSecond(final Blackhole blackhole)
+    public void rawSecond(final Blackhole blackhole)
     {
         blackhole.consume(ethloItu.parse("2017-12-21T12:20:45Z"));
+    }
+
+    @Benchmark
+    public void rawNanos(final Blackhole blackhole)
+    {
+        blackhole.consume(ethloItu.parse("2017-12-21T12:20:45.123123123Z"));
     }
 }

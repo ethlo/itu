@@ -28,7 +28,7 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import com.ethlo.time.internal.Rfc3339Parser;
 
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 public abstract class ParserBenchmarkTest
 {
     protected static Rfc3339Parser parser;

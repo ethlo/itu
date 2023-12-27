@@ -26,7 +26,7 @@ import java.util.Arrays;
 public final class LimitedCharArrayIntegerUtil
 {
     public static final char DIGIT_9 = '9';
-    private static final char ZERO = '0';
+    public static final char ZERO = '0';
     private static final char[] DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     private static final int TABLE_WIDTH = 4;
     private static final int RADIX = 10;
@@ -48,37 +48,23 @@ public final class LimitedCharArrayIntegerUtil
     {
     }
 
-    public static int parsePositiveInt(final char[] strNum, int startInclusive, int endExclusive)
+    public static int parsePositiveInt(final String strNum, int startInclusive, int endExclusive)
     {
-        if (endExclusive > strNum.length)
+        if (endExclusive > strNum.length())
         {
-            throw new DateTimeException("Unexpected end of expression at position " + strNum.length + ": '" + new String(strNum) + "'");
+            throw new DateTimeException("Unexpected end of expression at position " + strNum.length() + ": '" + strNum + "'");
         }
 
         int result = 0;
         for (int i = startInclusive; i < endExclusive; i++)
         {
-            final char c = strNum[i];
-            if (isNotDigit(c))
+            final char c = strNum.charAt(i);
+            if (c < ZERO || c > DIGIT_9)
             {
                 throw new DateTimeException("Character " + c + " is not a digit");
             }
-            int digit = digit(c);
-            result *= RADIX;
-            result -= digit;
-        }
-        return -result;
-    }
-
-    public static int uncheckedParsePositiveInt(final char[] strNum, int startInclusive, int endExclusive)
-    {
-        int result = 0;
-        for (int i = startInclusive; i < endExclusive; i++)
-        {
-            final char c = strNum[i];
-            int digit = digit(c);
-            result *= RADIX;
-            result -= digit;
+            result = (result << 1) + (result << 3);
+            result -= c - ZERO;
         }
         return -result;
     }
@@ -148,21 +134,12 @@ public final class LimitedCharArrayIntegerUtil
     {
         for (int i = offset; i < text.length; i++)
         {
-            if (isNotDigit(text[i]))
+            char c = text[i];
+            if (c < ZERO || c > DIGIT_9)
             {
                 return i;
             }
         }
         return -1;
-    }
-
-    private static boolean isNotDigit(char c)
-    {
-        return (c < ZERO || c > DIGIT_9);
-    }
-
-    private static int digit(char c)
-    {
-        return c - ZERO;
     }
 }

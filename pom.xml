@@ -23,9 +23,9 @@ limitations under the License.
     <groupId>com.ethlo.time</groupId>
     <packaging>bundle</packaging>
     <artifactId>itu</artifactId>
-    <version>1.7.3</version>
+    <version>1.7.4-SNAPSHOT</version>
     <name>Internet Time Utility</name>
-    <description>Extremely fast date/time parser and formatter - RFC 3339 (ISO 8601 profile) and W3C format
+    <description>Very fast date-time parser and formatter - RFC 3339 (ISO 8601 profile) and W3C format
     </description>
     <licenses>
         <license>
@@ -65,25 +65,25 @@ limitations under the License.
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.12.0</version>
+            <version>3.14.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client</artifactId>
-            <version>1.43.1</version>
+            <version>1.43.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-core</artifactId>
-            <version>1.35</version>
+            <version>1.37</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-generator-annprocess</artifactId>
-            <version>1.35</version>
+            <version>1.37</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -97,7 +97,7 @@ limitations under the License.
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.12.1</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -111,14 +111,14 @@ limitations under the License.
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-                    <benchmarkMode>SampleTime</benchmarkMode>
-                    <warmupIterations>1</warmupIterations>
-                    <warmup>30</warmup>
+                    <benchmarkMode>Throughput</benchmarkMode>
+                    <warmupIterations>10</warmupIterations>
+                    <warmup>2</warmup>
                     <fork>1</fork>
                     <resultFormat>JSON</resultFormat>
                     <resultsFile>target/itu_performance.json</resultsFile>
-                    <iterations>3</iterations>
-                    <timeOnIteration>10</timeOnIteration>
+                    <iterations>10</iterations>
+                    <timeOnIteration>2</timeOnIteration>
                 </configuration>
             </plugin>
             <plugin>

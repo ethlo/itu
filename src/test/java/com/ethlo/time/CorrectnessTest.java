@@ -98,6 +98,13 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
+    public void parseWithFragmentsNonDigit()
+    {
+        final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T12:20:45.9b7Z"));
+        assertThat(exception.getMessage()).isEqualTo("Invalid character starting at position 21: 2017-12-21T12:20:45.9b7Z");
+    }
+
+    @Test
     public void testParseLeapSecondUTCJune()
     {
         final String leapSecondUTC = "1992-06-30T23:59:60Z";

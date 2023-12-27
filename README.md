@@ -8,7 +8,7 @@ An extremely fast parser and formatter of ISO format date-times.
 
 > Date and time formats cause a lot of confusion and interoperability problems on the Internet. This document addresses many of the problems encountered and makes recommendations to improve consistency and interoperability when representing and using date and time in Internet protocols.
 
-This project's goal it to do one thing and to do it right; make it easy to
+This project's goal is to do one thing and to do it right; make it easy to
 handle [Date and Time on the Internet: Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and
 W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
@@ -21,9 +21,24 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 ## Performance
 
-Your mileage may vary, but tests indicate comfortably 10x faster than JDK classes.
-<img src="doc/performance.png" alt="Performance plot">
+Your mileage may vary. I've done my best to make sure these tests are as accurate as possible, but please do your own evaluation.
+* The second resolution test-string is: `2017-12-21T12:20:45Z`
+* The nanosecond-resolution test-string is: `2017-12-21T12:20:45.987654321Z`
 
+### Parsing
+<img src="doc/parse.png" alt="Performance of parsing">
+
+### Formatting
+<img src="doc/format.png" alt="Performance of formatting">
+
+### Raw parsing
+If you do not need to have the full verification of `java.time.OffsetDateTime`, 
+you can use the raw, parsed data through `com.ethlo.time.DateTime` that incurs less overhead. 
+
+Here it becomes even more visible how the parser scales with the length of the string that is parsed.
+<img src="doc/parse_raw.png" alt="Performance of raw parsing">
+
+### Environment
 Tests performed on a Lenovo P1 G6 laptop:
 * Intel(R) Core(TM) i9-13900H
 * Ubuntu 23.10
@@ -36,7 +51,7 @@ mvn jmh:benchmark
 
 To plot the result and create the resulting image, you can run `plot.py`, for example:
 ```
-python3 plot.py -i target/itu_performance.json --size=11,5
+python3 plot.py -i target/itu_performance.json
 ```
 
 ## Example usage
@@ -47,7 +62,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.7.3</version>
+  <version>1.7.4</version>
 </dependency>
 ```
 
@@ -181,7 +196,7 @@ serves as a sane subset of ISO-8601, just like RFC-3339.
 Typical formats include:
 
 * `2017-12-27T23:45Z` - Minute resolution, UTC/Zulu time
-* `2017-12-27` - Date only, no timezone (like someones birthday)
+* `2017-12-27` - Date only, no timezone (like someone's birthday)
 * `2017-12` - Year and month only. Like an expiry date.
 
 ## Limitations
@@ -203,6 +218,11 @@ instead of `60`.
 
 
 ## Changelog
+
+### Version 1.7.4
+
+2023-12-26
+* Parser performance improvements.
 
 ### Version 1.7.0
 

@@ -20,12 +20,10 @@ package com.ethlo.time.itu;
  * #L%
  */
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.ethlo.time.internal.EthloITU;
 
-@Disabled
 public class EthloItuProfilerTest
 {
     private static final EthloITU ethloItu = EthloITU.getInstance();

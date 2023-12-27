@@ -230,6 +230,11 @@ public class DateTime
     public OffsetDateTime toOffsetDatetime()
     {
         assertMinGranularity(Field.MINUTE);
+        return toOffsetDatetimeNoGranularityCheck();
+    }
+
+    public OffsetDateTime toOffsetDatetimeNoGranularityCheck()
+    {
         if (offset != null)
         {
             return OffsetDateTime.of(year, month, day, hour, minute, second, nano, offset.toZoneOffset());
