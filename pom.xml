@@ -169,11 +169,13 @@ limitations under the License.
                     <injar>${project.build.finalName}.jar</injar>
                     <outjar>${project.build.finalName}-small.jar</outjar>
                     <outputDirectory>${project.build.directory}</outputDirectory>
+                    <attach>true</attach>
                     <options>
                         <option>-dontnote</option>
                         <option>-allowaccessmodification</option>
                         <option>-repackageclasses</option>
                         <option>-flattenpackagehierarchy a</option>
+                        <option>-keepattributes Signature</option>
                         <option>-keep public class com.ethlo.time.ITU { *; }</option>
                         <option>-keep public class com.ethlo.time.DateTime { *; }</option>
                         <option>-keep public class com.ethlo.time.Field { *; }</option>
@@ -313,7 +315,6 @@ limitations under the License.
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <gpg.skip>true</gpg.skip>
-        <proguard.skip>true</proguard.skip>
     </properties>
     <profiles>
         <profile>
