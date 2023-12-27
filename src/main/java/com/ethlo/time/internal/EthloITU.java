@@ -51,7 +51,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
-    private final LeapSecondHandler leapSecondHandler = new DefaultLeapSecondHandler();
+    private static final LeapSecondHandler leapSecondHandler = new DefaultLeapSecondHandler();
 
     private EthloITU()
     {
@@ -117,19 +117,23 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private DateTime handleTime(String chars, int year, int month, int day, int hour, int minute)
+    private static Object handleTime(String chars, int year, int month, int day, int hour, int minute, final boolean raw)
     {
         switch (chars.charAt(16))
         {
             // We have more granularity, keep going
             case TIME_SEPARATOR:
-                return handleTime(year, month, day, hour, minute, chars);
+                return handleTime(year, month, day, hour, minute, chars, raw);
 
             case PLUS:
             case MINUS:
             case ZULU_UPPER:
             case ZULU_LOWER:
                 final TimezoneOffset zoneOffset = parseTimezone(chars, 16);
+                if (! raw)
+                {
+                    throw raiseMissingField(Field.SECOND);
+                }
                 return DateTime.of(year, month, day, hour, minute, zoneOffset);
 
             default:
@@ -138,7 +142,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         throw new DateTimeException(chars);
     }
 
-    private void assertPositionContains(String chars, int offset, char expected)
+    private static void assertPositionContains(String chars, int offset, char expected)
     {
         if (offset >= chars.length())
         {
@@ -152,7 +156,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private void assertPositionContains(String chars, int offset, char... expected)
+    private static void assertPositionContains(String chars, int offset, char... expected)
     {
         if (offset >= chars.length())
         {
@@ -176,7 +180,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private TimezoneOffset parseTimezone(String chars, int offset)
+    private static TimezoneOffset parseTimezone(String chars, int offset)
     {
         if (offset >= chars.length())
         {
@@ -218,7 +222,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return TimezoneOffset.ofHoursMinutes(hours, minutes);
     }
 
-    private void assertNoMoreChars(String chars, int lastUsed)
+    private static void assertNoMoreChars(String chars, int lastUsed)
     {
         if (chars.length() > lastUsed + 1)
         {
@@ -313,16 +317,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     @Override
     public OffsetDateTime parseDateTime(final String dateTime)
     {
-        return assertSecondsGranularity(parse(dateTime)).toOffsetDatetimeNoGranularityCheck();
-    }
-
-    private DateTime assertSecondsGranularity(DateTime dt)
-    {
-        if (!dt.includesGranularity(Field.SECOND))
-        {
-            throw new DateTimeException("No " + Field.SECOND.name() + " field found");
-        }
-        return dt;
+        return (OffsetDateTime) parse(dateTime, false);
     }
 
     @Override
@@ -352,6 +347,11 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     @Override
     public DateTime parse(String chars)
     {
+        return (DateTime) parse(chars, true);
+    }
+
+    private static Object parse(String chars, boolean raw)
+    {
         if (chars == null)
         {
             throw new NullPointerException("text cannot be null");
@@ -373,6 +373,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         final int months = parsePositiveInt(chars, 5, 7);
         if (7 == len)
         {
+            if (! raw)
+            {
+                throw raiseMissingField(Field.SECOND);
+            }
             return DateTime.ofYearMonth(years, months);
         }
 
@@ -381,6 +385,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         final int days = parsePositiveInt(chars, 8, 10);
         if (10 == len)
         {
+            if (! raw)
+            {
+                throw raiseMissingField(Field.SECOND);
+            }
             return DateTime.ofDate(years, months, days);
         }
 
@@ -394,14 +402,23 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         if (len > 16)
         {
             // SECONDS or TIMEZONE
-            return handleTime(chars, years, months, days, hours, minutes);
+            return handleTime(chars, years, months, days, hours, minutes, raw);
         }
 
         // Have only minutes
-        return DateTime.of(years, months, days, hours, minutes, null);
+        if (raw)
+        {
+            return DateTime.of(years, months, days, hours, minutes, null);
+        }
+        throw raiseMissingField(Field.SECOND);
     }
 
-    private DateTime handleTime(int year, int month, int day, int hour, int minute, String chars)
+    private static DateTimeException raiseMissingField(Field field)
+    {
+        return new DateTimeException("No " + field.name() + " field found");
+    }
+
+    private static Object handleTime(int year, int month, int day, int hour, int minute, String chars, boolean raw)
     {
         // From here the specification is more lenient
         final int len = chars.length();
@@ -410,7 +427,11 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             final int seconds = parsePositiveInt(chars, 17, 19);
             leapSecondCheck(year, month, day, hour, minute, seconds, 0, null);
-            return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0);
+            if (raw)
+            {
+                return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0);
+            }
+            throw new DateTimeException("No timezone information: " + chars);
         }
 
         TimezoneOffset offset = null;
@@ -467,10 +488,14 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
         leapSecondCheck(year, month, day, hour, minute, second, fractions, offset);
 
+        if (!raw)
+        {
+            return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset.toZoneOffset());
+        }
         return fractionDigits > 0 ? DateTime.of(year, month, day, hour, minute, second, fractions, offset, fractionDigits) : DateTime.of(year, month, day, hour, minute, second, offset);
     }
 
-    private void leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
+    private static void leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
     {
         if (second == LEAP_SECOND_SECONDS)
         {
@@ -493,7 +518,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private void raiseDateTimeException(String chars, String message)
+    private static void raiseDateTimeException(String chars, String message)
     {
         throw new DateTimeException(message + ": " + chars);
     }
