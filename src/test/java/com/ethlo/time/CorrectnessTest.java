@@ -193,42 +193,42 @@ public abstract class CorrectnessTest extends AbstractTest
     public void testParseMoreThanNanoResolutionFails()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-02-21T15:00:00.1234567891Z"));
-        assertThat(exception.getMessage()).isEqualTo("Field NANO out of bounds. Expected 0-999999999, got 1234567891");
+        assertThat(exception.getMessage()).isEqualTo("Invalid value for NanoOfSecond (valid values 0 - 999999999): 1234567891");
     }
 
     @Test
     public void testParseMonthOutOfBounds()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-13-21T15:00:00Z"));
-        assertThat(exception.getMessage()).isEqualTo("Field MONTH out of bounds. Expected 1-12, got 13");
+        assertThat(exception.getMessage()).isEqualTo("Invalid value for MonthOfYear (valid values 1 - 12): 13");
     }
 
     @Test
     public void testParseDayOutOfBounds()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-11-32T15:00:00Z"));
-        assertThat(exception.getMessage()).isEqualTo("Field DAY out of bounds. Expected 1-31, got 32");
+        assertThat(exception.getMessage()).isEqualTo("Invalid value for DayOfMonth (valid values 1 - 28/31): 32");
     }
 
     @Test
     public void testParseHourOutOfBounds()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T24:00:00Z"));
-        assertThat(exception.getMessage()).isEqualTo("Field HOUR out of bounds. Expected 0-23, got 24");
+        assertThat(exception.getMessage()).isEqualTo("Invalid value for HourOfDay (valid values 0 - 23): 24");
     }
 
     @Test
     public void testParseMinuteOfBounds()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T23:60:00Z"));
-        assertThat(exception.getMessage()).isEqualTo("Field MINUTE out of bounds. Expected 0-59, got 60");
+        assertThat(exception.getMessage()).isEqualTo("Invalid value for MinuteOfHour (valid values 0 - 59): 60");
     }
 
     @Test
     public void testParseSecondOutOfBounds()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T23:00:61Z"));
-        assertThat(exception.getMessage()).isEqualTo("Field SECOND out of bounds. Expected 0-60, got 61");
+        assertThat(exception.getMessage()).isEqualTo("Invalid value for SecondOfMinute (valid values 0 - 59): 61");
     }
 
     @Test
