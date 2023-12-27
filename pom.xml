@@ -23,7 +23,7 @@ limitations under the License.
     <groupId>com.ethlo.time</groupId>
     <packaging>bundle</packaging>
     <artifactId>itu</artifactId>
-    <version>1.7.4-SNAPSHOT</version>
+    <version>1.7.4</version>
     <name>Internet Time Utility</name>
     <description>Very fast date-time parser and formatter - RFC 3339 (ISO 8601 profile) and W3C format
     </description>
@@ -227,7 +227,7 @@ limitations under the License.
                 </executions>
                 <configuration>
                     <executable>gpg</executable>
-                    <useAgent>false</useAgent>
+                    <keyname>8E68968CE7C85B314DF175FD9CC6720FBB1B27BA</keyname>
                 </configuration>
             </plugin>
             <plugin>
