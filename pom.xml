@@ -153,43 +153,6 @@ limitations under the License.
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>com.github.wvengen</groupId>
-                <artifactId>proguard-maven-plugin</artifactId>
-                <version>2.6.0</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>proguard</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <obfuscate>true</obfuscate>
-                    <injar>${project.build.finalName}.jar</injar>
-                    <outjar>${project.build.finalName}-small.jar</outjar>
-                    <outputDirectory>${project.build.directory}</outputDirectory>
-                    <attach>true</attach>
-                    <options>
-                        <option>-dontnote</option>
-                        <option>-allowaccessmodification</option>
-                        <option>-repackageclasses</option>
-                        <option>-flattenpackagehierarchy a</option>
-                        <option>-keepattributes Signature</option>
-                        <option>-keep public class com.ethlo.time.ITU { *; }</option>
-                        <option>-keep public class com.ethlo.time.DateTime { *; }</option>
-                        <option>-keep public class com.ethlo.time.Field { *; }</option>
-                        <option>-keep public class com.ethlo.time.TemporalType { *; }</option>
-                        <option>-keep public class com.ethlo.time.TemporalConsumer { *; }</option>
-                        <option>-keep public class com.ethlo.time.TemporalHandler { *; }</option>
-                        <option>-keep public class com.ethlo.time.TimezoneOffset { *; }</option>
-                    </options>
-                    <libs>
-                        <lib>${java.home}/jmods/java.base.jmod</lib>
-                    </libs>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M5</version>
@@ -317,6 +280,53 @@ limitations under the License.
         <gpg.skip>true</gpg.skip>
     </properties>
     <profiles>
+        <profile>
+            <id>proguard</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.wvengen</groupId>
+                        <artifactId>proguard-maven-plugin</artifactId>
+                        <version>2.6.0</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>proguard</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <obfuscate>true</obfuscate>
+                            <injar>${project.build.finalName}.jar</injar>
+                            <outjar>${project.build.finalName}-small.jar</outjar>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <attach>true</attach>
+                            <options>
+                                <option>-dontnote</option>
+                                <option>-allowaccessmodification</option>
+                                <option>-repackageclasses</option>
+                                <option>-flattenpackagehierarchy a</option>
+                                <option>-keepattributes Signature</option>
+                                <option>-keep public class com.ethlo.time.ITU { *; }</option>
+                                <option>-keep public class com.ethlo.time.DateTime { *; }</option>
+                                <option>-keep public class com.ethlo.time.Field { *; }</option>
+                                <option>-keep public class com.ethlo.time.TemporalType { *; }</option>
+                                <option>-keep public class com.ethlo.time.TemporalConsumer { *; }</option>
+                                <option>-keep public class com.ethlo.time.TemporalHandler { *; }</option>
+                                <option>-keep public class com.ethlo.time.TimezoneOffset { *; }</option>
+                            </options>
+                            <libs>
+                                <lib>${java.home}/jmods/java.base.jmod</lib>
+                            </libs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>java8-doclint-disabled</id>
             <activation>
