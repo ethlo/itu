@@ -62,7 +62,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.7.4</version>
+  <version>1.7.5</version>
 </dependency>
 ```
 
@@ -218,6 +218,13 @@ instead of `60`.
 
 
 ## Changelog
+
+### Version 1.7.5
+
+2023-12-28
+* Parser performance improvements.
+* Adding a minimized version jar (16.4KB), available using classifier `small`.
+
 
 ### Version 1.7.4
 
