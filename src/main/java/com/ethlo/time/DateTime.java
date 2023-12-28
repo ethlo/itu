@@ -68,6 +68,15 @@ public class DateTime
 
     /**
      * Create a new instance with second granularity from the input parameters
+     *
+     * @param year year
+     * @param month month
+     * @param day day
+     * @param hour hour
+     * @param minute minute
+     * @param second second
+     * @param offset timezone offset
+     * @return A DateTime with second granularity
      */
     public static DateTime of(int year, int month, int day, int hour, int minute, int second, TimezoneOffset offset)
     {
@@ -76,6 +85,15 @@ public class DateTime
 
     /**
      * Create a new instance with nanosecond granularity from the input parameters
+     *
+     * @param year year
+     * @param month month
+     * @param day day
+     * @param hour hour
+     * @param minute minute
+     * @param second second
+     * @param offset timezone offset
+     * @return A DateTime with nanosecond granularity
      */
     public static DateTime of(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset, final int fractionDigits)
     {
@@ -84,6 +102,8 @@ public class DateTime
 
     /**
      * Create a new instance with year granularity from the input parameters
+     * @param year The year
+     * @return a new instance with year granularity from the input parameters
      */
     public static DateTime ofYear(int year)
     {
@@ -92,26 +112,40 @@ public class DateTime
 
     /**
      * Create a new instance with year-month granularity from the input parameters
+     * @param year The year
+     * @param month The month
+     * @return a new instance with year-month granularity from the input parameters
      */
-    public static DateTime ofYearMonth(int years, int months)
+    public static DateTime ofYearMonth(int year, int month)
     {
-        return new DateTime(Field.MONTH, years, months, 0, 0, 0, 0, 0, null, 0);
+        return new DateTime(Field.MONTH, year, month, 0, 0, 0, 0, 0, null, 0);
     }
 
     /**
      * Create a new instance with day granularity from the input parameters
+     * @param year The year
+     * @param month The month
+     * @param day The day
+     * @return a new instance with day granularity from the input parameters
      */
-    public static DateTime ofDate(int years, int months, int days)
+    public static DateTime ofDate(int year, int month, int day)
     {
-        return new DateTime(Field.DAY, years, months, days, 0, 0, 0, 0, null, 0);
+        return new DateTime(Field.DAY, year, month, day, 0, 0, 0, 0, null, 0);
     }
 
     /**
      * Create a new instance with minute granularity from the input parameters
+     * @param year The year
+     * @param month The month
+     * @param day The day
+     * @param hour The hour
+     * @param minute The minute
+     * @param offset The timezone offset
+     * @return a new instance with minute granularity from the input parameters
      */
-    public static DateTime of(int years, int months, int days, int hours, int minute, TimezoneOffset offset)
+    public static DateTime of(int year, int month, int day, int hour, int minute, TimezoneOffset offset)
     {
-        return new DateTime(Field.MINUTE, years, months, days, hours, minute, 0, 0, offset, 0);
+        return new DateTime(Field.MINUTE, year, month, day, hour, minute, 0, 0, offset, 0);
     }
 
     /**
