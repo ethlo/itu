@@ -1,4 +1,4 @@
-package com.ethlo.time.google;
+package com.ethlo.time;
 
 /*-
  * #%L
@@ -20,19 +20,21 @@ package com.ethlo.time.google;
  * #L%
  */
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import com.ethlo.time.internal.EthloITU;
+import com.ethlo.time.internal.Rfc3339;
+import com.ethlo.time.internal.Rfc3339Formatter;
 
-import com.ethlo.time.internal.Rfc3339Parser;
-import com.google.api.client.util.DateTime;
-
-public class GoogleDateTimeRfc3339 implements Rfc3339Parser
+public class EthloITUCorrectnessTest extends CorrectnessTest
 {
     @Override
-    public OffsetDateTime parseDateTime(String dateTimeStr)
+    protected Rfc3339 getParser()
     {
-        final DateTime.SecondsAndNanos secondsAndNanos = DateTime.parseRfc3339ToSecondsAndNanos(dateTimeStr);
-        return OffsetDateTime.ofInstant(Instant.ofEpochSecond(secondsAndNanos.getSeconds(), secondsAndNanos.getNanos()), ZoneOffset.UTC);
+        return EthloITU.getInstance();
+    }
+
+    @Override
+    protected Rfc3339Formatter getFormatter()
+    {
+        return EthloITU.getInstance();
     }
 }

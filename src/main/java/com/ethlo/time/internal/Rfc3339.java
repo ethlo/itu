@@ -21,7 +21,7 @@ package com.ethlo.time.internal;
  */
 
 /**
- * The recommendation for date-time exchange in modern APIs is to use RFC-3339, available at https://tools.ietf.org/html/rfc3339
+ * The recommendation for date-time exchange in modern APIs is to use RFC-3339, available at <a href="https://tools.ietf.org/html/rfc3339">...</a>
  * This class supports both validation, parsing and formatting of such date-times.
  *
  * @author ethlo, Morten Haraldsen
