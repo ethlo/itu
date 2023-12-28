@@ -14,8 +14,8 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 ## Features
 * Very easy to use
-* No external dependencies, minimal JAR size
-* Apache licensed, can be used in any project, even commercial
+* No external dependencies, minimal JAR size (16.4KB)
+* Apache 2 licensed, can be used in any project, even commercial
 * Handling of leap-seconds
 * Very high performance
 
@@ -39,20 +39,14 @@ Here it becomes even more visible how the parser scales with the length of the s
 <img src="doc/parse_raw.png" alt="Performance of raw parsing">
 
 ### Environment
-Tests performed on a Lenovo P1 G6 laptop:
+The above results were captured on a Lenovo P1 G6 laptop:
 * Intel(R) Core(TM) i9-13900H
 * Ubuntu 23.10
 * OpenJDK version 17.0.9
 
 ### Run tests yourself
-```shell
-mvn jmh:benchmark
-```
 
-To plot the result and create the resulting image, you can run `plot.py`, for example:
-```
-python3 plot.py -i target/itu_performance.json
-```
+The benchmarks are available in https://github.com/ethlo/date-time-wars.
 
 ## Example usage
 
@@ -63,6 +57,8 @@ Add dependency
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
   <version>1.7.5</version>
+  <!-- If you want to use minified JAR -->  
+  <classifier>small</classifier>
 </dependency>
 ```
 
