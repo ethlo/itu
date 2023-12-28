@@ -92,6 +92,7 @@ public class DateTime
      * @param hour hour
      * @param minute minute
      * @param second second
+     * @param nanos nanos
      * @param offset timezone offset
      * @return A DateTime with nanosecond granularity
      */
