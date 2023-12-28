@@ -86,9 +86,6 @@ public class TimezoneOffset
         return ZoneOffset.ofHoursMinutes(hours, minutes);
     }
 
-    /**
-     * @hidden
-     */
     @Override
     public boolean equals(final Object o)
     {
@@ -104,9 +101,6 @@ public class TimezoneOffset
         return hours == that.hours && minutes == that.minutes;
     }
 
-    /**
-     * @hidden
-     */
     @Override
     public int hashCode()
     {

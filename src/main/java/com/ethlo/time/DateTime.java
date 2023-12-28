@@ -94,6 +94,7 @@ public class DateTime
      * @param second second
      * @param nanos nanos
      * @param offset timezone offset
+     * @param fractionDigits The granularity of the fractional seconds field
      * @return A DateTime with nanosecond granularity
      */
     public static DateTime of(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset, final int fractionDigits)
@@ -429,9 +430,6 @@ public class DateTime
         return fractionDigits > 0 ? toString(fractionDigits) : toString(field);
     }
 
-    /**
-     * * @hidden
-     */
     @Override
     public boolean equals(final Object o)
     {
@@ -456,9 +454,6 @@ public class DateTime
                 && Objects.equals(offset, dateTime.offset);
     }
 
-    /**
-     * @hidden
-     */
     @Override
     public int hashCode()
     {
