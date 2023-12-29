@@ -48,7 +48,7 @@ The above results were captured on a Lenovo P1 G6 laptop:
 
 The benchmarks are available in https://github.com/ethlo/date-time-wars.
 
-## Example usage
+## Usage
 
 Add dependency
 
@@ -161,6 +161,8 @@ no-brainer to do-the-right-thing(c).
 Some projects use epoch time-stamps for date-time exchange, and from a performance perspective this *may* make sense
 in *some* cases. With this project one can do-the-right-thing and maintain performance in date-time handling.
 
+This project is _not_ a premature optimization! In real-life scenarios there are examples of date-time parsing hindering optimal performance. The samples include data ingestion into databases and search engines, to importing/exporting data on less powerful devices, like cheaper Android devices.  
+
 *What is wrong with epoch timestamps?*
 
 * It is not human-readable, so debugging and direct manipulation is harder
@@ -218,9 +220,9 @@ instead of `60`.
 ### Version 1.7.5
 
 2023-12-28
-* Parser performance improvements.
-* Adding a minimized version jar (16.4KB), available using classifier `small`.
-
+* Releasing a minified version for scenarios where every KB counts. Use `<classifier>small</classifier>` to use it.
+* Even faster parsing performance. 1.7.5 is more than twice as fast as 1.7.0!
+* NOTE: Parsing to `OffsetDateTime` now emit error messages closer to parsing via `java.time`.
 
 ### Version 1.7.4
 
