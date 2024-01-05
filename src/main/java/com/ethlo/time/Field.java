@@ -34,21 +34,19 @@ import java.time.temporal.UnsupportedTemporalTypeException;
  */
 public enum Field
 {
-    YEAR(4, ChronoField.YEAR),
-    MONTH(7, ChronoField.MONTH_OF_YEAR),
-    DAY(10, ChronoField.DAY_OF_MONTH),
-    HOUR(13, ChronoField.HOUR_OF_DAY),
-    MINUTE(16, ChronoField.MINUTE_OF_HOUR),
-    SECOND(19, ChronoField.SECOND_OF_MINUTE),
-    NANO(20, ChronoField.NANO_OF_SECOND);
+    YEAR(4),
+    MONTH(7),
+    DAY(10),
+    HOUR(13),
+    MINUTE(16),
+    SECOND(19),
+    NANO(20);
 
     private final int requiredLength;
-    private final ChronoField chronoField;
 
-    Field(int requiredLength, final ChronoField chronoField)
+    Field(int requiredLength)
     {
         this.requiredLength = requiredLength;
-        this.chronoField = chronoField;
     }
 
     public static Field valueOf(Class<? extends Temporal> type)
@@ -71,6 +69,11 @@ public enum Field
         }
 
         throw new IllegalArgumentException("Type " + type.getSimpleName() + " is not supported");
+    }
+
+    public int getRequiredLength()
+    {
+        return requiredLength;
     }
 
     public static Field of(TemporalField temporalField)
@@ -104,15 +107,5 @@ public enum Field
             return NANO;
         }
         throw new UnsupportedTemporalTypeException("Unsupported field: " + temporalField);
-    }
-
-    public int getRequiredLength()
-    {
-        return requiredLength;
-    }
-
-    public TemporalField toTemporalField()
-    {
-        return chronoField;
     }
 }
