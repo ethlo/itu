@@ -31,6 +31,10 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalField;
+import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -39,7 +43,7 @@ import com.ethlo.time.internal.LimitedCharArrayIntegerUtil;
 /**
  * Container class for parsed date/date-time data. The {@link #getMostGranularField()} contains the highest granularity field found, like MONTH, MINUTE, SECOND.
  */
-public class DateTime
+public class DateTime implements TemporalAccessor
 {
     private final Field field;
     private final int year;
@@ -69,10 +73,10 @@ public class DateTime
     /**
      * Create a new instance with second granularity from the input parameters
      *
-     * @param year year
-     * @param month month
-     * @param day day
-     * @param hour hour
+     * @param year   year
+     * @param month  month
+     * @param day    day
+     * @param hour   hour
      * @param minute minute
      * @param second second
      * @param offset timezone offset
@@ -86,14 +90,14 @@ public class DateTime
     /**
      * Create a new instance with nanosecond granularity from the input parameters
      *
-     * @param year year
-     * @param month month
-     * @param day day
-     * @param hour hour
-     * @param minute minute
-     * @param second second
-     * @param nanos nanos
-     * @param offset timezone offset
+     * @param year           year
+     * @param month          month
+     * @param day            day
+     * @param hour           hour
+     * @param minute         minute
+     * @param second         second
+     * @param nanos          nanos
+     * @param offset         timezone offset
      * @param fractionDigits The granularity of the fractional seconds field
      * @return A DateTime with nanosecond granularity
      */
@@ -104,6 +108,7 @@ public class DateTime
 
     /**
      * Create a new instance with year granularity from the input parameters
+     *
      * @param year The year
      * @return a new instance with year granularity from the input parameters
      */
@@ -114,7 +119,8 @@ public class DateTime
 
     /**
      * Create a new instance with year-month granularity from the input parameters
-     * @param year The year
+     *
+     * @param year  The year
      * @param month The month
      * @return a new instance with year-month granularity from the input parameters
      */
@@ -125,9 +131,10 @@ public class DateTime
 
     /**
      * Create a new instance with day granularity from the input parameters
-     * @param year The year
+     *
+     * @param year  The year
      * @param month The month
-     * @param day The day
+     * @param day   The day
      * @return a new instance with day granularity from the input parameters
      */
     public static DateTime ofDate(int year, int month, int day)
@@ -137,10 +144,11 @@ public class DateTime
 
     /**
      * Create a new instance with minute granularity from the input parameters
-     * @param year The year
-     * @param month The month
-     * @param day The day
-     * @param hour The hour
+     *
+     * @param year   The year
+     * @param month  The month
+     * @param day    The day
+     * @param hour   The hour
      * @param minute The minute
      * @param offset The timezone offset
      * @return a new instance with minute granularity from the input parameters
@@ -458,5 +466,46 @@ public class DateTime
     public int hashCode()
     {
         return Objects.hash(field.ordinal(), year, month, day, hour, minute, second, nano, offset, fractionDigits);
+    }
+
+    @Override
+    public boolean isSupported(final TemporalField field)
+    {
+        return Field.of(field).ordinal() <= this.field.ordinal();
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    @Override
+    public long getLong(final TemporalField temporalField)
+    {
+        if (temporalField.equals(ChronoField.YEAR))
+        {
+            return year;
+        }
+        else if (temporalField.equals(ChronoField.MONTH_OF_YEAR))
+        {
+            return month;
+        }
+        else if (temporalField.equals(ChronoField.DAY_OF_MONTH))
+        {
+            return day;
+        }
+        else if (temporalField.equals(ChronoField.HOUR_OF_DAY))
+        {
+            return hour;
+        }
+        else if (temporalField.equals(ChronoField.MINUTE_OF_HOUR))
+        {
+            return minute;
+        }
+        else if (temporalField.equals(ChronoField.SECOND_OF_MINUTE))
+        {
+            return second;
+        }
+        else if (temporalField.equals(ChronoField.NANO_OF_SECOND))
+        {
+            return nano;
+        }
+        throw new UnsupportedTemporalTypeException("Unsupported field: " + temporalField);
     }
 }

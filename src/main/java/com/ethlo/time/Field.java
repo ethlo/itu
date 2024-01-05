@@ -24,7 +24,10 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalField;
+import java.time.temporal.UnsupportedTemporalTypeException;
 
 /**
  * Enumeration of the fields that makes up the date/date-time
@@ -71,5 +74,38 @@ public enum Field
     public int getRequiredLength()
     {
         return requiredLength;
+    }
+
+    public static Field of(TemporalField temporalField)
+    {
+        if (temporalField.equals(ChronoField.YEAR))
+        {
+            return YEAR;
+        }
+        else if (temporalField.equals(ChronoField.MONTH_OF_YEAR))
+        {
+            return MONTH;
+        }
+        else if (temporalField.equals(ChronoField.DAY_OF_MONTH))
+        {
+            return DAY;
+        }
+        else if (temporalField.equals(ChronoField.HOUR_OF_DAY))
+        {
+            return HOUR;
+        }
+        else if (temporalField.equals(ChronoField.MINUTE_OF_HOUR))
+        {
+            return MINUTE;
+        }
+        else if (temporalField.equals(ChronoField.SECOND_OF_MINUTE))
+        {
+            return SECOND;
+        }
+        else if (temporalField.equals(ChronoField.NANO_OF_SECOND))
+        {
+            return NANO;
+        }
+        throw new UnsupportedTemporalTypeException("Unsupported field: " + temporalField);
     }
 }

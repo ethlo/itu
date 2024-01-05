@@ -129,17 +129,4 @@ public final class LimitedCharArrayIntegerUtil
     {
         System.arraycopy(buf, srcPos, target, offset, length);
     }
-
-    public static int indexOfNonDigit(final char[] text, int offset)
-    {
-        for (int i = offset; i < text.length; i++)
-        {
-            char c = text[i];
-            if (c < ZERO || c > DIGIT_9)
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
 }
