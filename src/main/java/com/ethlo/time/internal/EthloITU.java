@@ -466,7 +466,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             {
                 fractionDigits = idx - 20;
                 fractions = scale(-result, fractionDigits);
-                offset = parseTimezone(chars, idx);
+                if (! raw)
+                {
+                    offset = parseTimezone(chars, idx);
+                }
             }
         }
         else if (remaining == 1 && (c == ZULU_UPPER || c == ZULU_LOWER))

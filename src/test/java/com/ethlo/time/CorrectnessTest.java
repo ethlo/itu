@@ -25,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -65,13 +67,13 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testParseLeapSecondUTC()
+    void testParseLeapSecondUTC()
     {
         verifyLeapSecondDateTime("1990-12-31T23:59:60Z", "1991-01-01T00:00:00Z", true);
     }
 
     @Test
-    public void testParseDoubleLeapSecondUTC()
+    void testParseDoubleLeapSecondUTC()
     {
         assertThrows(DateTimeException.class, () -> verifyLeapSecondDateTime("1990-12-31T23:59:61Z", "1991-01-01T00:00:01Z", true));
     }
@@ -85,46 +87,46 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testParseLeapSecondPST()
+    void testParseLeapSecondPST()
     {
         verifyLeapSecondDateTime("1990-12-31T15:59:60-08:00", "1991-01-01T00:00:00Z", true);
     }
 
     @Test
-    public void parseWithFragmentsNoTimezone()
+    void parseWithFragmentsNoTimezone()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T12:20:45.987"));
         assertThat(exception.getMessage()).isEqualTo("No timezone information: 2017-12-21T12:20:45.987");
     }
 
     @Test
-    public void parseWithFragmentsNonDigit()
+    void parseWithFragmentsNonDigit()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T12:20:45.9b7Z"));
         assertThat(exception.getMessage()).isEqualTo("Invalid character starting at position 21: 2017-12-21T12:20:45.9b7Z");
     }
 
     @Test
-    public void testParseLeapSecondUTCJune()
+    void testParseLeapSecondUTCJune()
     {
         final String leapSecondUTC = "1992-06-30T23:59:60Z";
         verifyLeapSecondDateTime(leapSecondUTC, "1992-07-01T00:00:00Z", true);
     }
 
     @Test
-    public void testParseLeapSecondPSTJune()
+    void testParseLeapSecondPSTJune()
     {
         verifyLeapSecondDateTime("1992-06-30T15:59:60-08:00", "1992-07-01T00:00:00Z", true);
     }
 
     @Test
-    public void testParseLeapSecond()
+    void testParseLeapSecond()
     {
         verifyLeapSecondDateTime("1990-12-31T15:59:60-08:00", "1991-01-01T00:00:00Z", true);
     }
 
     @Test
-    public void testParseLeapSecondPotentiallyCorrect()
+    void testParseLeapSecondPotentiallyCorrect()
     {
         verifyLeapSecondDateTime("2032-06-30T15:59:60-08:00", "2032-07-01T00:00:00Z", false);
     }
@@ -143,7 +145,7 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testFormat1()
+    void testFormat1()
     {
         final String s = "2017-02-21T15:27:39.0000000";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
@@ -151,7 +153,7 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testFormat2()
+    void testFormat2()
     {
         final String s = "2017-02-21T15:27:39.000+30:00";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
@@ -159,7 +161,7 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testFormat3()
+    void testFormat3()
     {
         final String s = "2017-02-21T10:00:00.000+12:00";
         final OffsetDateTime date = parser.parseDateTime(s);
@@ -167,7 +169,7 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testInvalidNothingAfterFractionalSeconds()
+    void testInvalidNothingAfterFractionalSeconds()
     {
         final String s = "2017-02-21T10:00:00.12345";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
@@ -175,14 +177,14 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void parseWithoutSeconds()
+    void parseWithoutSeconds()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T12:20Z"));
         assertThat(exception.getMessage()).isEqualTo("No SECOND field found");
     }
 
     @Test
-    public void testFormat4()
+    void testFormat4()
     {
         final String s = "2017-02-21T15:00:00.123Z";
         final OffsetDateTime date = parser.parseDateTime(s);
@@ -190,49 +192,49 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testParseMoreThanNanoResolutionFails()
+    void testParseMoreThanNanoResolutionFails()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-02-21T15:00:00.1234567891Z"));
         assertThat(exception.getMessage()).isEqualTo("Invalid value for NanoOfSecond (valid values 0 - 999999999): 1234567891");
     }
 
     @Test
-    public void testParseMonthOutOfBounds()
+    void testParseMonthOutOfBounds()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-13-21T15:00:00Z"));
         assertThat(exception.getMessage()).isEqualTo("Invalid value for MonthOfYear (valid values 1 - 12): 13");
     }
 
     @Test
-    public void testParseDayOutOfBounds()
+    void testParseDayOutOfBounds()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-11-32T15:00:00Z"));
         assertThat(exception.getMessage()).isEqualTo("Invalid value for DayOfMonth (valid values 1 - 28/31): 32");
     }
 
     @Test
-    public void testParseHourOutOfBounds()
+    void testParseHourOutOfBounds()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T24:00:00Z"));
         assertThat(exception.getMessage()).isEqualTo("Invalid value for HourOfDay (valid values 0 - 23): 24");
     }
 
     @Test
-    public void testParseMinuteOfBounds()
+    void testParseMinuteOfBounds()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T23:60:00Z"));
         assertThat(exception.getMessage()).isEqualTo("Invalid value for MinuteOfHour (valid values 0 - 59): 60");
     }
 
     @Test
-    public void testParseSecondOutOfBounds()
+    void testParseSecondOutOfBounds()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-12-21T23:00:61Z"));
         assertThat(exception.getMessage()).isEqualTo("Invalid value for SecondOfMinute (valid values 0 - 59): 61");
     }
 
     @Test
-    public void testFormatMoreThanNanoResolutionFails()
+    void testFormatMoreThanNanoResolutionFails()
     {
         final OffsetDateTime d = parser.parseDateTime("2017-02-21T15:00:00.123456789Z");
         final int fractionDigits = 10;
@@ -241,7 +243,7 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testFormatUtc()
+    void testFormatUtc()
     {
         final String s = "2017-02-21T15:09:03.123456789Z";
         final OffsetDateTime date = parser.parseDateTime(s);
@@ -251,7 +253,7 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testFormatUtcMilli()
+    void testFormatUtcMilli()
     {
         final String s = "2017-02-21T15:00:00.123456789Z";
         final OffsetDateTime date = parser.parseDateTime(s);
@@ -259,7 +261,7 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testFormatUtcMicro()
+    void testFormatUtcMicro()
     {
         final String s = "2017-02-21T15:00:00.123456789Z";
         final OffsetDateTime date = parser.parseDateTime(s);
@@ -267,7 +269,7 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testFormatUtcNano()
+    void testFormatUtcNano()
     {
         final String s = "2017-02-21T15:00:00.987654321Z";
         final OffsetDateTime date = parser.parseDateTime(s);
@@ -275,7 +277,7 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testFormat4TrailingNoise()
+    void testFormat4TrailingNoise()
     {
         final String s = "2017-02-21T15:00:00.123ZGGG";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(s));
@@ -283,7 +285,7 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testFormat5()
+    void testFormat5()
     {
         final String s = "2017-02-21T15:27:39.123+13:00";
         final OffsetDateTime date = parser.parseDateTime(s);
@@ -291,21 +293,21 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testParseEmptyString()
+    void testParseEmptyString()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(""));
         assertThat(exception.getMessage()).isEqualTo("Unexpected end of expression at position 0: ''");
     }
 
     @Test
-    public void testParseNull()
+    void testParseNull()
     {
         final NullPointerException exception = assertThrows(NullPointerException.class, () -> parser.parseDateTime(null));
         assertThat(exception.getMessage()).isEqualTo("text cannot be null");
     }
 
     @Test
-    public void testRfcExample()
+    void testRfcExample()
     {
         // 1994-11-05T08:15:30-05:00 corresponds to November 5, 1994, 8:15:30 am, US Eastern Standard Time/
         // 1994-11-05T13:15:30Z corresponds to the same instant.
@@ -317,14 +319,14 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testBadSeparator()
+    void testBadSeparator()
     {
         final String a = "1994 11-05T08:15:30-05:00";
         assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
     }
 
     @Test
-    public void testParseNonDigit()
+    void testParseNonDigit()
     {
         final String a = "199g-11-05T08:15:30-05:00";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
@@ -332,7 +334,7 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testInvalidDateTimeSeparator()
+    void testInvalidDateTimeSeparator()
     {
         final String a = "1994-11-05X08:15:30-05:00";
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime(a));
@@ -340,34 +342,112 @@ public abstract class CorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testLowerCaseTseparator()
+    void testLowerCaseTseparator()
     {
         final String a = "1994-11-05t08:15:30z";
         assertThat(parser.parseDateTime(a)).isNotNull();
     }
 
     @Test
-    public void testSpaceAsSeparator()
+    void testSpaceAsSeparator()
     {
         assertThat(parser.parseDateTime("1994-11-05 08:15:30z")).isNotNull();
     }
 
     @Test
-    public void testMilitaryOffset()
+    void testMilitaryOffset()
     {
         assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-02-21T15:27:39+0000"));
     }
 
     @Test
-    public void testParseUnknownLocalOffsetConvention()
+    void testParseUnknownLocalOffsetConvention()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-02-21T15:27:39-00:00"));
         assertThat(exception.getMessage()).isEqualTo("Unknown 'Local Offset Convention' date-time not allowed");
     }
 
     @Test
-    public void testParseLowercaseZ()
+    void testParseLowercaseZ()
     {
-        parser.parseDateTime("2017-02-21T15:27:39.000z");
+        assertThat(parser.parseDateTime("2017-02-21T15:27:39.000z")).isEqualTo(OffsetDateTime.parse("2017-02-21T15:27:39.000z"));
+    }
+
+    @Test
+    void testTemporalAccessorYear()
+    {
+        final TemporalAccessor parsed = ITU.parseLenient("2017");
+        assertThat(parsed.isSupported(ChronoField.YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.MONTH_OF_YEAR)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.DAY_OF_MONTH)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.HOUR_OF_DAY)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isFalse();
+    }
+
+    @Test
+    void testTemporalAccessorMonth()
+    {
+        final TemporalAccessor parsed = ITU.parseLenient("2017-01");
+        assertThat(parsed.isSupported(ChronoField.YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.MONTH_OF_YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.DAY_OF_MONTH)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.HOUR_OF_DAY)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isFalse();
+    }
+
+    @Test
+    void testTemporalAccessorDay()
+    {
+        final TemporalAccessor parsed = ITU.parseLenient("2017-01-27");
+        assertThat(parsed.isSupported(ChronoField.YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.MONTH_OF_YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.DAY_OF_MONTH)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.HOUR_OF_DAY)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isFalse();
+    }
+
+    @Test
+    void testTemporalAccessorMinute()
+    {
+        final TemporalAccessor parsed = ITU.parseLenient("2017-01-27T15:34");
+        assertThat(parsed.isSupported(ChronoField.YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.MONTH_OF_YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.DAY_OF_MONTH)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.HOUR_OF_DAY)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isFalse();
+    }
+
+    @Test
+    void testTemporalAccessorSecond()
+    {
+        final TemporalAccessor parsed = ITU.parseLenient("2017-01-27T15:34:49");
+        assertThat(parsed.isSupported(ChronoField.YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.MONTH_OF_YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.DAY_OF_MONTH)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.HOUR_OF_DAY)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isFalse();
+    }
+
+    @Test
+    void testTemporalAccessorNanos()
+    {
+        final TemporalAccessor parsed = ITU.parseLenient("2017-01-27T15:34:49.987654321");
+        assertThat(parsed.isSupported(ChronoField.YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.MONTH_OF_YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.DAY_OF_MONTH)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.HOUR_OF_DAY)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isTrue();
     }
 }

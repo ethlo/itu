@@ -24,26 +24,31 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalField;
+import java.time.temporal.UnsupportedTemporalTypeException;
 
 /**
  * Enumeration of the fields that makes up the date/date-time
  */
 public enum Field
 {
-    YEAR(4),
-    MONTH(7),
-    DAY(10),
-    HOUR(13),
-    MINUTE(16),
-    SECOND(19),
-    NANO(20);
+    YEAR(4, ChronoField.YEAR),
+    MONTH(7, ChronoField.MONTH_OF_YEAR),
+    DAY(10, ChronoField.DAY_OF_MONTH),
+    HOUR(13, ChronoField.HOUR_OF_DAY),
+    MINUTE(16, ChronoField.MINUTE_OF_HOUR),
+    SECOND(19, ChronoField.SECOND_OF_MINUTE),
+    NANO(20, ChronoField.NANO_OF_SECOND);
 
     private final int requiredLength;
+    private final ChronoField chronoField;
 
-    Field(int requiredLength)
+    Field(int requiredLength, final ChronoField chronoField)
     {
         this.requiredLength = requiredLength;
+        this.chronoField = chronoField;
     }
 
     public static Field valueOf(Class<? extends Temporal> type)
@@ -68,8 +73,46 @@ public enum Field
         throw new IllegalArgumentException("Type " + type.getSimpleName() + " is not supported");
     }
 
+    public static Field of(TemporalField temporalField)
+    {
+        if (temporalField.equals(ChronoField.YEAR))
+        {
+            return YEAR;
+        }
+        else if (temporalField.equals(ChronoField.MONTH_OF_YEAR))
+        {
+            return MONTH;
+        }
+        else if (temporalField.equals(ChronoField.DAY_OF_MONTH))
+        {
+            return DAY;
+        }
+        else if (temporalField.equals(ChronoField.HOUR_OF_DAY))
+        {
+            return HOUR;
+        }
+        else if (temporalField.equals(ChronoField.MINUTE_OF_HOUR))
+        {
+            return MINUTE;
+        }
+        else if (temporalField.equals(ChronoField.SECOND_OF_MINUTE))
+        {
+            return SECOND;
+        }
+        else if (temporalField.equals(ChronoField.NANO_OF_SECOND))
+        {
+            return NANO;
+        }
+        throw new UnsupportedTemporalTypeException("Unsupported field: " + temporalField);
+    }
+
     public int getRequiredLength()
     {
         return requiredLength;
+    }
+
+    public TemporalField toTemporalField()
+    {
+        return chronoField;
     }
 }
