@@ -130,14 +130,11 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             case ZULU_UPPER:
             case ZULU_LOWER:
                 final TimezoneOffset zoneOffset = parseTimezone(chars, 16);
-                if (! raw)
+                if (!raw)
                 {
                     throw raiseMissingField(Field.SECOND);
                 }
                 return DateTime.of(year, month, day, hour, minute, zoneOffset);
-
-            default:
-                assertPositionContains(chars, 16, TIME_SEPARATOR, PLUS, MINUS, ZULU_UPPER);
         }
         throw new DateTimeException(chars);
     }
@@ -373,7 +370,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         final int months = parsePositiveInt(chars, 5, 7);
         if (7 == len)
         {
-            if (! raw)
+            if (!raw)
             {
                 throw raiseMissingField(Field.SECOND);
             }
@@ -385,7 +382,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         final int days = parsePositiveInt(chars, 8, 10);
         if (10 == len)
         {
-            if (! raw)
+            if (!raw)
             {
                 throw raiseMissingField(Field.SECOND);
             }
@@ -466,7 +463,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             {
                 fractionDigits = idx - 20;
                 fractions = scale(-result, fractionDigits);
-                if (! raw)
+                if (!raw)
                 {
                     offset = parseTimezone(chars, idx);
                 }

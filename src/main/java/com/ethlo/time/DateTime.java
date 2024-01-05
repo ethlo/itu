@@ -496,7 +496,7 @@ public class DateTime implements TemporalAccessor
         }
         else if (temporalField.equals(ChronoField.MINUTE_OF_HOUR))
         {
-            return year;
+            return minute;
         }
         else if (temporalField.equals(ChronoField.SECOND_OF_MINUTE))
         {

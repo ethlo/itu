@@ -27,6 +27,7 @@ import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalField;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -56,11 +57,20 @@ public abstract class CorrectnessTest extends AbstractTest
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "2017-02-21T15:27:39.+00:00",
-            "2017-02-21T15:27:39", "2017-02-21T15:27:39.123",
-            "2017-02-21T15:27:39.123456", "2017-02-21T15:27:39.123456789",
-            "2017-02-21T15:27:39+0000", "2017-02-21T15:27:39.123+0000",
-            "201702-21T15:27:39.123456+0000", "20170221T15:27:39.123456789+0000"})
+            "2017-02-21T15",
+            "2017-02-21T15Z",
+            "2017-02-21T15:27",
+            "2017-02-21T15:27Z",
+            "2017-02-21T15:27:19~10:00",
+            "2017-02-21T15:27:39.+00:00", // No fractions after dot
+            "2017-02-21T15:27:39", // No timezone
+            "2017-02-21T15:27:39.123",
+            "2017-02-21T15:27:39.123456",
+            "2017-02-21T15:27:39.123456789",
+            "2017-02-21T15:27:39+0000",
+            "2017-02-21T15:27:39.123+0000",
+            "201702-21T15:27:39.123456+0000",
+            "20170221T15:27:39.123456789+0000"})
     void testInvalid(final String invalid)
     {
         assertThrows(DateTimeException.class, () -> parser.parseDateTime(invalid));
@@ -384,6 +394,7 @@ public abstract class CorrectnessTest extends AbstractTest
         assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isFalse();
         assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isFalse();
         assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isFalse();
+        assertThat(parsed.getLong(ChronoField.YEAR)).isEqualTo(2017);
     }
 
     @Test
@@ -397,6 +408,8 @@ public abstract class CorrectnessTest extends AbstractTest
         assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isFalse();
         assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isFalse();
         assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isFalse();
+
+        assertThat(parsed.getLong(ChronoField.MONTH_OF_YEAR)).isEqualTo(1);
     }
 
     @Test
@@ -410,6 +423,8 @@ public abstract class CorrectnessTest extends AbstractTest
         assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isFalse();
         assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isFalse();
         assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isFalse();
+
+        assertThat(parsed.getLong(ChronoField.DAY_OF_MONTH)).isEqualTo(27);
     }
 
     @Test
@@ -423,6 +438,8 @@ public abstract class CorrectnessTest extends AbstractTest
         assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isTrue();
         assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isFalse();
         assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isFalse();
+
+        assertThat(parsed.getLong(ChronoField.MINUTE_OF_HOUR)).isEqualTo(34);
     }
 
     @Test
@@ -436,6 +453,8 @@ public abstract class CorrectnessTest extends AbstractTest
         assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isTrue();
         assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isTrue();
         assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isFalse();
+
+        assertThat(parsed.getLong(ChronoField.SECOND_OF_MINUTE)).isEqualTo(49);
     }
 
     @Test
@@ -449,5 +468,7 @@ public abstract class CorrectnessTest extends AbstractTest
         assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isTrue();
         assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isTrue();
         assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isTrue();
+
+        assertThat(parsed.getLong(ChronoField.NANO_OF_SECOND)).isEqualTo(987654321);
     }
 }
