@@ -372,7 +372,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             if (!raw)
             {
-                throw raiseMissingField(Field.SECOND);
+                throw raiseMissingField(Field.MONTH);
             }
             return DateTime.ofYearMonth(years, months);
         }
@@ -384,7 +384,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             if (!raw)
             {
-                throw raiseMissingField(Field.SECOND);
+                throw raiseMissingField(Field.DAY);
             }
             return DateTime.ofDate(years, months, days);
         }
