@@ -233,9 +233,20 @@ instead of `60`.
 
 ## Changelog
 
+### Version 1.7.7
+2024-01-22
+
+`com.ethlo.time.DateTime` now supports `toInstant()` with a best-effort approach, so it will parse according to RFC-3339, but it will not raise an error for missing granularity nor timezone information.
+
+### Version 1.7.6
+2024-01-05
+
+com.ethlo.time.DateTime now implements `java.time.temporal.TemporalAccessor`.
+
 ### Version 1.7.5
 
 2023-12-28
+
 * Releasing a minified version for scenarios where every KB counts. Use `<classifier>small</classifier>` to use it.
 * Even faster parsing performance. 1.7.5 is more than twice as fast as 1.7.0!
 * NOTE: Parsing to `OffsetDateTime` now emit error messages closer to parsing via `java.time`.
