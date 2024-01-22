@@ -356,7 +356,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
         else if (c == PLUS || c == MINUS)
         {
-            // No fractional sections
+            // No fractional seconds
             offset = parseTimezone(chars, 19);
         }
         else
