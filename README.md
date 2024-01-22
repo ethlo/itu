@@ -108,7 +108,7 @@ class Test {
 ```
 
 ### Handle different granularity (ISO format)
-Validate to different required granularity:
+#### Validate with specified granularity
 ```java
 import com.ethlo.time.ITU;
 import com.ethlo.time.TemporalType;
@@ -120,7 +120,7 @@ class Test {
 }
 ```
 
-Allowing handling different levels of granularity:
+#### Handling different levels of granularity explicitly
 ```java
 import com.ethlo.time.ITU;
 import com.ethlo.time.TemporalHandler;
@@ -147,7 +147,20 @@ class Test {
         });
     }
 }
+```
+#### Parsing leniently to a timestamp
+In some real world scenarios, the need to parse a best-effort timestamp is needed. To ease this, we can use `ITU.parseLenient()` with `DateTime.toInstant()` like this:
 
+```java
+import com.ethlo.time.ITU;
+import com.ethlo.time.TemporalHandler;
+import java.time.temporal.TemporalAccessor;
+
+class Test {
+    void parseTest() {
+        final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
+    }
+}
 ```
 
 ## Q & A
