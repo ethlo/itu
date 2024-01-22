@@ -57,7 +57,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.7.5</version>
+  <version>1.7.7</version>
   <!-- If you want to use minified JAR -->  
   <classifier>small</classifier>
 </dependency>
