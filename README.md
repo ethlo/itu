@@ -3,6 +3,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.ethlo.time/itu.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ethlo.time%22%20a%3A%22itu%22)
 [![javadoc](https://javadoc.io/badge2/com.ethlo.time/itu/javadoc.svg)](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html)
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/598913bc1fe9405c82be73d9a4f105c8)](https://app.codacy.com/gh/ethlo/itu/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 An extremely fast parser and formatter of ISO format date-times.
 
@@ -107,7 +108,7 @@ class Test {
 ```
 
 ### Handle different granularity (ISO format)
-Validate to different required granularity:
+#### Validate with specified granularity
 ```java
 import com.ethlo.time.ITU;
 import com.ethlo.time.TemporalType;
@@ -119,7 +120,7 @@ class Test {
 }
 ```
 
-Allowing handling different levels of granularity:
+#### Handling different levels of granularity explicitly
 ```java
 import com.ethlo.time.ITU;
 import com.ethlo.time.TemporalHandler;
@@ -146,7 +147,20 @@ class Test {
         });
     }
 }
+```
+#### Parsing leniently to a timestamp
+In some real world scenarios, the need to parse a best-effort timestamp is needed. To ease this, we can use `ITU.parseLenient()` with `DateTime.toInstant()` like this:
 
+```java
+import com.ethlo.time.ITU;
+import com.ethlo.time.TemporalHandler;
+import java.time.temporal.TemporalAccessor;
+
+class Test {
+    void parseTest() {
+        final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
+    }
+}
 ```
 
 ## Q & A
