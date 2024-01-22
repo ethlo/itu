@@ -516,7 +516,7 @@ public class DateTime implements TemporalAccessor
 
     /**
      * <p>This method will attempt to create an Instant from whatever granularity is available in the parsed year/date/date-time.</p>
-     * <p>Missing fields will be replaced by their lowest allowed value, like 1 for month and day, 0 for any time component.</p>
+     * <p>Missing fields will be replaced by their lowest allowed value: 1 for month and day, 0 for any missing time component.</p>
      * <p>NOTE: If there is no time-zone defined, UTC will be assumed</p>
      *
      * @return An instant representing the point in time.
