@@ -71,11 +71,6 @@ public enum Field
         throw new IllegalArgumentException("Type " + type.getSimpleName() + " is not supported");
     }
 
-    public int getRequiredLength()
-    {
-        return requiredLength;
-    }
-
     public static Field of(TemporalField temporalField)
     {
         if (temporalField.equals(ChronoField.YEAR))
@@ -107,5 +102,10 @@ public enum Field
             return NANO;
         }
         throw new UnsupportedTemporalTypeException("Unsupported field: " + temporalField);
+    }
+
+    public int getRequiredLength()
+    {
+        return requiredLength;
     }
 }

@@ -153,15 +153,15 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private static void assertPositionContains(String chars, int offset, char... expected)
+    private static void assertPositionContains(String chars, char... expected)
     {
-        if (offset >= chars.length())
+        if (10 >= chars.length())
         {
             raiseDateTimeException(chars, "Unexpected end of input");
         }
 
         boolean found = false;
-        final char needle = chars.charAt(offset);
+        final char needle = chars.charAt(10);
         for (char e : expected)
         {
             if (needle == e)
@@ -173,7 +173,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         if (!found)
         {
             throw new DateTimeException("Expected character " + Arrays.toString(expected)
-                    + " at position " + (offset + 1) + " '" + chars + "'");
+                    + " at position " + (10 + 1) + " '" + chars + "'");
         }
     }
 
@@ -227,126 +227,6 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    @Override
-    public String formatUtc(OffsetDateTime date, int fractionDigits)
-    {
-        return doFormat(date, ZoneOffset.UTC, Field.SECOND, fractionDigits);
-    }
-
-    @Override
-    public String formatUtc(OffsetDateTime date, Field lastIncluded)
-    {
-        return doFormat(date, ZoneOffset.UTC, lastIncluded, 0);
-    }
-
-    @Override
-    public String format(OffsetDateTime date, ZoneOffset adjustTo, final int fractionDigits)
-    {
-        return doFormat(date, adjustTo, Field.NANO, fractionDigits);
-    }
-
-    private String doFormat(OffsetDateTime date, ZoneOffset adjustTo, Field lastIncluded, int fractionDigits)
-    {
-        assertMaxFractionDigits(fractionDigits);
-
-        OffsetDateTime adjusted = date;
-        if (!date.getOffset().equals(adjustTo))
-        {
-            adjusted = date.atZoneSameInstant(adjustTo).toOffsetDateTime();
-        }
-        final TimezoneOffset tz = TimezoneOffset.of(adjustTo);
-
-        final char[] buffer = new char[31];
-
-        if (handleDatePart(lastIncluded, buffer, adjusted.getYear(), 0, 4, Field.YEAR))
-        {
-            return finish(buffer, Field.YEAR.getRequiredLength(), null);
-        }
-
-        buffer[4] = DATE_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, adjusted.getMonthValue(), 5, 2, Field.MONTH))
-        {
-            return finish(buffer, Field.MONTH.getRequiredLength(), null);
-        }
-
-        buffer[7] = DATE_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, adjusted.getDayOfMonth(), 8, 2, Field.DAY))
-        {
-            return finish(buffer, Field.DAY.getRequiredLength(), null);
-        }
-
-        // T separator
-        buffer[10] = SEPARATOR_UPPER;
-
-        // Time
-        LimitedCharArrayIntegerUtil.toString(adjusted.getHour(), buffer, 11, 2);
-        buffer[13] = TIME_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, adjusted.getMinute(), 14, 2, Field.MINUTE))
-        {
-            return finish(buffer, Field.MINUTE.getRequiredLength(), tz);
-        }
-        buffer[16] = TIME_SEPARATOR;
-        LimitedCharArrayIntegerUtil.toString(adjusted.getSecond(), buffer, 17, 2);
-
-        // Second fractions
-        final boolean hasFractionDigits = fractionDigits > 0;
-        if (hasFractionDigits)
-        {
-            buffer[19] = FRACTION_SEPARATOR;
-            addFractions(buffer, fractionDigits, adjusted.getNano());
-            return finish(buffer, 20 + fractionDigits, tz);
-        }
-        return finish(buffer, 19, tz);
-    }
-
-    private boolean handleDatePart(final Field lastIncluded, final char[] buffer, final int value, final int offset, final int length, final Field field)
-    {
-        LimitedCharArrayIntegerUtil.toString(value, buffer, offset, length);
-        return lastIncluded == field;
-    }
-
-    private void addFractions(char[] buf, int fractionDigits, int nano)
-    {
-        final double d = widths[fractionDigits - 1];
-        LimitedCharArrayIntegerUtil.toString((int) (nano / d), buf, 20, fractionDigits);
-    }
-
-    @Override
-    public OffsetDateTime parseDateTime(final String dateTime)
-    {
-        return (OffsetDateTime) parse(dateTime, false);
-    }
-
-    @Override
-    public String formatUtcMilli(OffsetDateTime date)
-    {
-        return formatUtc(date, 3);
-    }
-
-    @Override
-    public String formatUtcMicro(OffsetDateTime date)
-    {
-        return formatUtc(date, 6);
-    }
-
-    @Override
-    public String formatUtcNano(OffsetDateTime date)
-    {
-        return formatUtc(date, 9);
-    }
-
-    @Override
-    public String formatUtc(OffsetDateTime date)
-    {
-        return formatUtc(date, 0);
-    }
-
-    @Override
-    public DateTime parse(String chars)
-    {
-        return (DateTime) parse(chars, true);
-    }
-
     private static Object parse(String chars, boolean raw)
     {
         if (chars == null)
@@ -390,7 +270,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
 
         // HOURS
-        assertPositionContains(chars, 10, SEPARATOR_UPPER, SEPARATOR_LOWER, SEPARATOR_SPACE);
+        assertPositionContains(chars, SEPARATOR_UPPER, SEPARATOR_LOWER, SEPARATOR_SPACE);
         final int hours = parsePositiveInt(chars, 11, 13);
 
         // MINUTES
@@ -521,5 +401,125 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     private static void raiseDateTimeException(String chars, String message)
     {
         throw new DateTimeException(message + ": " + chars);
+    }
+
+    @Override
+    public String formatUtc(OffsetDateTime date, int fractionDigits)
+    {
+        return doFormat(date, ZoneOffset.UTC, Field.SECOND, fractionDigits);
+    }
+
+    @Override
+    public String formatUtc(OffsetDateTime date, Field lastIncluded)
+    {
+        return doFormat(date, ZoneOffset.UTC, lastIncluded, 0);
+    }
+
+    @Override
+    public String format(OffsetDateTime date, ZoneOffset adjustTo, final int fractionDigits)
+    {
+        return doFormat(date, adjustTo, Field.NANO, fractionDigits);
+    }
+
+    private String doFormat(OffsetDateTime date, ZoneOffset adjustTo, Field lastIncluded, int fractionDigits)
+    {
+        assertMaxFractionDigits(fractionDigits);
+
+        OffsetDateTime adjusted = date;
+        if (!date.getOffset().equals(adjustTo))
+        {
+            adjusted = date.atZoneSameInstant(adjustTo).toOffsetDateTime();
+        }
+        final TimezoneOffset tz = TimezoneOffset.of(adjustTo);
+
+        final char[] buffer = new char[31];
+
+        if (handleDatePart(lastIncluded, buffer, adjusted.getYear(), 0, 4, Field.YEAR))
+        {
+            return finish(buffer, Field.YEAR.getRequiredLength(), null);
+        }
+
+        buffer[4] = DATE_SEPARATOR;
+        if (handleDatePart(lastIncluded, buffer, adjusted.getMonthValue(), 5, 2, Field.MONTH))
+        {
+            return finish(buffer, Field.MONTH.getRequiredLength(), null);
+        }
+
+        buffer[7] = DATE_SEPARATOR;
+        if (handleDatePart(lastIncluded, buffer, adjusted.getDayOfMonth(), 8, 2, Field.DAY))
+        {
+            return finish(buffer, Field.DAY.getRequiredLength(), null);
+        }
+
+        // T separator
+        buffer[10] = SEPARATOR_UPPER;
+
+        // Time
+        LimitedCharArrayIntegerUtil.toString(adjusted.getHour(), buffer, 11, 2);
+        buffer[13] = TIME_SEPARATOR;
+        if (handleDatePart(lastIncluded, buffer, adjusted.getMinute(), 14, 2, Field.MINUTE))
+        {
+            return finish(buffer, Field.MINUTE.getRequiredLength(), tz);
+        }
+        buffer[16] = TIME_SEPARATOR;
+        LimitedCharArrayIntegerUtil.toString(adjusted.getSecond(), buffer, 17, 2);
+
+        // Second fractions
+        final boolean hasFractionDigits = fractionDigits > 0;
+        if (hasFractionDigits)
+        {
+            buffer[19] = FRACTION_SEPARATOR;
+            addFractions(buffer, fractionDigits, adjusted.getNano());
+            return finish(buffer, 20 + fractionDigits, tz);
+        }
+        return finish(buffer, 19, tz);
+    }
+
+    private boolean handleDatePart(final Field lastIncluded, final char[] buffer, final int value, final int offset, final int length, final Field field)
+    {
+        LimitedCharArrayIntegerUtil.toString(value, buffer, offset, length);
+        return lastIncluded == field;
+    }
+
+    private void addFractions(char[] buf, int fractionDigits, int nano)
+    {
+        final double d = widths[fractionDigits - 1];
+        LimitedCharArrayIntegerUtil.toString((int) (nano / d), buf, 20, fractionDigits);
+    }
+
+    @Override
+    public OffsetDateTime parseDateTime(final String dateTime)
+    {
+        return (OffsetDateTime) parse(dateTime, false);
+    }
+
+    @Override
+    public String formatUtcMilli(OffsetDateTime date)
+    {
+        return formatUtc(date, 3);
+    }
+
+    @Override
+    public String formatUtcMicro(OffsetDateTime date)
+    {
+        return formatUtc(date, 6);
+    }
+
+    @Override
+    public String formatUtcNano(OffsetDateTime date)
+    {
+        return formatUtc(date, 9);
+    }
+
+    @Override
+    public String formatUtc(OffsetDateTime date)
+    {
+        return formatUtc(date, 0);
+    }
+
+    @Override
+    public DateTime parse(String chars)
+    {
+        return (DateTime) parse(chars, true);
     }
 }
