@@ -36,7 +36,7 @@ public class LenientParseTests
         final DateTime a = ITU.parseLenient(s);
         assertThat(Instant.from(a)).isEqualTo(OffsetDateTime.parse(s).toInstant());
     }
-    
+
     @Test
     public void testParseTimestamp()
     {
