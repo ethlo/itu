@@ -26,6 +26,7 @@ import static com.ethlo.time.internal.EthloITU.TIME_SEPARATOR;
 import static com.ethlo.time.internal.EthloITU.finish;
 
 import java.time.DateTimeException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -38,6 +39,7 @@ import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.ethlo.time.internal.DateTimeMath;
 import com.ethlo.time.internal.LimitedCharArrayIntegerUtil;
 
 /**
@@ -506,6 +508,34 @@ public class DateTime implements TemporalAccessor
         {
             return nano;
         }
+        else if (temporalField.equals(ChronoField.INSTANT_SECONDS))
+        {
+            if (offset != null)
+            {
+                return toEpochSeconds();
+            }
+        }
+
         throw new UnsupportedTemporalTypeException("Unsupported field: " + temporalField);
+    }
+
+    /**
+     * <p>This method will attempt to create an Instant from whatever granularity is available in the parsed year/date/date-time.</p>
+     * <p>Missing fields will be replaced by their lowest allowed value, like 1 for month and day, 0 for any time component.</p>
+     * <p>NOTE: If there is no time-zone defined, UTC will be assumed</p>
+     *
+     * @return An instant representing the point in time.
+     */
+    public Instant toInstant()
+    {
+        return Instant.ofEpochSecond(toEpochSeconds(), nano);
+    }
+
+    private long toEpochSeconds()
+    {
+        final long secsSinceMidnight = hour * 3600L + minute * 60L + second;
+        final long daysInSeconds = DateTimeMath.daysFromCivil(year, month != 0 ? month : 1, day != 0 ? day : 1) * 86_400;
+        final long tsOffset = offset != null ? offset.getTotalSeconds() : 0;
+        return daysInSeconds + secsSinceMidnight - tsOffset;
     }
 }
