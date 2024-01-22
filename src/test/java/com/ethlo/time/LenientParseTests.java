@@ -32,8 +32,9 @@ public class LenientParseTests
     @Test
     public void testParseTimestampAndUseTemporalAccessor()
     {
-        final String s = "2018-11-01T14:45:59.12356789+04:00";
+        final String s = "2018-11-01T14:45:59.123456789+04:00";
         final DateTime a = ITU.parseLenient(s);
+        assertThat(a.getFractionDigits()).isEqualTo(9);
         assertThat(Instant.from(a)).isEqualTo(OffsetDateTime.parse(s).toInstant());
     }
 
