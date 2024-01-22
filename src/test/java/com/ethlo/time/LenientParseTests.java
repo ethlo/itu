@@ -47,6 +47,14 @@ public class LenientParseTests
     }
 
     @Test
+    public void testParseYear()
+    {
+        final String s = "2018";
+        final DateTime a = ITU.parseLenient(s);
+        assertThat(a.toInstant()).isEqualTo(OffsetDateTime.parse(s + "-01-01T00:00:00Z").toInstant());
+    }
+
+    @Test
     public void testParseYearMonth()
     {
         final String s = "2018-11";
@@ -67,6 +75,6 @@ public class LenientParseTests
     {
         final String s = "2018-11-27T12:30";
         final DateTime a = ITU.parseLenient(s);
-        assertThat(a.toInstant()).isEqualTo(OffsetDateTime.parse(s + ":00Z").toInstant());
+        assertThat(a.toInstant()).isEqualTo(OffsetDateTime.parse(s + "Z").toInstant());
     }
 }

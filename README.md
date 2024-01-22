@@ -22,21 +22,21 @@ W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 ## Performance
 
-Your mileage may vary. I've done my best to make sure these tests are as accurate as possible, but please do your own evaluation.
-* The second resolution test-string is: `2017-12-21T12:20:45Z`
-* The nanosecond-resolution test-string is: `2017-12-21T12:20:45.987654321Z`
+TL;DR: 30-100x faster than Java JDK classes.
 
 ### Parsing
-<img src="doc/parse.png" alt="Performance of parsing">
+<img src="https://github.com/ethlo/date-time-wars/blob/main/doc/parse.png?raw=true" alt="Performance of parsing">
 
 ### Formatting
-<img src="doc/format.png" alt="Performance of formatting">
+<img src="https://github.com/ethlo/date-time-wars/blob/main/doc/format.png?raw=true" alt="Performance of formatting">
+
+The details and tests are available in a separate repository, [date-time-wars](https://github.com/ethlo/date-time-wars).
 
 ### Raw parsing
 If you do not need to have the full verification of `java.time.OffsetDateTime`, 
 you can use the raw, parsed data through `com.ethlo.time.DateTime` that incurs less overhead. 
 
-Here it becomes even more visible how the parser scales with the length of the string that is parsed.
+Here it becomes even clearer how the parser scales with the length of the string that is parsed.
 <img src="doc/parse_raw.png" alt="Performance of raw parsing">
 
 ### Environment
