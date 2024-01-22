@@ -149,7 +149,9 @@ class Test {
 }
 ```
 #### Parsing leniently to a timestamp
-In some real world scenarios, the need to parse a best-effort timestamp is needed. To ease this, we can use `ITU.parseLenient()` with `DateTime.toInstant()` like this:
+In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, converting a raw `com.ethlo.time.DateTime` instance into `java.time.Instant` was added in 1.7.7. 
+
+We can use `ITU.parseLenient()` with `DateTime.toInstant()` like this:
 
 ```java
 import com.ethlo.time.ITU;
