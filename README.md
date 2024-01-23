@@ -149,7 +149,9 @@ class Test {
 }
 ```
 #### Parsing leniently to a timestamp
-In some real world scenarios, the need to parse a best-effort timestamp is needed. To ease this, we can use `ITU.parseLenient()` with `DateTime.toInstant()` like this:
+In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, converting a raw `com.ethlo.time.DateTime` instance into `java.time.Instant` was added in 1.7.7. 
+
+We can use `ITU.parseLenient()` with `DateTime.toInstant()` like this:
 
 ```java
 import com.ethlo.time.ITU;
@@ -231,9 +233,20 @@ instead of `60`.
 
 ## Changelog
 
+### Version 1.7.7
+2024-01-22
+
+`com.ethlo.time.DateTime` now supports `toInstant()` with a best-effort approach, so it will parse according to RFC-3339, but it will not raise an error for missing granularity nor timezone information.
+
+### Version 1.7.6
+2024-01-05
+
+com.ethlo.time.DateTime now implements `java.time.temporal.TemporalAccessor`.
+
 ### Version 1.7.5
 
 2023-12-28
+
 * Releasing a minified version for scenarios where every KB counts. Use `<classifier>small</classifier>` to use it.
 * Even faster parsing performance. 1.7.5 is more than twice as fast as 1.7.0!
 * NOTE: Parsing to `OffsetDateTime` now emit error messages closer to parsing via `java.time`.

@@ -308,6 +308,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         if (remaining == 2)
         {
             final int seconds = parsePositiveInt(chars, 17, 19);
+<<<<<<< HEAD
+=======
+            leapSecondCheck(year, month, day, hour, minute, 0, 0, null);
+>>>>>>> main
             if (raw)
             {
                 return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0);
