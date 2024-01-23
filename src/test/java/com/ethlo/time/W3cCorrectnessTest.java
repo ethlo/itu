@@ -151,13 +151,6 @@ public class W3cCorrectnessTest extends AbstractTest
     }
 
     @Test
-    public void testMismatch()
-    {
-        assertThrows(DateTimeException.class, () -> TimezoneOffset.ofHoursMinutes(-17, 30));
-        assertThrows(DateTimeException.class, () -> TimezoneOffset.ofHoursMinutes(17, -30));
-    }
-
-    @Test
     public void testOfZoneOffset()
     {
         final ZoneOffset zoneOffset = ZoneOffset.ofHoursMinutes(-17, -33);

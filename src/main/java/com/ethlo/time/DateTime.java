@@ -280,7 +280,7 @@ public class DateTime implements TemporalAccessor
         {
             return OffsetDateTime.of(year, month, day, hour, minute, second, nano, offset.toZoneOffset());
         }
-        throw new DateTimeException("No zone offset information found");
+        throw new DateTimeFormatException("No zone offset information found");
     }
 
     /**
@@ -308,7 +308,7 @@ public class DateTime implements TemporalAccessor
     {
         if (!includesGranularity(field))
         {
-            throw new DateTimeException("No " + field.name() + " field found");
+            throw new DateTimeFormatException("No " + field.name() + " field found");
         }
     }
 
@@ -338,7 +338,7 @@ public class DateTime implements TemporalAccessor
     {
         if (lastIncluded.ordinal() > date.getMostGranularField().ordinal())
         {
-            throw new DateTimeException("Requested granularity was " + lastIncluded.name() + ", but contains only granularity " + date.getMostGranularField().name());
+            throw new DateTimeFormatException("Requested granularity was " + lastIncluded.name() + ", but contains only granularity " + date.getMostGranularField().name());
         }
         final TimezoneOffset tz = date.getOffset().orElse(null);
         final char[] buffer = new char[35];
