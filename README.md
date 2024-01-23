@@ -5,15 +5,13 @@
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/598913bc1fe9405c82be73d9a4f105c8)](https://app.codacy.com/gh/ethlo/itu/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
-⚠️ Version 1.7.4 to 1.7.7 have a known issue parsing very specific, errounous date-time strings. _Please upgrade to version 1.8.0 or later!_
-
 An extremely fast parser and formatter of ISO format date-times.
 
-> Date and time formats cause a lot of confusion and interoperability problems on the Internet. This document addresses many of the problems encountered and makes recommendations to improve consistency and interoperability when representing and using date and time in Internet protocols.
-
-This project's goal is to do one thing and to do it right; make it easy to
-handle [Date and Time on the Internet: Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and
+This project's goal is to  do one thing: Make it easy to
+handle [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and
 W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
+
+⚠️ Important note: Version 1.7.4 to 1.7.7 have a known issue parsing very specific, errounous date-time strings. _Please upgrade to version 1.8.0 or later!_
 
 ## Features
 * Very easy to use
