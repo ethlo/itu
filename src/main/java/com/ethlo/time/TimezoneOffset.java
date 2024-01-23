@@ -20,7 +20,6 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.time.DateTimeException;
 import java.time.ZoneOffset;
 import java.util.Objects;
 
@@ -35,15 +34,6 @@ public class TimezoneOffset
 
     private TimezoneOffset(final int hours, final int minutes)
     {
-        if (hours > 0 && minutes < 0)
-        {
-            throw new DateTimeException("Zone offset minutes must be positive because hours is positive");
-        }
-        else if (hours < 0 && minutes > 0)
-        {
-            throw new DateTimeException("Zone offset minutes must be negative because hours is negative");
-        }
-
         this.hours = hours;
         this.minutes = minutes;
     }

@@ -204,7 +204,7 @@ public abstract class CorrectnessTest extends AbstractTest
     void testParseMoreThanNanoResolutionFails()
     {
         final DateTimeException exception = assertThrows(DateTimeException.class, () -> parser.parseDateTime("2017-02-21T15:00:00.1234567891Z"));
-        assertThat(exception.getMessage()).isEqualTo("Invalid value for NanoOfSecond (valid values 0 - 999999999): 1234567891");
+        assertThat(exception.getMessage()).isEqualTo("Too many fraction digits: 2017-02-21T15:00:00.1234567891Z");
     }
 
     @Test

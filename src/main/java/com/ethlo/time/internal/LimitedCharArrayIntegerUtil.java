@@ -21,6 +21,7 @@ package com.ethlo.time.internal;
  */
 
 import java.time.DateTimeException;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 
 public final class LimitedCharArrayIntegerUtil
@@ -52,7 +53,7 @@ public final class LimitedCharArrayIntegerUtil
     {
         if (endExclusive > strNum.length())
         {
-            throw new DateTimeException("Unexpected end of expression at position " + strNum.length() + ": '" + strNum + "'");
+            throw new DateTimeParseException("Unexpected end of expression at position " + strNum.length() + ": '" + strNum + "'", strNum, startInclusive);
         }
 
         int result = 0;
@@ -61,7 +62,7 @@ public final class LimitedCharArrayIntegerUtil
             final char c = strNum.charAt(i);
             if (c < ZERO || c > DIGIT_9)
             {
-                throw new DateTimeException("Character " + c + " is not a digit");
+                throw new DateTimeParseException("Character " + c + " is not a digit", strNum, i);
             }
             result = (result << 1) + (result << 3);
             result -= c - ZERO;
