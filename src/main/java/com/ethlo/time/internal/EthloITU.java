@@ -308,10 +308,6 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         if (remaining == 2)
         {
             final int seconds = parsePositiveInt(chars, 17, 19);
-<<<<<<< HEAD
-=======
-            leapSecondCheck(year, month, day, hour, minute, 0, 0, null);
->>>>>>> main
             if (raw)
             {
                 return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0);
@@ -418,8 +414,8 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             final boolean isValidLeapYearMonth = leapSecondHandler.isValidLeapSecondDate(needle);
             if (isValidLeapYearMonth || needle.isAfter(leapSecondHandler.getLastKnownLeapSecond()))
             {
-                final int utcHour = hour - (offset != null ? (offset.getTotalSeconds() / 3_600) : 0);
-                final int utcMinute = minute - (offset != null ? ((offset.getTotalSeconds() % 3_600) / 60) : 0);
+                final int utcHour = hour - offset.getTotalSeconds() / 3_600;
+                final int utcMinute = minute - (offset.getTotalSeconds() % 3_600) / 60;
                 if (((month == Month.DECEMBER.getValue() && day == 31) || (month == Month.JUNE.getValue() && day == 30))
                         && utcHour == 23
                         && utcMinute == 59)
