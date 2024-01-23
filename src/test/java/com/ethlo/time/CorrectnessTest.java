@@ -470,4 +470,10 @@ public abstract class CorrectnessTest extends AbstractTest
 
         assertThat(parsed.getLong(ChronoField.NANO_OF_SECOND)).isEqualTo(987654321);
     }
+
+    @Test
+    void testParseLeapSecondWhenNoTimeOffsetPresent()
+    {
+        ITU.parseLenient("3011-10-02T22:00:60.003");
+    }
 }

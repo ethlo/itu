@@ -60,6 +60,12 @@ limitations under the License.
             <version>5.10.1</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.code-intelligence</groupId>
+            <artifactId>jazzer-junit</artifactId>
+            <version>0.22.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
