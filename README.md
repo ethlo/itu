@@ -13,6 +13,9 @@ This project's goal is to do one thing and to do it right; make it easy to
 handle [Date and Time on the Internet: Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and
 W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
+## Important
+⚠️ Version 1.7.4 to 1.7.7 have a known issue parsing very specific, errounous date-time strings. _Please upgrade to version 1.8.0 or later!_
+
 ## Features
 * Very easy to use
 * No external dependencies, minimal JAR size (16.4KB)
@@ -32,32 +35,14 @@ TL;DR: 30-100x faster than Java JDK classes.
 
 The details and tests are available in a separate repository, [date-time-wars](https://github.com/ethlo/date-time-wars).
 
-### Raw parsing
-If you do not need to have the full verification of `java.time.OffsetDateTime`, 
-you can use the raw, parsed data through `com.ethlo.time.DateTime` that incurs less overhead. 
-
-Here it becomes even clearer how the parser scales with the length of the string that is parsed.
-<img src="doc/parse_raw.png" alt="Performance of raw parsing">
-
-### Environment
-The above results were captured on a Lenovo P1 G6 laptop:
-* Intel(R) Core(TM) i9-13900H
-* Ubuntu 23.10
-* OpenJDK version 17.0.9
-
-### Run tests yourself
-
-The benchmarks are available in https://github.com/ethlo/date-time-wars.
-
 ## Usage
-
 Add dependency
 
 ```xml
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.7.7</version>
+  <version>1.8.0</version>
   <!-- If you want to use minified JAR -->  
   <classifier>small</classifier>
 </dependency>
@@ -149,7 +134,7 @@ class Test {
 }
 ```
 #### Parsing leniently to a timestamp
-In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, converting a raw `com.ethlo.time.DateTime` instance into `java.time.Instant` was added in 1.7.7. 
+In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, converting a raw `com.ethlo.time.DateTime` instance into `java.time.Instant`. Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc. 
 
 We can use `ITU.parseLenient()` with `DateTime.toInstant()` like this:
 
@@ -229,106 +214,3 @@ Since Java's `java.time` classes do not support storing leap seconds, ITU will t
 encountered to signal that this is a leap second. The exception can then be queried for the second-value. Storing such
 values is not possible in a `java.time.OffsetDateTime`, the `60` is therefore abandoned and the date-time will use `59`
 instead of `60`. 
-
-
-## Changelog
-
-### Version 1.7.7
-2024-01-22
-
-`com.ethlo.time.DateTime` now supports `toInstant()` with a best-effort approach, so it will parse according to RFC-3339, but it will not raise an error for missing granularity nor timezone information.
-
-### Version 1.7.6
-2024-01-05
-
-com.ethlo.time.DateTime now implements `java.time.temporal.TemporalAccessor`.
-
-### Version 1.7.5
-
-2023-12-28
-
-* Releasing a minified version for scenarios where every KB counts. Use `<classifier>small</classifier>` to use it.
-* Even faster parsing performance. 1.7.5 is more than twice as fast as 1.7.0!
-* NOTE: Parsing to `OffsetDateTime` now emit error messages closer to parsing via `java.time`.
-
-### Version 1.7.4
-
-2023-12-26
-* Parser performance improvements.
-
-### Version 1.7.0
-
-2022-09-03
-
-* Added support for keeping number of significant fraction digits in second
-* Added toString methods to `DateTime` for formatting.
-* Added support for formatting date-times with other time-offsets than UTC.
-* Vastly [improved javadoc](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
-
-### Version 1.6.1
-
-2022-09-03
-
-New helper methods were added to deal with different granularity.
-
-* Validate to different required granularity.
-* Allowing handling different levels of granularity.
-
-### Version 1.6.0
-
-2022-03-08
-
-* `ITU.parseLenient(String)` now returns a custom `DateTime` object, which can be transformed to OffsetDateTime, LocalDateTime, etc, depending on how granular the fields in the input.
-* Removed methods supporting the handling of `java.util.Date`.
-
-### Version 1.5.2
-
-2022-03-02
-
-* Performance optimizations, especially formatting performance nearly doubled.
-* Better error message for date-times with fractions, but missing time-zone.
-* Rewrote benchmarks using [JMH](https://github.com/openjdk/jmh).
-
-### Version 1.5.1
-
-2022-02-28
-
-ITU is now using a list of known leap-second dates in the past and keeps the current rule for date-times after the last known leap-second year/date. This will avoid breaking the parsing of valid leap second due to not having the very last updated list of leap-seconds. 
-
-The `LeapSecondException` now has a new method to allow for checking if this is indeed a valid leap-second according to the list, via `isVerifiedValidLeapYearMonth()`.
-
-### Version 1.5.0
-
-2022-02-27
-
-* Massive performance improvement for formatting
-* IMPORTANT: Breaking change where previous versions returned null for null/empty input when parsing. This now throws an exception in line with the `java.time` classes.
-
-### Version 1.4.0
-2022-02-26
-Upgrade test dependencies and restructure internals to be able to write more fine-grained tests.
-
-### Version 1.3.0
-
-2020-07-10
-
-Support the parsing of leap seconds
-
-### Version 1.2.0
-
-2020-07-10
-
-* Support parsing of sub-date formats (`Year` and `YearMonth`).ITU utility class with static methods
-* No longer a need to create parser/formatter objects. Use static methods on `com.ethlo.time.ITU`.
-
-### Version 1.1.0
-
-2018-01-24
-
-Support for space as date/time separator for parsing, as specified as optional in the RFC-3339.
-
-### Version 1.0
-
-2017-02-27
-
-Initial release.
