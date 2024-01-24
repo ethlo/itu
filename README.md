@@ -5,20 +5,19 @@
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/598913bc1fe9405c82be73d9a4f105c8)](https://app.codacy.com/gh/ethlo/itu/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
-An extremely fast parser and formatter of ISO format date-times.
+An extremely fast parser and formatter of specific ISO-8601 format date and date-times.
 
 This project's goal is to  do one thing: Make it easy to
-handle [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and
-W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
+handle [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
 ⚠️ Important note: Version 1.7.4 to 1.7.7 have a known issue parsing very specific, errounous date-time strings. _Please upgrade to version [1.8.0](https://github.com/ethlo/itu/releases/tag/v1.8.0) or later!_
 
 ## Features
-* Very easy to use
-* No external dependencies, minimal JAR size (16.4KB)
-* Apache 2 licensed, can be used in any project, even commercial
-* Handling of leap-seconds
-* Very high performance
+* Very easy to use.
+* Aim for 100% specification compliance.
+* No external dependencies, minimal JAR size (16.4KB).
+* Apache 2 licensed, can be used in any project, even commercial.
+* Handling leap-seconds (if you want to).
 
 ## Performance
 
@@ -149,19 +148,19 @@ class Test {
 
 ## Q & A
 
-*Why this little project?*
+### Why this little project?
 
 There are an endless amount of APIs with non-standard date/time exchange, and the goal of this project is to make it a
 no-brainer to do-the-right-thing(c).
 
-*Why the performance optimized version?*
+### Why the performance optimized version?
 
 Some projects use epoch time-stamps for date-time exchange, and from a performance perspective this *may* make sense
 in *some* cases. With this project one can do-the-right-thing and maintain performance in date-time handling.
 
 This project is _not_ a premature optimization! In real-life scenarios there are examples of date-time parsing hindering optimal performance. The samples include data ingestion into databases and search engines, to importing/exporting data on less powerful devices, like cheaper Android devices.  
 
-*What is wrong with epoch timestamps?*
+### What is wrong with epoch timestamps?
 
 * It is not human-readable, so debugging and direct manipulation is harder
 * Limited resolution and/or time-range available
