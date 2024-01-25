@@ -96,7 +96,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         switch (len)
         {
             case 0:
-                throw new DateTimeParseException("Must have at least 1 fraction digit", parsedData, index);
+                throw new DateTimeParseException("Must have at least 1 fraction digit: " + parsedData, parsedData, index);
             case 1:
                 return fractions * 100_000_000;
             case 2:
@@ -137,7 +137,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
                 }
                 return DateTime.of(year, month, day, hour, minute, zoneOffset);
         }
-        throw new DateTimeParseException("Unexpected character at position 16: " + chars.charAt(16), chars, 16);
+        throw new DateTimeParseException("Unexpected character " + chars.charAt(16) + " at position 16: " + chars, chars, 16);
     }
 
     private static void assertPositionContains(String chars, int offset, char expected)
@@ -150,31 +150,28 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         if (chars.charAt(offset) != expected)
         {
             throw new DateTimeParseException("Expected character " + expected
-                    + " at position " + (offset + 1) + " '" + chars + "'", chars, offset);
+                    + " at position " + (offset + 1) + ": " + chars, chars, offset);
         }
     }
 
-    private static void assertPositionContains(String chars, char... expected)
+    private static void assertAllowedDateTimeSeparator(String chars)
     {
         if (10 >= chars.length())
         {
             raiseDateTimeException(chars, "Unexpected end of input", 10);
         }
 
-        boolean found = false;
         final char needle = chars.charAt(10);
-        for (char e : expected)
+        switch (needle)
         {
-            if (needle == e)
-            {
-                found = true;
-                break;
-            }
-        }
-        if (!found)
-        {
-            throw new DateTimeParseException("Expected character " + Arrays.toString(expected)
-                    + " at position " + (10 + 1) + " '" + chars + "'", chars, 10);
+            case SEPARATOR_UPPER:
+            case SEPARATOR_LOWER:
+            case SEPARATOR_SPACE:
+                return;
+
+            default:
+                throw new DateTimeParseException("Expected character " + Arrays.toString(new char[]{SEPARATOR_UPPER, SEPARATOR_LOWER, SEPARATOR_SPACE})
+                    + " at position " + (10 + 1) + ": " + chars, chars, 10);
         }
     }
 
@@ -224,7 +221,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     {
         if (chars.length() > lastUsed + 1)
         {
-            throw new DateTimeParseException("Trailing junk data after position " + (lastUsed + 1) + ": " + chars, chars, lastUsed + 1);
+            throw new DateTimeParseException("Trailing junk data after position " + (lastUsed + 2) + ": " + chars, chars, lastUsed + 1);
         }
     }
 
@@ -275,7 +272,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
 
         // HOURS
-        assertPositionContains(chars, SEPARATOR_UPPER, SEPARATOR_LOWER, SEPARATOR_SPACE);
+        assertAllowedDateTimeSeparator(chars);
         final int hours = parsePositiveInt(chars, 11, 13);
 
         // MINUTES
@@ -384,7 +381,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
         else
         {
-            raiseDateTimeException(chars, "Unexpected character at position 19", 19);
+            raiseDateTimeException(chars, "Unexpected character " + c + " at position 20", 19);
         }
 
         final int second = parsePositiveInt(chars, 17, 19);

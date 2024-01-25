@@ -62,7 +62,7 @@ public final class LimitedCharArrayIntegerUtil
             final char c = strNum.charAt(i);
             if (c < ZERO || c > DIGIT_9)
             {
-                throw new DateTimeParseException("Character " + c + " is not a digit", strNum, i);
+                throw new DateTimeParseException("Unexpected character " + c + " at position " + (i + 1) + ": " + strNum, strNum, i);
             }
             result = (result << 1) + (result << 3);
             result -= c - ZERO;
