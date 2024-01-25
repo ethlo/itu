@@ -24,7 +24,7 @@ import com.ethlo.time.internal.EthloITU;
 import com.ethlo.time.internal.Rfc3339;
 import com.ethlo.time.internal.Rfc3339Formatter;
 
-public class EthloITUCorrectnessTest extends CorrectnessTest
+public class EthloITULeapSecondTest extends LeapSecondTest
 {
     @Override
     protected Rfc3339 getParser()

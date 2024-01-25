@@ -1,0 +1,228 @@
+/*-
+ * #%L
+ * Internet Time Utility
+ * %%
+ * Copyright (C) 2017 - 2024 Morten Haraldsen (ethlo)
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+[
+    {
+        "input": "2020-22-12T12:11.56+04:30",
+        "error": "Unexpected character at position 16: ."
+    },
+    {
+        "input": "2017-02-21T15:27:39Z"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123Z"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123456Z"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123456789Z"
+    },
+    {
+        "input": "2017-02-21T15:27:39+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123456+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123456789+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.1+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.12+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.1234+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.12345+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123456+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.1234567+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.12345678+00:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123456789+00:00"
+    },
+    {
+        "input": "2017-02-21T15",
+        "error": "Unexpected end of input: 2017-02-21T15"
+    },
+    {
+        "input": "2017-02-21T15Z",
+        "error": "Expected character : at position 14 '2017-02-21T15Z'"
+    },
+    {
+        "input": "2017-02-21T15:27",
+        "error": "No SECOND field found"
+    },
+    {
+        "input": "2017-02-21T15:27Z",
+        "error": "No SECOND field found"
+    },
+    {
+        "input": "2017-02-21T15:27:19~10:00",
+        "error": "Unexpected character at position 19: 2017-02-21T15:27:19~10:00"
+    },
+    {
+        "input": "2017-02-21T15:27:39.+00:00",
+        "error": "Must have at least 1 fraction digit"
+    },
+    {
+        "input": "2017-02-21T15:27:39",
+        "error": "No timezone information: 2017-02-21T15:27:39"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123",
+        "error": "No timezone information: 2017-02-21T15:27:39.123"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123456",
+        "error": "No timezone information: 2017-02-21T15:27:39.123456"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123456789",
+        "error": "No timezone information: 2017-02-21T15:27:39.123456789"
+    },
+    {
+        "input": "2017-02-21T15:27:39+0000",
+        "error": "Invalid timezone offset: 2017-02-21T15:27:39+0000"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123+0000",
+        "error": "Invalid timezone offset: 2017-02-21T15:27:39.123+0000"
+    },
+    {
+        "input": "201702-21T15:27:39.123456+0000",
+        "error": "Expected character - at position 5 '201702-21T15:27:39.123456+0000'",
+        "error_index": 4
+    },
+    {
+        "input": "20170221T15:27:39.123456789+0000",
+        "error": "Expected character - at position 5 '20170221T15:27:39.123456789+0000'",
+        "error_index": 4
+    },
+    {
+        "input": "2017-12-21T12:20:45.987",
+        "error": "No timezone information: 2017-12-21T12:20:45.987"
+    },
+    {
+        "input": "2017-12-21T12:20:45.9b7Z",
+        "error": "Invalid character starting at position 21: 2017-12-21T12:20:45.9b7Z",
+        "error_index": 21
+    },
+    {
+        "input": "2017-02-21T15:27:39.0000000",
+        "error": "No timezone information: 2017-02-21T15:27:39.0000000"
+    },
+    {
+        "input": "2017-02-21T15:27:39.000+30:00",
+        "error": "Zone offset hours not in valid range: value 30 is not in the range -18 to 18"
+    },
+    {
+        "input": "2017-02-21T15:00:00.1234567891Z",
+        "error": "Too many fraction digits: 2017-02-21T15:00:00.1234567891Z"
+    },
+    {
+        "input": "2017-13-21T15:00:00Z",
+        "error": "Invalid value for MonthOfYear (valid values 1 - 12): 13"
+    },
+    {
+        "input": "2017-11-32T15:00:00Z",
+        "error": "Invalid value for DayOfMonth (valid values 1 - 28/31): 32"
+    },
+    {
+        "input": "2017-12-21T24:00:00Z",
+        "error": "Invalid value for HourOfDay (valid values 0 - 23): 24"
+    },
+    {
+        "input": "2017-12-21T23:60:00Z",
+        "error": "Invalid value for MinuteOfHour (valid values 0 - 59): 60"
+    },
+    {
+        "input": "2017-12-21T23:00:61Z",
+        "error": "Invalid value for SecondOfMinute (valid values 0 - 59): 61"
+    },
+    {
+        "input": "2020-12-31T22:22:2",
+        "error": "Unexpected end of input: 2020-12-31T22:22:2",
+        "error_index": 16
+    },
+    {
+        "input": "1994 11-05T08:15:30-05:00",
+        "error": "Expected character - at position 5 '1994 11-05T08:15:30-05:00'",
+        "error_index": 4,
+        "note": "Invalid separator between year and month"
+    },
+    {
+        "input": "199g-11-05T08:15:30-05:00",
+        "error": "Character g is not a digit",
+        "note": "Non-digit in year"
+    },
+    {
+        "input": "1994-11-05X08:15:30-05:00",
+        "error": "Expected character [T, t,  ] at position 11 '1994-11-05X08:15:30-05:00'",
+        "note": "invalid date/time separator"
+    },
+    {
+        "input": "1994-11-05t08:15:30z",
+        "note": "Lowercase 'z' as UTC timezone"
+    },
+    {
+        "input": "1994-11-05 08:15:30Z",
+        "error": "Text '1994-11-05 08:15:30Z' could not be parsed at index 10",
+        "note": "Space as date/time separator"
+    },
+    {
+        "input": "2017-02-21T15:27:39+0000",
+        "error": "Invalid timezone offset: 2017-02-21T15:27:39+0000",
+        "note": "Military format offset"
+    },
+    {
+        "input": "2017-02-21T15:27:39-00:00",
+        "error": "Unknown 'Local Offset Convention' date-time not allowed"
+    },
+    {
+        "input": "",
+        "error": "Unexpected end of expression at position 0: ''"
+    },
+    {
+        "input": "2017-02-21T15:00:00.123ZGGG",
+        "error": "Trailing junk data after position 24: 2017-02-21T15:00:00.123ZGGG"
+    },
+    /** LENIENT **/
+    {
+        "input": "2020-12-31T22:22:2",
+        "error": "Unexpected end of input: 2020-12-31T22:22:2",
+        "lenient": true
+    }
+]

@@ -32,7 +32,7 @@ public class ParseDateTimeFuzzTest
     {
         try
         {
-            ITU.parseDateTime(data.consumeRemainingAsAsciiString());
+            ITU.parseDateTime(data.consumeRemainingAsString());
         }
         catch (DateTimeException ignored)
         {

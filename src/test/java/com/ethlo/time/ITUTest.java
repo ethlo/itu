@@ -36,12 +36,10 @@ import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.Temporal;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
 
 @Tag("CorrectnessTest")
 public class ITUTest
@@ -303,4 +301,25 @@ public class ITUTest
         }));
         assertThat(exc).hasMessage("Expected character [T, t,  ] at position 11 '2017-03-05G'");
     }
+
+    @Test
+    void testParseNull()
+    {
+        final NullPointerException exception = assertThrows(NullPointerException.class, () -> ITU.parseDateTime(null));
+        assertThat(exception.getMessage()).isEqualTo("text cannot be null");
+    }
+
+    @Test
+    void testRfcExample()
+    {
+        // 1994-11-05T08:15:30-05:00 corresponds to November 5, 1994, 8:15:30 am, US Eastern Standard Time/
+        // 1994-11-05T13:15:30Z corresponds to the same instant.
+        final String a = "1994-11-05T08:15:30-05:00";
+        final String b = "1994-11-05T13:15:30Z";
+        final OffsetDateTime dA = ITU.parseDateTime(a);
+        final OffsetDateTime dB = ITU.parseDateTime(b);
+        assertThat(ITU.formatUtc(dA)).isEqualTo(ITU.formatUtc(dB));
+    }
+
+
 }
