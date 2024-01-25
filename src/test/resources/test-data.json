@@ -71,7 +71,7 @@
     },
     {
         "input": "2020-22-12T12:11.56+04:30",
-        "error": "Unexpected character . at position 16: 2020-22-12T12:11.56+04:30",
+        "error": "Unexpected character . at position 17: 2020-22-12T12:11.56+04:30",
         "error_index": 16
     },
     {
@@ -232,7 +232,7 @@
     {
         "input": "",
         "error_index": 0,
-        "error": "Unexpected end of expression at position 0: ''"
+        "error": "Unexpected end of input: "
     },
     {
         "input": "2017-02-21T15:00:00.123ZGGG",
