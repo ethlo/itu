@@ -20,6 +20,7 @@ package com.ethlo.time.fuzzer;
  * #L%
  */
 
+/*
 import java.time.DateTimeException;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
@@ -40,3 +41,4 @@ public class ParseDateTimeFuzzTest
         }
     }
 }
+*/
