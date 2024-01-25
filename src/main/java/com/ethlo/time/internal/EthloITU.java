@@ -20,6 +20,8 @@ package com.ethlo.time.internal;
  * #L%
  */
 
+import static com.ethlo.time.internal.ErrorUtil.raiseMissingTimeZone;
+import static com.ethlo.time.internal.ErrorUtil.raiseUnexpectedCharacter;
 import static com.ethlo.time.internal.ErrorUtil.raiseUnexpectedEndOfText;
 import static com.ethlo.time.internal.LeapSecondHandler.LEAP_SECOND_SECONDS;
 import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.DIGIT_9;
@@ -180,7 +182,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     {
         if (offset >= chars.length())
         {
-            throw new DateTimeParseException("No timezone information: " + chars, chars, offset);
+            raiseMissingTimeZone(chars, offset);
         }
         final int len = chars.length();
         final int left = len - offset;
@@ -194,7 +196,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         final char sign = chars.charAt(offset);
         if (sign != PLUS && sign != MINUS)
         {
-            throw new DateTimeParseException("Invalid character starting at position " + offset + ": " + chars, chars, offset);
+            raiseUnexpectedCharacter(chars, offset);
         }
 
         if (left != 6)
@@ -310,7 +312,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             {
                 return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0);
             }
-            throw new DateTimeParseException("No timezone information: " + chars, chars, 19);
+            ErrorUtil.raiseMissingTimeZone(chars, 19);
         }
         else if (remaining == 0)
         {
@@ -318,7 +320,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             {
                 return new DateTime(Field.SECOND, year, month, day, hour, minute, 0, 0, null, 0);
             }
-            throw new DateTimeParseException("No timezone information: " + chars, chars, 16);
+            raiseMissingTimeZone(chars, 16);
         }
 
         TimezoneOffset offset = null;

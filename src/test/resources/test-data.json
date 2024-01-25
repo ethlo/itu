@@ -149,7 +149,7 @@
     },
     {
         "input": "2017-12-21T12:20:45.9b7Z",
-        "error": "Invalid character starting at position 21: 2017-12-21T12:20:45.9b7Z",
+        "error": "Unexpected character b at position 22: 2017-12-21T12:20:45.9b7Z",
         "error_index": 21
     },
     {

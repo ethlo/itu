@@ -35,4 +35,9 @@ public class ErrorUtil
     {
         throw new DateTimeParseException("Unexpected end of input: " + chars, chars, offset);
     }
+
+    public static void raiseMissingTimeZone(String chars, int index)
+    {
+        throw new DateTimeParseException("No timezone information: " + chars, chars, index);
+    }
 }
