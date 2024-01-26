@@ -91,15 +91,15 @@ public class ExternalParameterizedTest
 
     }
 
-    private Instant getExpected(TestParam input)
+    private Instant getExpected(TestParam testParam)
     {
         try
         {
-            return Instant.parse(input.getExpected() != null ? input.getExpected() : input.getInput());
+            return Instant.parse(testParam.getExpected() != null ? testParam.getExpected() : testParam.getInput());
         }
         catch (DateTimeException exc)
         {
-            throw new IllegalArgumentException("Cannot parse using Instant: " + input, exc);
+            throw new IllegalArgumentException("Cannot parse using Instant: " + testParam.getInput() + ": " + exc.getMessage(), exc);
         }
     }
 
