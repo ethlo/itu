@@ -48,6 +48,6 @@ public class ErrorUtil
 
     public static DateTimeException raiseMissingGranularity(Field field, final String chars, final int offset)
     {
-        throw raiseUnexpectedEndOfText(chars + " is missing field for " + field.name(), offset);
+        throw new DateTimeParseException("Unexpected end of input, missing field " + field.name() + ": " + chars, chars, offset);
     }
 }

@@ -89,7 +89,7 @@
     },
     {
         "input": "2017-02-21T15",
-        "error":   "Unexpected end of input: 2017-02-21T15 is missing field for MINUTE",
+        "error":   "Unexpected end of input, missing field MINUTE: 2017-02-21T15",
         "error_index": 13
     },
     {
@@ -99,11 +99,11 @@
     },
     {
         "input": "2017-02-21T15:27",
-        "error": "Unexpected end of input: 2017-02-21T15:27 is missing field for SECOND"
+        "error": "Unexpected end of input, missing field SECOND: 2017-02-21T15:27"
     },
     {
         "input": "2017-02-21T15:27Z",
-        "error": "Unexpected end of input: 2017-02-21T15:27Z is missing field for SECOND"
+        "error": "Unexpected end of input, missing field SECOND: 2017-02-21T15:27Z"
     },
     {
         "input": "2017-02-21T15:27:22~10:00",
@@ -270,22 +270,22 @@
     },
     {
         "input": "2020",
-        "error": "Unexpected end of input: 2020 is missing field for MONTH"
+        "error": "Unexpected end of input, missing field MONTH: 2020"
     },
     {
         "input": "2020-12",
-        "error": "Unexpected end of input: 2020-12 is missing field for DAY"
+        "error": "Unexpected end of input, missing field DAY: 2020-12"
     },
     {
         "input": "2020-12-31",
-        "error": "Unexpected end of input: 2020-12-31 is missing field for HOUR"
+        "error": "Unexpected end of input, missing field HOUR: 2020-12-31"
     },
     {
         "input": "2020-12-31T12",
-        "error": "Unexpected end of input: 2020-12-31T12 is missing field for MINUTE"
+        "error": "Unexpected end of input, missing field MINUTE: 2020-12-31T12"
     },
     {
         "input": "2020-12-31T12:44",
-        "error": "Unexpected end of input: 2020-12-31T12:44 is missing field for SECOND"
+        "error": "Unexpected end of input, missing field SECOND: 2020-12-31T12:44"
     }
 ]
