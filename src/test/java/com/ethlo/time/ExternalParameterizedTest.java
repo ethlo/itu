@@ -43,6 +43,17 @@ public class ExternalParameterizedTest
 {
     private static final Logger logger = LoggerFactory.getLogger(ExternalParameterizedTest.class);
 
+    public static List<TestParam> fromFile() throws IOException
+    {
+        final List<TestParam> result = new ObjectMapper()
+                .enable(JsonParser.Feature.ALLOW_COMMENTS)
+                .readValue(ExternalParameterizedTest.class.getResource("/test-data.json"), new TypeReference<List<TestParam>>()
+                {
+                });
+        logger.info("Loaded {} test-cases", result.size());
+        return result;
+    }
+
     @ParameterizedTest
     @MethodSource("fromFile")
     void testAll(TestParam param)
@@ -119,16 +130,5 @@ public class ExternalParameterizedTest
         {
             throw new IllegalArgumentException("Cannot parse using Instant: " + testParam.getInput() + ": " + exc.getMessage(), exc);
         }
-    }
-
-    public static List<TestParam> fromFile() throws IOException
-    {
-        final List<TestParam> result = new ObjectMapper()
-                .enable(JsonParser.Feature.ALLOW_COMMENTS)
-                .readValue(ExternalParameterizedTest.class.getResource("/test-data.json"), new TypeReference<List<TestParam>>()
-                {
-                });
-        logger.info("Loaded {} test-cases", result.size());
-        return result;
     }
 }
