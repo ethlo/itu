@@ -20,7 +20,10 @@ package com.ethlo.time;
  * #L%
  */
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.beans.ConstructorProperties;
+import java.time.Instant;
 
 public class TestParam
 {
@@ -28,16 +31,30 @@ public class TestParam
     private final boolean lenient;
     private final String error;
     private final int errorIndex;
+    private final Instant expected;
     private final String note;
 
-    @ConstructorProperties(value = {"input", "lenient", "error", "error_index", "note"})
-    public TestParam(String input, boolean lenient, String error, Integer errorIndex, String note)
+    @ConstructorProperties(value = {"input", "lenient", "error", "error_index", "expected", "note"})
+    public TestParam(String input, boolean lenient, String error, Integer errorIndex, String expected, String note)
     {
         this.input = input;
         this.lenient = lenient;
         this.error = error;
         this.errorIndex = errorIndex != null ? errorIndex : -1;
+        this.expected = parseExpected(expected);
         this.note = note;
+    }
+
+    private Instant parseExpected(String expected)
+    {
+        if (expected == null)
+        {
+            return null;
+        }
+
+        final String[] parts = expected.split(",");
+        assertThat(parts.length).isEqualTo(2);
+        return Instant.ofEpochSecond(Long.parseLong(parts[0]), Long.parseLong(parts[1]));
     }
 
     public String getInput()
@@ -66,6 +83,7 @@ public class TestParam
         return "TestParam{" +
                 "input='" + input + '\'' +
                 ", lenient=" + lenient +
+                ", expected=" + expected + '\'' +
                 ", error='" + error + '\'' +
                 ", errorOffset=" + errorIndex + '\'' +
                 ", note=" + note +
@@ -75,5 +93,10 @@ public class TestParam
     public String getNote()
     {
         return note;
+    }
+
+    public Instant getExpected()
+    {
+        return expected;
     }
 }

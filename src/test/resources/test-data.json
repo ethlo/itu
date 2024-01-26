@@ -19,10 +19,6 @@
  */
 [
     {
-        "input": "2020-22-12T12:11.56+04:30",
-        "error": "Unexpected character at position 16: ."
-    },
-    {
         "input": "2017-02-21T15:27:39Z"
     },
     {
@@ -35,51 +31,71 @@
         "input": "2017-02-21T15:27:39.123456789Z"
     },
     {
-        "input": "2017-02-21T15:27:39+00:00"
+        "input": "2017-02-21T15:27:39+00:00",
+        "expected": "1487690859,0"
     },
     {
-        "input": "2017-02-21T15:27:39.123+00:00"
+        "input": "2017-02-21T15:27:39.123+00:00",
+        "expected": "1487690859,123000000"
     },
     {
-        "input": "2017-02-21T15:27:39.123456+00:00"
+        "input": "2017-02-21T15:27:39.123456+00:00",
+        "expected": "1487690859,123456000"
     },
     {
-        "input": "2017-02-21T15:27:39.123456789+00:00"
+        "input": "2017-02-21T15:27:39.123456789+00:00",
+        "expected": "1487690859,123456789"
     },
     {
-        "input": "2017-02-21T15:27:39.1+00:00"
+        "input": "2017-02-21T15:27:39.1+00:00",
+        "expected": "1487690859,100000000"
     },
     {
-        "input": "2017-02-21T15:27:39.12+00:00"
+        "input": "2017-02-21T15:27:39.12+00:00",
+        "expected": "1487690859,120000000"
     },
     {
-        "input": "2017-02-21T15:27:39.123+00:00"
+        "input": "2017-02-21T15:27:39.123+00:00",
+        "expected": "1487690859,123000000"
     },
     {
-        "input": "2017-02-21T15:27:39.1234+00:00"
+        "input": "2017-02-21T15:27:39.1234+00:00",
+        "expected": "1487690859,123400000"
     },
     {
-        "input": "2017-02-21T15:27:39.12345+00:00"
+        "input": "2017-02-21T15:27:39.12345+00:00",
+        "expected": "1487690859,123450000"
     },
     {
-        "input": "2017-02-21T15:27:39.123456+00:00"
+        "input": "2017-02-21T15:27:39.123456+00:00",
+        "expected": "1487690859,123456000"
     },
     {
-        "input": "2017-02-21T15:27:39.1234567+00:00"
+        "input": "2017-02-21T15:27:39.1234567+00:00",
+        "expected": "1487690859,123456700"
     },
     {
-        "input": "2017-02-21T15:27:39.12345678+00:00"
+        "input": "2017-02-21T15:27:39.12345678+00:00",
+        "expected": "1487690859,123456780"
     },
     {
-        "input": "2017-02-21T15:27:39.123456789+00:00"
+        "input": "2017-02-21T15:27:39.123456789+00:00",
+        "expected": "1487690859,123456789"
+    },
+    {
+        "input": "2020-22-12T12:11.56+04:30",
+        "error": "Unexpected character . at position 17: 2020-22-12T12:11.56+04:30",
+        "error_index": 16
     },
     {
         "input": "2017-02-21T15",
-        "error": "Unexpected end of input: 2017-02-21T15"
+        "error": "Unexpected end of input: 2017-02-21T15",
+        "error_index": 13
     },
     {
         "input": "2017-02-21T15Z",
-        "error": "Expected character : at position 14 '2017-02-21T15Z'"
+        "error": "Expected character : at position 14: 2017-02-21T15Z",
+        "error_index": 13
     },
     {
         "input": "2017-02-21T15:27",
@@ -90,59 +106,69 @@
         "error": "No SECOND field found"
     },
     {
-        "input": "2017-02-21T15:27:19~10:00",
-        "error": "Unexpected character at position 19: 2017-02-21T15:27:19~10:00"
+        "input": "2017-02-21T15:27:22~10:00",
+        "error": "Unexpected character ~ at position 20: 2017-02-21T15:27:22~10:00",
+        "error_index": 19
     },
     {
         "input": "2017-02-21T15:27:39.+00:00",
-        "error": "Must have at least 1 fraction digit"
+        "error": "Must have at least 1 fraction digit: 2017-02-21T15:27:39.+00:00",
+        "error_index": 20
     },
     {
         "input": "2017-02-21T15:27:39",
-        "error": "No timezone information: 2017-02-21T15:27:39"
+        "error": "No timezone information: 2017-02-21T15:27:39",
+        "error_index": 19
     },
     {
         "input": "2017-02-21T15:27:39.123",
-        "error": "No timezone information: 2017-02-21T15:27:39.123"
+        "error": "No timezone information: 2017-02-21T15:27:39.123",
+        "error_index": 23
     },
     {
         "input": "2017-02-21T15:27:39.123456",
-        "error": "No timezone information: 2017-02-21T15:27:39.123456"
+        "error": "No timezone information: 2017-02-21T15:27:39.123456",
+        "error_index": 26
     },
     {
         "input": "2017-02-21T15:27:39.123456789",
-        "error": "No timezone information: 2017-02-21T15:27:39.123456789"
+        "error": "No timezone information: 2017-02-21T15:27:39.123456789",
+        "error_index": 29
     },
     {
         "input": "2017-02-21T15:27:39+0000",
-        "error": "Invalid timezone offset: 2017-02-21T15:27:39+0000"
+        "error": "Invalid timezone offset: 2017-02-21T15:27:39+0000",
+        "error_index": 19
     },
     {
         "input": "2017-02-21T15:27:39.123+0000",
-        "error": "Invalid timezone offset: 2017-02-21T15:27:39.123+0000"
+        "error": "Invalid timezone offset: 2017-02-21T15:27:39.123+0000",
+        "error_index": 23
     },
     {
         "input": "201702-21T15:27:39.123456+0000",
-        "error": "Expected character - at position 5 '201702-21T15:27:39.123456+0000'",
+        "error": "Expected character - at position 5: 201702-21T15:27:39.123456+0000",
         "error_index": 4
     },
     {
         "input": "20170221T15:27:39.123456789+0000",
-        "error": "Expected character - at position 5 '20170221T15:27:39.123456789+0000'",
+        "error": "Expected character - at position 5: 20170221T15:27:39.123456789+0000",
         "error_index": 4
     },
     {
         "input": "2017-12-21T12:20:45.987",
-        "error": "No timezone information: 2017-12-21T12:20:45.987"
+        "error": "No timezone information: 2017-12-21T12:20:45.987",
+        "error_index": 23
     },
     {
         "input": "2017-12-21T12:20:45.9b7Z",
-        "error": "Invalid character starting at position 21: 2017-12-21T12:20:45.9b7Z",
+        "error": "Unexpected character b at position 22: 2017-12-21T12:20:45.9b7Z",
         "error_index": 21
     },
     {
         "input": "2017-02-21T15:27:39.0000000",
-        "error": "No timezone information: 2017-02-21T15:27:39.0000000"
+        "error": "No timezone information: 2017-02-21T15:27:39.0000000",
+        "error_index": 27
     },
     {
         "input": "2017-02-21T15:27:39.000+30:00",
@@ -150,7 +176,8 @@
     },
     {
         "input": "2017-02-21T15:00:00.1234567891Z",
-        "error": "Too many fraction digits: 2017-02-21T15:00:00.1234567891Z"
+        "error": "Too many fraction digits: 2017-02-21T15:00:00.1234567891Z",
+        "error_index": 29
     },
     {
         "input": "2017-13-21T15:00:00Z",
@@ -179,18 +206,20 @@
     },
     {
         "input": "1994 11-05T08:15:30-05:00",
-        "error": "Expected character - at position 5 '1994 11-05T08:15:30-05:00'",
+        "error": "Expected character - at position 5: 1994 11-05T08:15:30-05:00",
         "error_index": 4,
         "note": "Invalid separator between year and month"
     },
     {
         "input": "199g-11-05T08:15:30-05:00",
-        "error": "Character g is not a digit",
+        "error": "Unexpected character g at position 4: 199g-11-05T08:15:30-05:00",
+        "error_index": 3,
         "note": "Non-digit in year"
     },
     {
         "input": "1994-11-05X08:15:30-05:00",
-        "error": "Expected character [T, t,  ] at position 11 '1994-11-05X08:15:30-05:00'",
+        "error": "Expected character [T, t,  ] at position 11: 1994-11-05X08:15:30-05:00",
+        "error_index": 10,
         "note": "invalid date/time separator"
     },
     {
@@ -198,13 +227,9 @@
         "note": "Lowercase 'z' as UTC timezone"
     },
     {
-        "input": "1994-11-05 08:15:30Z",
-        "error": "Text '1994-11-05 08:15:30Z' could not be parsed at index 10",
-        "note": "Space as date/time separator"
-    },
-    {
         "input": "2017-02-21T15:27:39+0000",
         "error": "Invalid timezone offset: 2017-02-21T15:27:39+0000",
+        "error_index": 19,
         "note": "Military format offset"
     },
     {
@@ -213,16 +238,34 @@
     },
     {
         "input": "",
-        "error": "Unexpected end of expression at position 0: ''"
+        "error_index": 0,
+        "error": "Unexpected end of input: "
     },
     {
         "input": "2017-02-21T15:00:00.123ZGGG",
-        "error": "Trailing junk data after position 24: 2017-02-21T15:00:00.123ZGGG"
+        "error": "Trailing junk data after position 25: 2017-02-21T15:00:00.123ZGGG",
+        "error_index": 24
     },
-    /** LENIENT **/
     {
         "input": "2020-12-31T22:22:2",
         "error": "Unexpected end of input: 2020-12-31T22:22:2",
+        "error_index": 16,
+        "lenient": true
+    },
+    {
+        "input": "2020-12-31T22:22:",
+        "error": "Unexpected end of input: 2020-12-31T22:22:",
+        "error_index": 16,
+        "lenient": true
+    },
+    {
+        "input": "2020-12-31T22:56",
+        "expected": "1609455360,0",
+        "lenient": true
+    },
+    {
+        "input": "2020-12-31",
+        "expected": "1609372800,0",
         "lenient": true
     }
 ]

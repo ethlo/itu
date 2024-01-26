@@ -299,7 +299,7 @@ public class ITUTest
                 assertThat(year).isEqualTo(Year.parse(input));
             }
         }));
-        assertThat(exc).hasMessage("Expected character [T, t,  ] at position 11 '2017-03-05G'");
+        assertThat(exc).hasMessage("Expected character [T, t,  ] at position 11: 2017-03-05G");
     }
 
     @Test

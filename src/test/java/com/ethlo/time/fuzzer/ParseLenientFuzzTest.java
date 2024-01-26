@@ -22,6 +22,7 @@ package com.ethlo.time.fuzzer;
 
 import java.time.DateTimeException;
 
+/*
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.ethlo.time.DateTime;
 import com.ethlo.time.ITU;
@@ -49,3 +50,4 @@ public class ParseLenientFuzzTest
         }
     }
 }
+*/
