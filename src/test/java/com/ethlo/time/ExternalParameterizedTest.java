@@ -59,7 +59,7 @@ public class ExternalParameterizedTest
             }
 
             // Compare to Java's parser result
-            final Instant expected = Instant.parse(param.getInput());
+            final Instant expected = getExpected(param);
             if (result instanceof DateTime)
             {
                 assertThat(((DateTime) result).toInstant()).isEqualTo(expected);
@@ -89,6 +89,18 @@ public class ExternalParameterizedTest
             }
         }
 
+    }
+
+    private Instant getExpected(TestParam input)
+    {
+        try
+        {
+            return Instant.parse(input.getExpected() != null ? input.getExpected() : input.getInput());
+        }
+        catch (DateTimeException exc)
+        {
+            throw new IllegalArgumentException("Cannot parse using Instant: " + input);
+        }
     }
 
     public static List<TestParam> fromFile() throws IOException

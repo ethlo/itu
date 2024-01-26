@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,11 +31,37 @@ import org.junit.jupiter.api.Test;
 public class FormatterTest
 {
     @Test
-    void testFormat3()
+    void testFormatSpecifiedResolution()
     {
         final String s = "2017-02-21T10:00:00.000+12:00";
         final OffsetDateTime date = ITU.parseDateTime(s);
-        assertThat(ITU.formatUtcMilli(date)).isEqualTo("2017-02-20T22:00:00.000Z");
+        assertThat(ITU.format(date, 9)).isEqualTo("2017-02-21T10:00:00.000000000+12:00");
+    }
+
+    @Test
+    void testFormatYear()
+    {
+        assertThat(DateTime.ofYear(1234).toString()).isEqualTo("1234");
+    }
+
+    @Test
+    void testFormatYearMonth()
+    {
+        assertThat(DateTime.ofYearMonth(1234, 12).toString()).isEqualTo("1234-12");
+    }
+
+    @Test
+    void testFormatHigherGranularityThanAvailable()
+    {
+        final DateTimeException exc = assertThrows(DateTimeException.class, () -> DateTime.ofYear(1234).toString(Field.DAY));
+        assertThat(exc).hasMessage("Requested granularity was DAY, but contains only granularity YEAR");
+    }
+
+    @Test
+    void testFormatWithFractionDigits()
+    {
+        final DateTimeException exc = assertThrows(DateTimeException.class, () -> DateTime.ofYear(1234).toString(Field.DAY));
+        assertThat(exc).hasMessage("Requested granularity was DAY, but contains only granularity YEAR");
     }
 
     @Test

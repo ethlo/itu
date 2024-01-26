@@ -26,7 +26,9 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
+import java.time.temporal.UnsupportedTemporalTypeException;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -36,7 +38,7 @@ import org.junit.jupiter.api.Test;
 public class FieldTest
 {
     @Test
-    public void testGetKnownFields()
+    void testGetKnownFields()
     {
         assertThat(Field.valueOf(Year.class)).isEqualTo(Field.YEAR);
         assertThat(Field.valueOf(YearMonth.class)).isEqualTo(Field.MONTH);
@@ -45,8 +47,14 @@ public class FieldTest
     }
 
     @Test
-    public void testGetUnknown()
+    void testGetUnknown()
     {
         Assertions.assertThrows(IllegalArgumentException.class, () -> Field.valueOf(Temporal.class));
+    }
+
+    @Test
+    void testUnknownField()
+    {
+        Assertions.assertThrows(UnsupportedTemporalTypeException.class, () -> Field.of(ChronoField.NANO_OF_DAY));
     }
 }

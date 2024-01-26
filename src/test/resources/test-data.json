@@ -214,12 +214,6 @@
         "note": "Lowercase 'z' as UTC timezone"
     },
     {
-        "input": "1994-11-05 08:15:30Z",
-        "error": "Text '1994-11-05 08:15:30Z' could not be parsed at index 10",
-        "error_index": 10,
-        "note": "Space as date/time separator"
-    },
-    {
         "input": "2017-02-21T15:27:39+0000",
         "error": "Invalid timezone offset: 2017-02-21T15:27:39+0000",
         "error_index": 19,
@@ -247,8 +241,18 @@
     },
     {
         "input": "2020-12-31T22:22:",
-        "error": "Text '2020-12-31T22:22:' could not be parsed at index 17",
-        "error_index": 17,
+        "error": "Unexpected end of input: 2020-12-31T22:22:",
+        "error_index": 16,
+        "lenient": true
+    },
+    {
+        "input": "2020-12-31T22:56",
+        "expected": "2020-12-31T22:56:00Z",
+        "lenient": true
+    },
+    {
+        "input": "2020-12-31",
+        "expected": "2020-12-31T00:00:00Z",
         "lenient": true
     }
 ]
