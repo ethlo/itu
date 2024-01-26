@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
@@ -62,11 +63,11 @@ public class ExternalParameterizedTest
             final Instant expected = getExpected(param);
             if (result instanceof DateTime)
             {
-                assertThat(((DateTime) result).toInstant()).isEqualTo(expected);
+                assertEqualInstant(((DateTime) result).toInstant(), expected);
             }
             else
             {
-                assertThat(Instant.from(result)).isEqualTo(expected);
+                assertEqualInstant(((OffsetDateTime) result).toInstant(), expected);
             }
         }
         catch (DateTimeException exc)
@@ -91,11 +92,28 @@ public class ExternalParameterizedTest
 
     }
 
+    private void assertEqualInstant(Instant result, Instant expected)
+    {
+        assertThat(result)
+                .overridingErrorMessage("Expected %s (%s), was %s (%s)", expected, asTs(expected), result, asTs(result))
+                .isEqualTo(expected);
+    }
+
+    private String asTs(Instant instant)
+    {
+        return instant.getEpochSecond() + "," + instant.getNano();
+    }
+
     private Instant getExpected(TestParam testParam)
     {
+        if (testParam.getExpected() != null)
+        {
+            return testParam.getExpected();
+        }
+
         try
         {
-            return Instant.parse(testParam.getExpected() != null ? testParam.getExpected() : testParam.getInput());
+            return Instant.parse(testParam.getInput());
         }
         catch (DateTimeException exc)
         {

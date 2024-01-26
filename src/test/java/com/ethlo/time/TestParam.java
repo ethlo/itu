@@ -20,7 +20,10 @@ package com.ethlo.time;
  * #L%
  */
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.beans.ConstructorProperties;
+import java.time.Instant;
 
 public class TestParam
 {
@@ -28,7 +31,7 @@ public class TestParam
     private final boolean lenient;
     private final String error;
     private final int errorIndex;
-    private final String expected;
+    private final Instant expected;
     private final String note;
 
     @ConstructorProperties(value = {"input", "lenient", "error", "error_index", "expected", "note"})
@@ -38,8 +41,20 @@ public class TestParam
         this.lenient = lenient;
         this.error = error;
         this.errorIndex = errorIndex != null ? errorIndex : -1;
-        this.expected = expected;
+        this.expected = parseExpected(expected);
         this.note = note;
+    }
+
+    private Instant parseExpected(String expected)
+    {
+        if (expected == null)
+        {
+            return null;
+        }
+
+        final String[] parts = expected.split(",");
+        assertThat(parts.length).isEqualTo(2);
+        return Instant.ofEpochSecond(Long.parseLong(parts[0]), Long.parseLong(parts[1]));
     }
 
     public String getInput()
@@ -80,7 +95,7 @@ public class TestParam
         return note;
     }
 
-    public String getExpected()
+    public Instant getExpected()
     {
         return expected;
     }
