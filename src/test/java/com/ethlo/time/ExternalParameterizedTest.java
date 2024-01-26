@@ -99,7 +99,7 @@ public class ExternalParameterizedTest
         }
         catch (DateTimeException exc)
         {
-            throw new IllegalArgumentException("Cannot parse using Instant: " + input);
+            throw new IllegalArgumentException("Cannot parse using Instant: " + input, exc);
         }
     }
 
