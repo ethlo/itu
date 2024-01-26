@@ -140,7 +140,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
                 }
                 return DateTime.of(year, month, day, hour, minute, zoneOffset);
         }
-        throw ErrorUtil.raiseUnexpectedCharacter(chars, 16);
+        throw raiseUnexpectedCharacter(chars, 16);
     }
 
     private static void assertPositionContains(String chars, int offset, char expected)
@@ -159,11 +159,6 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
     private static void assertAllowedDateTimeSeparator(String chars)
     {
-        if (10 >= chars.length())
-        {
-            raiseUnexpectedEndOfText(chars, 10);
-        }
-
         final char needle = chars.charAt(10);
         switch (needle)
         {
@@ -303,98 +298,89 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     private static Object handleTime(int year, int month, int day, int hour, int minute, String chars, boolean raw)
     {
         // From here the specification is more lenient
-        final int len = chars.length();
-        final int remaining = len - 17;
-        if (remaining == 2)
+        final int length = chars.length();
+        if (length > 19)
+        {
+            TimezoneOffset offset = null;
+            int fractions = 0;
+            int fractionDigits = 0;
+            char c = chars.charAt(19);
+            if (c == FRACTION_SEPARATOR)
+            {
+            if (chars.length() < 21)
+            {
+                raiseUnexpectedEndOfText(chars, 20);
+            }
+                // We have fractional seconds
+                int result = 0;
+                int idx = 20;
+                boolean nonDigitFound = false;
+                do
+                {
+                    c = chars.charAt(idx);
+                    if (c < ZERO || c > DIGIT_9)
+                    {
+                        nonDigitFound = true;
+                        fractionDigits = idx - 20;
+                        assertFractionDigits(chars, fractionDigits, idx);
+                        fractions = scale(-result, fractionDigits, chars, idx);
+                        offset = parseTimezone(chars, idx);
+                    }
+                    else
+                    {
+                        fractionDigits = idx - 19;
+                        assertFractionDigits(chars, fractionDigits, idx);
+                        result = (result << 1) + (result << 3);
+                        result -= c - ZERO;
+                    }
+                    idx++;
+                } while (idx < length && !nonDigitFound);
+
+                if (!nonDigitFound)
+                {
+                    fractionDigits = idx - 20;
+                    fractions = scale(-result, fractionDigits, chars, idx);
+                    if (!raw)
+                    {
+                        offset = parseTimezone(chars, idx);
+                    }
+                }
+            }
+            else if (c == ZULU_UPPER || c == ZULU_LOWER)
+            {
+                // Do nothing we are done
+                offset = TimezoneOffset.UTC;
+            }
+            else if (c == PLUS || c == MINUS)
+            {
+                // No fractional seconds
+                offset = parseTimezone(chars, 19);
+            }
+            else
+            {
+                throw raiseUnexpectedCharacter(chars, 19);
+            }
+
+            final int second = parsePositiveInt(chars, 17, 19);
+
+            if (!raw)
+            {
+                leapSecondCheck(year, month, day, hour, minute, second, fractions, offset);
+                return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset.toZoneOffset());
+            }
+            return fractionDigits > 0 ? DateTime.of(year, month, day, hour, minute, second, fractions, offset, fractionDigits) : DateTime.of(year, month, day, hour, minute, second, offset);
+        }
+        else if (length == 19)
         {
             final int seconds = parsePositiveInt(chars, 17, 19);
             if (raw)
             {
                 return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0);
             }
-            ErrorUtil.raiseMissingTimeZone(chars, 19);
-        }
-        else if (remaining == 0)
-        {
-            if (raw)
-            {
-                return new DateTime(Field.SECOND, year, month, day, hour, minute, 0, 0, null, 0);
-            }
-            raiseMissingTimeZone(chars, 16);
+            raiseMissingTimeZone(chars, 19);
         }
 
-        TimezoneOffset offset = null;
-        int fractions = 0;
-        int fractionDigits = 0;
-        if (chars.length() < 20)
-        {
-            raiseUnexpectedEndOfText(chars, 16);
-        }
-        char c = chars.charAt(19);
-        if (c == FRACTION_SEPARATOR)
-        {
-            if (chars.length() < 21)
-            {
-                raiseUnexpectedEndOfText(chars, 20);
-            }
-            // We have fractional seconds
-            int result = 0;
-            int idx = 20;
-            boolean nonDigitFound = false;
-            do
-            {
-                c = chars.charAt(idx);
-                if (c < ZERO || c > DIGIT_9)
-                {
-                    nonDigitFound = true;
-                    fractionDigits = idx - 20;
-                    assertFractionDigits(chars, fractionDigits, idx);
-                    fractions = scale(-result, fractionDigits, chars, idx);
-                    offset = parseTimezone(chars, idx);
-                }
-                else
-                {
-                    fractionDigits = idx - 19;
-                    assertFractionDigits(chars, fractionDigits, idx);
-                    result = (result << 1) + (result << 3);
-                    result -= c - ZERO;
-                }
-                idx++;
-            } while (idx < len && !nonDigitFound);
-
-            if (!nonDigitFound)
-            {
-                fractionDigits = idx - 20;
-                fractions = scale(-result, fractionDigits, chars, idx);
-                if (!raw)
-                {
-                    offset = parseTimezone(chars, idx);
-                }
-            }
-        }
-        else if (c == ZULU_UPPER || c == ZULU_LOWER)
-        {
-            // Do nothing we are done
-            offset = TimezoneOffset.UTC;
-        }
-        else if (c == PLUS || c == MINUS)
-        {
-            // No fractional seconds
-            offset = parseTimezone(chars, 19);
-        }
-        else
-        {
-            throw ErrorUtil.raiseUnexpectedCharacter(chars, 19);
-        }
-
-        final int second = parsePositiveInt(chars, 17, 19);
-
-        if (!raw)
-        {
-            leapSecondCheck(year, month, day, hour, minute, second, fractions, offset);
-            return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset.toZoneOffset());
-        }
-        return fractionDigits > 0 ? DateTime.of(year, month, day, hour, minute, second, fractions, offset, fractionDigits) : DateTime.of(year, month, day, hour, minute, second, offset);
+        throw raiseUnexpectedEndOfText(chars, 16);
     }
 
     private static void assertFractionDigits(String chars, int fractionDigits, int idx)
@@ -457,7 +443,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
         final TimezoneOffset tz = TimezoneOffset.of(adjustTo);
 
-        final char[] buffer = new char[31];
+        final char[] buffer = new char[26 + fractionDigits];
 
         if (handleDatePart(lastIncluded, buffer, adjusted.getYear(), 0, 4, Field.YEAR))
         {
