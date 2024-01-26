@@ -127,7 +127,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             // We have more granularity, keep going
             case TIME_SEPARATOR:
-                return handleTime(year, month, day, hour, minute, chars, raw);
+                return handleTimeResolution(year, month, day, hour, minute, chars, raw);
 
             case PLUS:
             case MINUS:
@@ -295,7 +295,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return new DateTimeParseException("No " + field.name() + " field found", chars, offset);
     }
 
-    private static Object handleTime(int year, int month, int day, int hour, int minute, String chars, boolean raw)
+    private static Object handleTimeResolution(int year, int month, int day, int hour, int minute, String chars, boolean raw)
     {
         // From here the specification is more lenient
         final int length = chars.length();
@@ -307,13 +307,15 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             char c = chars.charAt(19);
             if (c == FRACTION_SEPARATOR)
             {
-            if (chars.length() < 21)
-            {
-                raiseUnexpectedEndOfText(chars, 20);
-            }
+                final int firstFraction = 20;
+                if (chars.length() < 21)
+                {
+                    raiseUnexpectedEndOfText(chars, firstFraction);
+                }
+
                 // We have fractional seconds
                 int result = 0;
-                int idx = 20;
+                int idx = firstFraction;
                 boolean nonDigitFound = false;
                 do
                 {
@@ -321,7 +323,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
                     if (c < ZERO || c > DIGIT_9)
                     {
                         nonDigitFound = true;
-                        fractionDigits = idx - 20;
+                        fractionDigits = idx - firstFraction;
                         assertFractionDigits(chars, fractionDigits, idx);
                         fractions = scale(-result, fractionDigits, chars, idx);
                         offset = parseTimezone(chars, idx);
