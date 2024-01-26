@@ -74,6 +74,21 @@ public class TemporalAccessorTest
     }
 
     @Test
+    void testTemporalAccessorHour()
+    {
+        final TemporalAccessor parsed = ITU.parseLenient("2017-01-27T13:22");
+        assertThat(parsed.isSupported(ChronoField.YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.MONTH_OF_YEAR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.DAY_OF_MONTH)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.HOUR_OF_DAY)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.MINUTE_OF_HOUR)).isTrue();
+        assertThat(parsed.isSupported(ChronoField.SECOND_OF_MINUTE)).isFalse();
+        assertThat(parsed.isSupported(ChronoField.NANO_OF_SECOND)).isFalse();
+
+        assertThat(parsed.getLong(ChronoField.HOUR_OF_DAY)).isEqualTo(13);
+    }
+
+    @Test
     void testTemporalAccessorMinute()
     {
         final TemporalAccessor parsed = ITU.parseLenient("2017-01-27T15:34");

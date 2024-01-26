@@ -20,6 +20,7 @@ package com.ethlo.time.internal;
  * #L%
  */
 
+import static com.ethlo.time.internal.ErrorUtil.raiseMissingGranularity;
 import static com.ethlo.time.internal.ErrorUtil.raiseMissingTimeZone;
 import static com.ethlo.time.internal.ErrorUtil.raiseUnexpectedCharacter;
 import static com.ethlo.time.internal.ErrorUtil.raiseUnexpectedEndOfText;
@@ -28,7 +29,6 @@ import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.DIGIT_9;
 import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.ZERO;
 import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.parsePositiveInt;
 
-import java.time.DateTimeException;
 import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.YearMonth;
@@ -136,7 +136,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
                 final TimezoneOffset zoneOffset = parseTimezone(chars, 16);
                 if (!raw)
                 {
-                    throw raiseMissingField(Field.SECOND, chars, 16);
+                    raiseMissingGranularity(Field.SECOND, chars, 16);
                 }
                 return DateTime.of(year, month, day, hour, minute, zoneOffset);
         }
@@ -147,7 +147,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     {
         if (offset >= chars.length())
         {
-            raiseUnexpectedEndOfText(chars, offset);
+            raiseMissingGranularity(Field.MINUTE, chars, offset);
         }
 
         if (chars.charAt(offset) != expected)
@@ -240,7 +240,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             if (!raw)
             {
-                throw raiseMissingField(Field.YEAR, chars, 2);
+                throw raiseMissingGranularity(Field.MONTH, chars, 4);
             }
             return DateTime.ofYear(years);
         }
@@ -252,7 +252,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             if (!raw)
             {
-                throw raiseMissingField(Field.MONTH, chars, 5);
+                throw raiseMissingGranularity(Field.DAY, chars, 7);
             }
             return DateTime.ofYearMonth(years, months);
         }
@@ -264,7 +264,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             if (!raw)
             {
-                throw raiseMissingField(Field.DAY, chars, 9);
+                throw raiseMissingGranularity(Field.HOUR, chars, 11);
             }
             return DateTime.ofDate(years, months, days);
         }
@@ -287,12 +287,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             return DateTime.of(years, months, days, hours, minutes, null);
         }
-        throw raiseMissingField(Field.SECOND, chars, 16);
-    }
-
-    private static DateTimeException raiseMissingField(Field field, final String chars, final int offset)
-    {
-        return new DateTimeParseException("No " + field.name() + " field found", chars, offset);
+        throw raiseMissingGranularity(Field.SECOND, chars, 16);
     }
 
     private static Object handleTimeResolution(int year, int month, int day, int hour, int minute, String chars, boolean raw)

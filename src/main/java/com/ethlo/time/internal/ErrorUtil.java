@@ -20,7 +20,10 @@ package com.ethlo.time.internal;
  * #L%
  */
 
+import java.time.DateTimeException;
 import java.time.format.DateTimeParseException;
+
+import com.ethlo.time.Field;
 
 public class ErrorUtil
 {
@@ -41,5 +44,10 @@ public class ErrorUtil
     public static DateTimeParseException raiseMissingTimeZone(String chars, int index)
     {
         throw new DateTimeParseException("No timezone information: " + chars, chars, index);
+    }
+
+    public static DateTimeException raiseMissingGranularity(Field field, final String chars, final int offset)
+    {
+        throw raiseUnexpectedEndOfText(chars + " is missing field for " + field.name(), offset);
     }
 }
