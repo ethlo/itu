@@ -471,7 +471,6 @@ public class DateTime implements TemporalAccessor
         return Field.of(field).ordinal() <= this.field.ordinal();
     }
 
-    @SuppressWarnings("DuplicatedCode")
     @Override
     public long getLong(final TemporalField temporalField)
     {
