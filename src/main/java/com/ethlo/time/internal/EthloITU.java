@@ -94,33 +94,6 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private static int scale(int fractions, int len, String parsedData, final int index)
-    {
-        switch (len)
-        {
-            case 0:
-                throw new DateTimeParseException("Must have at least 1 fraction digit: " + parsedData, parsedData, index);
-            case 1:
-                return fractions * 100_000_000;
-            case 2:
-                return fractions * 10_000_000;
-            case 3:
-                return fractions * 1_000_000;
-            case 4:
-                return fractions * 100_000;
-            case 5:
-                return fractions * 10_000;
-            case 6:
-                return fractions * 1_000;
-            case 7:
-                return fractions * 100;
-            case 8:
-                return fractions * 10;
-            default:
-                return fractions;
-        }
-    }
-
     private static Object handleTime(ParseConfig parseConfig, String chars, int year, int month, int day, int hour, int minute, final boolean raw)
     {
         switch (chars.charAt(16))
@@ -296,15 +269,14 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             char c = chars.charAt(19);
             if (config.isFractionSeparator(c))
             {
-                final int firstFraction = 20;
+                final int firstFractionPos = 20;
                 if (chars.length() < 21)
                 {
-                    raiseUnexpectedEndOfText(chars, firstFraction);
+                    raiseUnexpectedEndOfText(chars, firstFractionPos);
                 }
 
                 // We have fractional seconds
-                int result = 0;
-                int idx = firstFraction;
+                int idx = firstFractionPos;
                 boolean nonDigitFound = false;
                 do
                 {
@@ -312,25 +284,34 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
                     if (c < ZERO || c > DIGIT_9)
                     {
                         nonDigitFound = true;
-                        fractionDigits = idx - firstFraction;
+                        fractionDigits = idx - firstFractionPos;
                         assertFractionDigits(chars, fractionDigits, idx);
-                        fractions = scale(-result, fractionDigits, chars, idx);
                         offset = parseTimezone(chars, idx);
                     }
                     else
                     {
                         fractionDigits = idx - 19;
                         assertFractionDigits(chars, fractionDigits, idx);
-                        result = (result << 1) + (result << 3);
-                        result -= c - ZERO;
-                    }
+                        fractions = fractions * 10 + (c - ZERO);
                     idx++;
+                    }
                 } while (idx < length && !nonDigitFound);
+
+                if (fractionDigits == 0)
+                {
+                    throw new DateTimeParseException("Must have at least 1 fraction digit: " + chars, chars, idx);
+                }
+
+                // Scale
+                int pos = fractionDigits;
+                while (pos < 9)
+                {
+                    fractions *= 10;
+                    pos++;
+                }
 
                 if (!nonDigitFound)
                 {
-                    fractionDigits = idx - 20;
-                    fractions = scale(-result, fractionDigits, chars, idx);
                     if (!raw)
                     {
                         offset = parseTimezone(chars, idx);
