@@ -83,7 +83,7 @@ public interface W3cDateTimeUtil
     String format(OffsetDateTime date, ZoneOffset adjustTo, int fractionDigits);
 
     /**
-     * Parse the format and return it as a fitting sub-class of {@link Temporal}
+     * Parse the date-time leniently
      *
      * @param s The date/date-time to parse
      * @return The parsed date/date-time
