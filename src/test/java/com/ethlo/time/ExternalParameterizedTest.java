@@ -21,6 +21,7 @@ package com.ethlo.time;
  */
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.io.IOException;
 import java.time.DateTimeException;
@@ -68,6 +69,11 @@ public class ExternalParameterizedTest
             else
             {
                 result = ITU.parseDateTime(param.getInput());
+            }
+
+            if (param.getError() != null)
+            {
+                fail("Expected error '%s' when parsing '%s'", param.getError(), param.getInput());
             }
 
             // Compare to Java's parser result

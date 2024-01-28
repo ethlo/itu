@@ -267,6 +267,11 @@
         "error_index": 24
     },
     {
+        "input": "2020-12-31T00:00:00-05:00 x",
+        "error": "Trailing junk data after position 27: 2020-12-31T00:00:00-05:00 x",
+        "lenient": true
+    },
+    {
         "input": "2020-12-31T22:22:2",
         "error": "Unexpected end of input: 2020-12-31T22:22:2",
         "error_index": 16,
