@@ -62,10 +62,9 @@ public final class LimitedCharArrayIntegerUtil
             {
                 ErrorUtil.raiseUnexpectedCharacter(strNum, i);
             }
-            result = (result << 1) + (result << 3);
-            result -= c - ZERO;
+            result = result * 10 + (c - ZERO);
         }
-        return -result;
+        return result;
     }
 
     public static void toString(final int value, final char[] buf, final int offset, final int charLength)
