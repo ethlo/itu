@@ -26,9 +26,10 @@ import java.time.temporal.Temporal;
 
 import com.ethlo.time.DateTime;
 import com.ethlo.time.Field;
+import com.ethlo.time.ParseConfig;
 
 /**
- * This class deals with the formats mentioned in W3C - NOTE-datetime: https://www.w3.org/TR/NOTE-datetime
+ * This class deals with the formats mentioned in W3C - NOTE-datetime: <a href="https://www.w3.org/TR/NOTE-datetime">...</a>
  *
  * <ul>
  * <li>Year:<br>
@@ -90,4 +91,6 @@ public interface W3cDateTimeUtil
     DateTime parse(String s);
 
     String formatUtc(OffsetDateTime parse, Field lastIncluded);
+
+    DateTime parse(String chars, ParseConfig config);
 }
