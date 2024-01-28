@@ -269,6 +269,27 @@
     {
         "input": "2020-12-31T00:00:00-05:00 x",
         "error": "Trailing junk data after position 27: 2020-12-31T00:00:00-05:00 x",
+        "config": {
+            "fail_on_trailing_junk": true
+        },
+        "lenient": true
+    },
+    {
+        "input": "2020-12-31T00:00:00-05:00 x",
+        "expected": "1609390800,0",
+        "config": {
+            "fail_on_trailing_junk": false
+        },
+        "lenient": true
+    },
+    {
+        "input": "2020-12-31|20:22:12,546464-05:00 x",
+        "expected": "1609464132,546464000",
+        "config": {
+            "fail_on_trailing_junk": false,
+            "allowed_date_separators": "|Tt ",
+            "allowed_fraction_separators": ","
+        },
         "lenient": true
     },
     {

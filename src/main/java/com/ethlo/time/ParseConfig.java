@@ -20,23 +20,27 @@ package com.ethlo.time;
  * #L%
  */
 
+import java.util.Optional;
+
 public class ParseConfig
 {
-    public static final ParseConfig DEFAULT = new ParseConfig(new char[]{'T', 't', ' '}, new char[]{'.'});
+    public static final ParseConfig DEFAULT = new ParseConfig(null, null, true);
 
     private final char[] allowedDateTimeSeparators;
     private final char[] allowedFractionSeparators;
+    private final boolean failOnTrailingJunk;
 
-    private ParseConfig(char[] allowedDateTimeSeparators, char[] allowedFractionSeparators)
+    protected ParseConfig(char[] allowedDateTimeSeparators, char[] allowedFractionSeparators, boolean failOnTrailingJunk)
     {
-        this.allowedDateTimeSeparators = allowedDateTimeSeparators;
-        this.allowedFractionSeparators = allowedFractionSeparators;
+        this.allowedDateTimeSeparators = Optional.ofNullable(allowedDateTimeSeparators).orElse(new char[]{'T', 't', ' '});
+        this.allowedFractionSeparators = Optional.ofNullable(allowedFractionSeparators).orElse(new char[]{'.'});
+        this.failOnTrailingJunk = failOnTrailingJunk;
     }
 
     public ParseConfig withDateTimeSeparators(char... allowed)
     {
         assertChars(allowed);
-        return new ParseConfig(allowed, allowedFractionSeparators);
+        return new ParseConfig(allowed, allowedFractionSeparators, failOnTrailingJunk);
     }
 
     private void assertChars(char[] allowed)
@@ -54,7 +58,17 @@ public class ParseConfig
     public ParseConfig withFractionSeparators(char... allowed)
     {
         assertChars(allowed);
-        return new ParseConfig(allowedDateTimeSeparators, allowed);
+        return new ParseConfig(allowedDateTimeSeparators, allowed, failOnTrailingJunk);
+    }
+
+    public ParseConfig failOnTrailingJunk(boolean failOnTrailingJunk)
+    {
+        return new ParseConfig(allowedDateTimeSeparators, allowedFractionSeparators, failOnTrailingJunk);
+    }
+
+    public boolean isFailOnTrailingJunk()
+    {
+        return failOnTrailingJunk;
     }
 
     public char[] getDateTimeSeparators()

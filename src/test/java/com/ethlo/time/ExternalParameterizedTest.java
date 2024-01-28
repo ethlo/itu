@@ -64,7 +64,7 @@ public class ExternalParameterizedTest
             TemporalAccessor result;
             if (param.isLenient())
             {
-                result = ITU.parseLenient(param.getInput());
+                result = ITU.parseLenient(param.getInput(), param.getConfig() != null ? param.getConfig() : ParseConfig.DEFAULT);
             }
             else
             {

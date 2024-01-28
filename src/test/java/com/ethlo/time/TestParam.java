@@ -33,9 +33,10 @@ public class TestParam
     private final int errorIndex;
     private final Instant expected;
     private final String note;
+    private final ParseConfig config;
 
-    @ConstructorProperties(value = {"input", "lenient", "error", "error_index", "expected", "note"})
-    public TestParam(String input, boolean lenient, String error, Integer errorIndex, String expected, String note)
+    @ConstructorProperties(value = {"input", "lenient", "error", "error_index", "expected", "note", "config"})
+    public TestParam(String input, boolean lenient, String error, Integer errorIndex, String expected, String note, SerializableParseConfig config)
     {
         this.input = input;
         this.lenient = lenient;
@@ -43,6 +44,7 @@ public class TestParam
         this.errorIndex = errorIndex != null ? errorIndex : -1;
         this.expected = parseExpected(expected);
         this.note = note;
+        this.config = config != null ? config : ParseConfig.DEFAULT;
     }
 
     private Instant parseExpected(String expected)
@@ -86,6 +88,7 @@ public class TestParam
                 ", expected=" + expected + '\'' +
                 ", error='" + error + '\'' +
                 ", errorOffset=" + errorIndex + '\'' +
+                ", config=" + config + '\'' +
                 ", note=" + note +
                 '}';
     }
@@ -98,5 +101,19 @@ public class TestParam
     public Instant getExpected()
     {
         return expected;
+    }
+
+    public ParseConfig getConfig()
+    {
+        return config;
+    }
+
+    public static class SerializableParseConfig extends ParseConfig
+    {
+        @ConstructorProperties({"allowed_date_separators", "allowed_fraction_separators", "fail_on_trailing_junk"})
+        protected SerializableParseConfig(final char[] allowedDateTimeSeparators, final char[] allowedFractionSeparators, final boolean failOnTrailingJunk)
+        {
+            super(allowedDateTimeSeparators, allowedFractionSeparators, failOnTrailingJunk);
+        }
     }
 }
