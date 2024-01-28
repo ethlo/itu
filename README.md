@@ -10,8 +10,6 @@ An extremely fast parser and formatter of specific ISO-8601 format date and date
 This project's goal is to  do one thing: Make it easy to
 handle [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
 
-⚠️ Important note: Version 1.7.4 to 1.7.7 have a known issue parsing very specific, errounous date-time strings. _Please upgrade to version [1.8.0](https://github.com/ethlo/itu/releases/tag/v1.8.0) or later!_
-
 ## Features
 * Very easy to use.
 * Aim for 100% specification compliance.
@@ -83,6 +81,13 @@ final ParseConfig config = ParseConfig.DEFAULT
                 .withFractionSeparators('.', ',')
                 .withDateTimeSeparators('T', '|');
 ITU.parseLenient("1999-11-22|11:22:17,191", config);
+```
+
+### Parse with ParsePosition
+
+```java
+final ParsePosition pos = new ParsePosition(0);
+ITU.parseLenient("1999-11-22T11:22", pos);
 ```
 
 ### Handle different granularity (ISO format)
