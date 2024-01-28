@@ -34,7 +34,6 @@ import java.time.OffsetDateTime;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
-import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 
 import com.ethlo.time.DateTime;
@@ -43,7 +42,7 @@ import com.ethlo.time.LeapSecondException;
 import com.ethlo.time.ParseConfig;
 import com.ethlo.time.TimezoneOffset;
 
-public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, LenientDateTimeParser
+public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 {
     private static final EthloITU instance = new EthloITU();
 
@@ -107,7 +106,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, Lenien
             case MINUS:
             case ZULU_UPPER:
             case ZULU_LOWER:
-                final TimezoneOffset zoneOffset = parseTimezone(chars, 16);
+                final TimezoneOffset zoneOffset = parseTimezone(parseConfig, chars, 16);
                 if (!raw)
                 {
                     raiseMissingGranularity(Field.SECOND, chars, 16);
@@ -141,7 +140,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, Lenien
         }
     }
 
-    private static TimezoneOffset parseTimezone(String chars, int offset)
+    private static TimezoneOffset parseTimezone(ParseConfig parseConfig, String chars, int offset)
     {
         if (offset >= chars.length())
         {
@@ -152,7 +151,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, Lenien
         final char c = chars.charAt(offset);
         if (c == ZULU_UPPER || c == ZULU_LOWER)
         {
-            assertNoMoreChars(chars, offset);
+            if (parseConfig.isFailOnTrailingJunk())
+            {
+                assertNoMoreChars(chars, offset);
+            }
             return TimezoneOffset.UTC;
         }
 
@@ -180,7 +182,10 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, Lenien
             }
         }
 
-        assertNoMoreChars(chars, offset + 6);
+        if (parseConfig.isFailOnTrailingJunk())
+        {
+            assertNoMoreChars(chars, offset + 6);
+        }
 
         return TimezoneOffset.ofHoursMinutes(hours, minutes);
     }
@@ -260,7 +265,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, Lenien
         throw raiseMissingGranularity(Field.SECOND, chars, 16);
     }
 
-    private static Object handleTimeResolution(ParseConfig config, int year, int month, int day, int hour, int minute, String chars, boolean raw)
+    private static Object handleTimeResolution(ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars, boolean raw)
     {
         // From here the specification is more lenient
         final int length = chars.length();
@@ -270,7 +275,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, Lenien
             int fractions = 0;
             int fractionDigits = 0;
             char c = chars.charAt(19);
-            if (config.isFractionSeparator(c))
+            if (parseConfig.isFractionSeparator(c))
             {
                 final int firstFractionPos = 20;
                 if (chars.length() < 21)
@@ -289,7 +294,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, Lenien
                         nonDigitFound = true;
                         fractionDigits = idx - firstFractionPos;
                         assertFractionDigits(chars, fractionDigits, idx);
-                        offset = parseTimezone(chars, idx);
+                        offset = parseTimezone(parseConfig, chars, idx);
                     }
                     else
                     {
@@ -317,7 +322,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, Lenien
                 {
                     if (!raw)
                     {
-                        offset = parseTimezone(chars, idx);
+                        offset = parseTimezone(parseConfig, chars, idx);
                     }
                 }
             }
@@ -329,7 +334,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, Lenien
             else if (c == PLUS || c == MINUS)
             {
                 // No fractional seconds
-                offset = parseTimezone(chars, 19);
+                offset = parseTimezone(parseConfig, chars, 19);
             }
             else
             {
@@ -513,17 +518,5 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, Lenien
     public DateTime parse(String chars, ParseConfig config)
     {
         return (DateTime) parse(chars, config, true);
-    }
-
-    @Override
-    public TemporalAccessor parseLenient(final String chars)
-    {
-        return (DateTime) parse(chars, ParseConfig.DEFAULT, true);
-    }
-
-    @Override
-    public TemporalAccessor parseLenient(final String chars, final ParseConfig config)
-    {
-        return parse(chars, config);
     }
 }
