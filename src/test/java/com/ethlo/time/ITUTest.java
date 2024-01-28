@@ -29,13 +29,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.text.ParsePosition;
 import java.time.DateTimeException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.Temporal;
 
 import org.junit.jupiter.api.Tag;
@@ -321,5 +324,50 @@ public class ITUTest
         assertThat(ITU.formatUtc(dA)).isEqualTo(ITU.formatUtc(dB));
     }
 
+    @Test
+    void testParseCommaFractionSeparator()
+    {
+        final ParseConfig config = ParseConfig.DEFAULT
+                .withFractionSeparators('.', ',')
+                .withDateTimeSeparators('T', '|');
+        final ParsePosition pos = new ParsePosition(0);
+        assertThat(ITU.parseLenient("1999-11-22|11:22:17,191", config, pos).toInstant()).isEqualTo(Instant.parse("1999-11-22T11:22:17.191Z"));
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+        assertThat(pos.getIndex()).isEqualTo(23);
+    }
 
+    @Test
+    void testParseUnparseable()
+    {
+        final ParsePosition pos = new ParsePosition(0);
+        assertThrows(DateTimeParseException.class, () -> ITU.parseLenient("1999-11-22|11:22:1", ParseConfig.DEFAULT, pos));
+        assertThat(pos.getErrorIndex()).isEqualTo(10);
+        assertThat(pos.getIndex()).isEqualTo(10);
+    }
+
+    @Test
+    void testParsePosition()
+    {
+        final ParsePosition pos = new ParsePosition(0);
+        ITU.parseLenient("1999-11-22T11:22:17.191", ParseConfig.DEFAULT, pos);
+        assertThat(pos.getIndex()).isEqualTo(23);
+    }
+
+    @Test
+    void testParsePositionDateTime()
+    {
+        final ParsePosition pos = new ParsePosition(0);
+        ITU.parseDateTime("1999-11-22T11:22:17.191Z", pos);
+        assertThat(pos.getIndex()).isEqualTo(24);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+    }
+
+    @Test
+    void testParsePositionDateTimeInvalid()
+    {
+        final ParsePosition pos = new ParsePosition(0);
+        assertThrows(DateTimeException.class, () -> ITU.parseDateTime("1999-11-22X11:22:17.191Z", pos));
+        assertThat(pos.getIndex()).isEqualTo(10);
+        assertThat(pos.getErrorIndex()).isEqualTo(10);
+    }
 }

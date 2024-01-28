@@ -39,18 +39,18 @@ import java.util.Arrays;
 import com.ethlo.time.DateTime;
 import com.ethlo.time.Field;
 import com.ethlo.time.LeapSecondException;
+import com.ethlo.time.ParseConfig;
 import com.ethlo.time.TimezoneOffset;
 
 public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 {
+    private static final EthloITU instance = new EthloITU();
+
     public static final char DATE_SEPARATOR = '-';
     public static final char TIME_SEPARATOR = ':';
     public static final char SEPARATOR_UPPER = 'T';
-    private static final EthloITU instance = new EthloITU();
     private static final char PLUS = '+';
     private static final char MINUS = '-';
-    private static final char SEPARATOR_LOWER = 't';
-    private static final char SEPARATOR_SPACE = ' ';
     private static final char FRACTION_SEPARATOR = '.';
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
@@ -121,13 +121,13 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private static Object handleTime(String chars, int year, int month, int day, int hour, int minute, final boolean raw)
+    private static Object handleTime(ParseConfig parseConfig, String chars, int year, int month, int day, int hour, int minute, final boolean raw)
     {
         switch (chars.charAt(16))
         {
             // We have more granularity, keep going
             case TIME_SEPARATOR:
-                return handleTimeResolution(year, month, day, hour, minute, chars, raw);
+                return handleTimeResolution(parseConfig, year, month, day, hour, minute, chars, raw);
 
             case PLUS:
             case MINUS:
@@ -157,19 +157,13 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private static void assertAllowedDateTimeSeparator(String chars)
+    private static void assertAllowedDateTimeSeparator(String chars, final ParseConfig config)
     {
         final char needle = chars.charAt(10);
-        switch (needle)
+        if (!config.isDateTimeSeparator(needle))
         {
-            case SEPARATOR_UPPER:
-            case SEPARATOR_LOWER:
-            case SEPARATOR_SPACE:
-                return;
-
-            default:
-                throw new DateTimeParseException("Expected character " + Arrays.toString(new char[]{SEPARATOR_UPPER, SEPARATOR_LOWER, SEPARATOR_SPACE})
-                        + " at position " + (10 + 1) + ": " + chars, chars, 10);
+            throw new DateTimeParseException("Expected character " + Arrays.toString(config.getDateTimeSeparators())
+                    + " at position " + (10 + 1) + ": " + chars, chars, 10);
         }
     }
 
@@ -223,7 +217,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private static Object parse(String chars, boolean raw)
+    private static Object parse(String chars, ParseConfig parseConfig, boolean raw)
     {
         if (chars == null)
         {
@@ -270,7 +264,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
 
         // HOURS
-        assertAllowedDateTimeSeparator(chars);
+        assertAllowedDateTimeSeparator(chars, parseConfig);
         final int hours = parsePositiveInt(chars, 11, 13);
 
         // MINUTES
@@ -279,7 +273,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         if (len > 16)
         {
             // SECONDS or TIMEZONE
-            return handleTime(chars, years, months, days, hours, minutes, raw);
+            return handleTime(parseConfig, chars, years, months, days, hours, minutes, raw);
         }
 
         // Have only minutes
@@ -290,7 +284,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         throw raiseMissingGranularity(Field.SECOND, chars, 16);
     }
 
-    private static Object handleTimeResolution(int year, int month, int day, int hour, int minute, String chars, boolean raw)
+    private static Object handleTimeResolution(ParseConfig config, int year, int month, int day, int hour, int minute, String chars, boolean raw)
     {
         // From here the specification is more lenient
         final int length = chars.length();
@@ -300,7 +294,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             int fractions = 0;
             int fractionDigits = 0;
             char c = chars.charAt(19);
-            if (c == FRACTION_SEPARATOR)
+            if (config.isFractionSeparator(c))
             {
                 final int firstFraction = 20;
                 if (chars.length() < 21)
@@ -498,7 +492,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     @Override
     public OffsetDateTime parseDateTime(final String dateTime)
     {
-        return (OffsetDateTime) parse(dateTime, false);
+        return (OffsetDateTime) parse(dateTime, ParseConfig.DEFAULT, false);
     }
 
     @Override
@@ -528,6 +522,12 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     @Override
     public DateTime parse(String chars)
     {
-        return (DateTime) parse(chars, true);
+        return (DateTime) parse(chars, ParseConfig.DEFAULT, true);
+    }
+
+    @Override
+    public DateTime parse(String chars, ParseConfig config)
+    {
+        return (DateTime) parse(chars, config, true);
     }
 }

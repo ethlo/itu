@@ -20,12 +20,14 @@ package com.ethlo.time;
  * #L%
  */
 
+import java.text.ParsePosition;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 
 import com.ethlo.time.internal.EthloITU;
 
@@ -51,6 +53,22 @@ public class ITU
         return delegate.parseDateTime(text);
     }
 
+    public static OffsetDateTime parseDateTime(String text, ParsePosition position)
+    {
+        try
+        {
+            final OffsetDateTime result = delegate.parseDateTime(text);
+            position.setIndex(text.length());
+            return result;
+        }
+        catch (DateTimeParseException exc)
+        {
+            position.setErrorIndex(exc.getErrorIndex());
+            position.setIndex(position.getErrorIndex());
+            throw exc;
+        }
+    }
+
     /**
      * Parse an ISO formatted date and optionally time to a {@link DateTime}. The result has
      * rudimentary checks for correctness, but will not be aware of number of days per specific month or leap-years.
@@ -61,6 +79,32 @@ public class ITU
     public static DateTime parseLenient(String text)
     {
         return delegate.parse(text);
+    }
+
+    public static DateTime parseLenient(String text, ParsePosition position)
+    {
+        return parseLenient(text, ParseConfig.DEFAULT, position);
+    }
+
+    public static DateTime parseLenient(String text, ParseConfig parseConfig)
+    {
+        return delegate.parse(text, parseConfig);
+    }
+
+    public static DateTime parseLenient(String text, ParseConfig parseConfig, ParsePosition position)
+    {
+        try
+        {
+            final DateTime result = delegate.parse(text, parseConfig);
+            position.setIndex(text.length());
+            return result;
+        }
+        catch (DateTimeParseException exc)
+        {
+            position.setIndex(exc.getErrorIndex());
+            position.setErrorIndex(exc.getErrorIndex());
+            throw exc;
+        }
     }
 
     /**

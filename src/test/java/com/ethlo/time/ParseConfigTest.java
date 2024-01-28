@@ -1,4 +1,4 @@
-package com.ethlo.time.fuzzer;
+package com.ethlo.time;
 
 /*-
  * #%L
@@ -9,9 +9,9 @@ package com.ethlo.time.fuzzer;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,32 +20,16 @@ package com.ethlo.time.fuzzer;
  * #L%
  */
 
-/*
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.ethlo.time.DateTime;
-import com.ethlo.time.ITU;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class ParseLenientFuzzTest
+import org.junit.jupiter.api.Test;
+
+class ParseConfigTest
 {
-    @com.code_intelligence.jazzer.junit.FuzzTest(maxDuration = "2m")
-    void parse(FuzzedDataProvider data)
+    @Test
+    void testParseConfigInvalid1()
     {
-        DateTime d = null;
-        try
-        {
-            d = ITU.parseLenient(data.consumeRemainingAsString());
-        }
-        catch (DateTimeException ignored)
-        {
-
-        }
-
-        if (d != null)
-        {
-            d.toInstant();
-            System.out.println(d);
-            d.toString();
-        }
+        assertThrows(IllegalArgumentException.class, () -> ParseConfig.DEFAULT.withDateTimeSeparators(null));
+        assertThrows(IllegalArgumentException.class, () -> ParseConfig.DEFAULT.withDateTimeSeparators());
     }
 }
-*/
