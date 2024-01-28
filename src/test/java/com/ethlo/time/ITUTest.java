@@ -328,8 +328,8 @@ public class ITUTest
     void testParseCommaFractionSeparator()
     {
         final ParseConfig config = ParseConfig.DEFAULT
-                .withAllowedFractionSeparators('.', ',')
-                .withAllowedDateTimeSeparators('T', '|');
+                .withFractionSeparators('.', ',')
+                .withDateTimeSeparators('T', '|');
         final ParsePosition pos = new ParsePosition(0);
         assertThat(ITU.parseLenient("1999-11-22|11:22:17,191", config, pos).toInstant()).isEqualTo(Instant.parse("1999-11-22T11:22:17.191Z"));
         assertThat(pos.getErrorIndex()).isEqualTo(-1);

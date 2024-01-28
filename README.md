@@ -52,99 +52,66 @@ import java.time.OffsetDateTime;
 import com.ethlo.time.DateTime;
 import com.ethlo.time.ITU;
 
-class Test {
-    void smokeTest() {
-        // Parse a string
-        final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
+// Parse a string
+final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
 
-        // Format with seconds (no fraction digits)
-        final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
+// Format with seconds (no fraction digits)
+final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
 
-        // Format with microsecond precision
-        final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
+// Format with microsecond precision
+final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
 
-        // Parse lenient, raw data
-        final DateTime dateTime = ITU.parseLenient("2012-12-27T19:07Z");
-    }
-}
+// Parse lenient
+final DateTime dateTime = ITU.parseLenient("2012-12-27T19:07Z");
 ```
 
 ### Handle leap-seconds
 ```java
-import com.ethlo.time.ITU;
-import com.ethlo.time.LeapSecondException;
-import java.time.OffsetDateTime;
-
-class Test {
-    void testParseDateTime() {
-        try {
-            final OffsetDateTime dateTime = ITU.parseDateTime("1990-12-31T15:59:60-08:00");
-        } catch (LeapSecondException exc) {
-            // The following helper methods are available let you decide how to progress
-            exc.getSecondsInMinute(); // 60
-            exc.getNearestDateTime(); // 1991-01-01T00:00:00Z
-            exc.isVerifiedValidLeapYearMonth(); // true
-        }
-    }
+try {
+    final OffsetDateTime dateTime = ITU.parseDateTime("1990-12-31T15:59:60-08:00");
+} catch (LeapSecondException exc) {
+    // The following helper methods are available let you decide how to progress
+    exc.getSecondsInMinute(); // 60
+    exc.getNearestDateTime(); // 1991-01-01T00:00:00Z
+    exc.isVerifiedValidLeapYearMonth(); // true
 }
+```
+
+### Parse lenient, configurable separators
+```java
+final ParseConfig config = ParseConfig.DEFAULT
+                .withFractionSeparators('.', ',')
+                .withDateTimeSeparators('T', '|');
+ITU.parseLenient("1999-11-22|11:22:17,191", config);
 ```
 
 ### Handle different granularity (ISO format)
 #### Validate with specified granularity
 ```java
-import com.ethlo.time.ITU;
-import com.ethlo.time.TemporalType;
-
-class Test {
-    void test() {
-        ITU.isValid("2017-12-06", TemporalType.LOCAL_DATE_TIME);
-    }
-}
+ITU.isValid("2017-12-06", TemporalType.LOCAL_DATE_TIME);
 ```
 
 #### Handling different levels of granularity explicitly
 ```java
-import com.ethlo.time.ITU;
-import com.ethlo.time.TemporalHandler;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZoneOffset;
-import java.time.temporal.TemporalAccessor;
-
-class Test {
-    TemporalAccessor extract() {
-        return ITU.parse("2017-12-06", new TemporalHandler<>() {
-            @Override
-            public OffsetDateTime handle(final LocalDate localDate) {
-                return localDate.atTime(OffsetTime.of(LocalTime.of(0, 0), ZoneOffset.UTC));
-            }
-
-            @Override
-            public OffsetDateTime handle(final OffsetDateTime offsetDateTime) {
-                return offsetDateTime;
-            }
-        });
+ITU.parse("2017-12-06", new TemporalHandler<>() {
+    @Override
+    public OffsetDateTime handle(final LocalDate localDate) {
+        return localDate.atTime(OffsetTime.of(LocalTime.of(0, 0), ZoneOffset.UTC));
     }
-}
+
+    @Override
+    public OffsetDateTime handle(final OffsetDateTime offsetDateTime) {
+        return offsetDateTime;
+    }
+});
 ```
 #### Parsing leniently to a timestamp
-In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, converting a raw `com.ethlo.time.DateTime` instance into `java.time.Instant`. Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc. 
+In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `com.ethlo.time.DateTime` instance into `java.time.Instant`. Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc. 
 
 We can use `ITU.parseLenient()` with `DateTime.toInstant()` like this:
 
 ```java
-import com.ethlo.time.ITU;
-import com.ethlo.time.TemporalHandler;
-import java.time.temporal.TemporalAccessor;
-
-class Test {
-    void parseTest() {
-        final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
-    }
-}
+final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
 ```
 
 ## Q & A

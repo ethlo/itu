@@ -160,9 +160,9 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     private static void assertAllowedDateTimeSeparator(String chars, final ParseConfig config)
     {
         final char needle = chars.charAt(10);
-        if (!config.isAllowedDateTimeSeparator(needle))
+        if (!config.isDateTimeSeparator(needle))
         {
-            throw new DateTimeParseException("Expected character " + Arrays.toString(config.getAllowedDateTimeSeparators())
+            throw new DateTimeParseException("Expected character " + Arrays.toString(config.getDateTimeSeparators())
                     + " at position " + (10 + 1) + ": " + chars, chars, 10);
         }
     }
@@ -294,7 +294,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             int fractions = 0;
             int fractionDigits = 0;
             char c = chars.charAt(19);
-            if (config.isAllowedFractionSeparator(c))
+            if (config.isFractionSeparator(c))
             {
                 final int firstFraction = 20;
                 if (chars.length() < 21)

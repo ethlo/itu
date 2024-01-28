@@ -33,7 +33,7 @@ public class ParseConfig
         this.allowedFractionSeparators = allowedFractionSeparators;
     }
 
-    public ParseConfig withAllowedDateTimeSeparators(char... allowed)
+    public ParseConfig withDateTimeSeparators(char... allowed)
     {
         assertChars(allowed);
         return new ParseConfig(allowed, allowedFractionSeparators);
@@ -51,18 +51,18 @@ public class ParseConfig
         }
     }
 
-    public ParseConfig withAllowedFractionSeparators(char... allowed)
+    public ParseConfig withFractionSeparators(char... allowed)
     {
         assertChars(allowed);
         return new ParseConfig(allowedDateTimeSeparators, allowed);
     }
 
-    public char[] getAllowedDateTimeSeparators()
+    public char[] getDateTimeSeparators()
     {
         return allowedDateTimeSeparators;
     }
 
-    public boolean isAllowedDateTimeSeparator(char needle)
+    public boolean isDateTimeSeparator(char needle)
     {
         for (char c : allowedDateTimeSeparators)
         {
@@ -74,7 +74,7 @@ public class ParseConfig
         return false;
     }
 
-    public boolean isAllowedFractionSeparator(char needle)
+    public boolean isFractionSeparator(char needle)
     {
         for (char c : allowedFractionSeparators)
         {
