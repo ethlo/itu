@@ -19,32 +19,39 @@
  */
 [
     {
-        "input": "2017-02-21T15:27:39Z"
+        "input": "1994-11-05t08:15:30z",
+        "note": "Lowercase 'z' as UTC timezone",
+        "expected": "784023330,0"
     },
     {
-        "input": "2017-02-21T15:27:39.123Z"
+        "input": "1994-11-05 08:15:30Z",
+        "note": "Space as date/time separator",
+        "expected": "784023330,0"
     },
     {
-        "input": "2017-02-21T15:27:39.123456Z"
+        "input": "1994-11-05t08:15:30Z",
+        "note": "Lower-case t as date/time separator",
+        "expected": "784023330,0"
     },
     {
-        "input": "2017-02-21T15:27:39.123456789Z"
+        "input": "2017-02-21T15:27:39Z",
+        "expected": "1487690859,0"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123Z",
+        "expected": "1487690859,123000000"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123456Z",
+        "expected": "1487690859,123456000"
+    },
+    {
+        "input": "2017-02-21T15:27:39.123456789Z",
+        "expected": "1487690859,123456789"
     },
     {
         "input": "2017-02-21T15:27:39+00:00",
         "expected": "1487690859,0"
-    },
-    {
-        "input": "2017-02-21T15:27:39.123+00:00",
-        "expected": "1487690859,123000000"
-    },
-    {
-        "input": "2017-02-21T15:27:39.123456+00:00",
-        "expected": "1487690859,123456000"
-    },
-    {
-        "input": "2017-02-21T15:27:39.123456789+00:00",
-        "expected": "1487690859,123456789"
     },
     {
         "input": "2017-02-21T15:27:39.1+00:00",
@@ -89,7 +96,7 @@
     },
     {
         "input": "2017-02-21T15",
-        "error":   "Unexpected end of input, missing field MINUTE: 2017-02-21T15",
+        "error": "Unexpected end of input, missing field MINUTE: 2017-02-21T15",
         "error_index": 13
     },
     {
@@ -99,11 +106,13 @@
     },
     {
         "input": "2017-02-21T15:27",
-        "error": "Unexpected end of input, missing field SECOND: 2017-02-21T15:27"
+        "error": "Unexpected end of input, missing field SECOND: 2017-02-21T15:27",
+        "error_index": 16
     },
     {
         "input": "2017-02-21T15:27Z",
-        "error": "Unexpected end of input, missing field SECOND: 2017-02-21T15:27Z"
+        "error": "Unexpected end of input, missing field SECOND: 2017-02-21T15:27Z",
+        "error_index": 16
     },
     {
         "input": "2017-02-21T15:27:22~10:00",
@@ -134,11 +143,6 @@
         "input": "2017-02-21T15:27:39.123456789",
         "error": "No timezone information: 2017-02-21T15:27:39.123456789",
         "error_index": 29
-    },
-    {
-        "input": "2017-02-21T15:27:39+0000",
-        "error": "Invalid timezone offset: 2017-02-21T15:27:39+0000",
-        "error_index": 19
     },
     {
         "input": "2017-02-21T15:27:39.123+0000",
@@ -223,10 +227,6 @@
         "note": "invalid date/time separator"
     },
     {
-        "input": "1994-11-05t08:15:30z",
-        "note": "Lowercase 'z' as UTC timezone"
-    },
-    {
         "input": "2017-02-21T15:27:39+0000",
         "error": "Invalid timezone offset: 2017-02-21T15:27:39+0000",
         "error_index": 19,
@@ -240,6 +240,26 @@
         "input": "",
         "error_index": 0,
         "error": "Unexpected end of input: "
+    },
+    {
+        "input": "2020",
+        "error": "Unexpected end of input, missing field MONTH: 2020"
+    },
+    {
+        "input": "2020-12",
+        "error": "Unexpected end of input, missing field DAY: 2020-12"
+    },
+    {
+        "input": "2020-12-31",
+        "error": "Unexpected end of input, missing field HOUR: 2020-12-31"
+    },
+    {
+        "input": "2020-12-31T12",
+        "error": "Unexpected end of input, missing field MINUTE: 2020-12-31T12"
+    },
+    {
+        "input": "2020-12-31T12:44",
+        "error": "Unexpected end of input, missing field SECOND: 2020-12-31T12:44"
     },
     {
         "input": "2017-02-21T15:00:00.123ZGGG",
@@ -267,25 +287,5 @@
         "input": "2020-12-31",
         "expected": "1609372800,0",
         "lenient": true
-    },
-    {
-        "input": "2020",
-        "error": "Unexpected end of input, missing field MONTH: 2020"
-    },
-    {
-        "input": "2020-12",
-        "error": "Unexpected end of input, missing field DAY: 2020-12"
-    },
-    {
-        "input": "2020-12-31",
-        "error": "Unexpected end of input, missing field HOUR: 2020-12-31"
-    },
-    {
-        "input": "2020-12-31T12",
-        "error": "Unexpected end of input, missing field MINUTE: 2020-12-31T12"
-    },
-    {
-        "input": "2020-12-31T12:44",
-        "error": "Unexpected end of input, missing field SECOND: 2020-12-31T12:44"
     }
 ]
