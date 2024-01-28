@@ -34,6 +34,7 @@ import java.time.OffsetDateTime;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 
 import com.ethlo.time.DateTime;
@@ -42,7 +43,7 @@ import com.ethlo.time.LeapSecondException;
 import com.ethlo.time.ParseConfig;
 import com.ethlo.time.TimezoneOffset;
 
-public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
+public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil, LenientDateTimeParser
 {
     private static final EthloITU instance = new EthloITU();
 
@@ -161,7 +162,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
             raiseUnexpectedCharacter(chars, offset);
         }
 
-        if (left != 6)
+        if (left < 6)
         {
             throw new DateTimeParseException("Invalid timezone offset: " + chars, chars, offset);
         }
@@ -172,12 +173,14 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         {
             hours = -hours;
             minutes = -minutes;
+
+            if (hours == 0 && minutes == 0)
+            {
+                throw new DateTimeParseException("Unknown 'Local Offset Convention' date-time not allowed", chars, offset);
+            }
         }
 
-        if (sign == MINUS && hours == 0 && minutes == 0)
-        {
-            throw new DateTimeParseException("Unknown 'Local Offset Convention' date-time not allowed", chars, offset);
-        }
+        assertNoMoreChars(chars, offset + 6);
 
         return TimezoneOffset.ofHoursMinutes(hours, minutes);
     }
@@ -293,7 +296,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
                         fractionDigits = idx - 19;
                         assertFractionDigits(chars, fractionDigits, idx);
                         fractions = fractions * 10 + (c - ZERO);
-                    idx++;
+                        idx++;
                     }
                 } while (idx < length && !nonDigitFound);
 
@@ -510,5 +513,17 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     public DateTime parse(String chars, ParseConfig config)
     {
         return (DateTime) parse(chars, config, true);
+    }
+
+    @Override
+    public TemporalAccessor parseLenient(final String chars)
+    {
+        return (DateTime) parse(chars, ParseConfig.DEFAULT, true);
+    }
+
+    @Override
+    public TemporalAccessor parseLenient(final String chars, final ParseConfig config)
+    {
+        return parse(chars, config);
     }
 }
