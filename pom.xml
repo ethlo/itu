@@ -282,6 +282,7 @@ limitations under the License.
                                 <option>-repackageclasses</option>
                                 <option>-flattenpackagehierarchy a</option>
                                 <option>-keepattributes Signature</option>
+                                <option>-keep public class com.ethlo.time.ParseConfig { *; }</option>
                                 <option>-keep public class com.ethlo.time.ITU { *; }</option>
                                 <option>-keep public class com.ethlo.time.DateTime { *; }</option>
                                 <option>-keep public class com.ethlo.time.Field { *; }</option>
