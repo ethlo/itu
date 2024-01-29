@@ -35,44 +35,37 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import com.ethlo.time.internal.EthloITU;
-import com.ethlo.time.internal.Rfc3339;
-import com.ethlo.time.internal.Rfc3339Formatter;
-import com.ethlo.time.internal.W3cDateTimeUtil;
-
 @Tag("CorrectnessTest")
-public class W3cCorrectnessTest extends AbstractTest
+public class W3cCorrectnessTest
 {
-    private W3cDateTimeUtil w3cDateUtil;
-
     @Test
     public void testParseEmptyString()
     {
-        assertThrows(DateTimeException.class, () -> parser.parseDateTime(""));
+        assertThrows(DateTimeException.class, () -> ITU.parseDateTime(""));
     }
 
     @Test
     public void testFormatYear()
     {
-        assertThat(w3cDateUtil.formatUtc(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.YEAR)).isEqualTo("2012");
+        assertThat(ITU.formatUtc(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.YEAR)).isEqualTo("2012");
     }
 
     @Test
     public void testFormatYearMonth()
     {
-        assertThat(w3cDateUtil.formatUtc(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.MONTH)).isEqualTo("2012-01");
+        assertThat(ITU.formatUtc(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.MONTH)).isEqualTo("2012-01");
     }
 
     @Test
     public void testFormatYearMonthDay()
     {
-        assertThat(w3cDateUtil.formatUtc(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.DAY)).isEqualTo("2012-01-14");
+        assertThat(ITU.formatUtc(OffsetDateTime.parse("2012-01-14T12:34:56Z"), Field.DAY)).isEqualTo("2012-01-14");
     }
 
     @Test
     public void testParseYear()
     {
-        final DateTime date = w3cDateUtil.parseLenient("2012");
+        final DateTime date = ITU.parseLenient("2012");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMostGranularField()).isEqualTo(Field.YEAR);
         assertThat(date.toYear()).isEqualTo(Year.of(2012));
@@ -81,22 +74,22 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseYearMonth()
     {
-        final DateTime date = w3cDateUtil.parseLenient("2012-10");
+        final DateTime date = ITU.parseLenient("2012-10");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getMostGranularField()).isEqualTo(Field.MONTH);
-        final YearMonth yearMonth = w3cDateUtil.parseLenient("2012-10").toYearMonth();
+        final YearMonth yearMonth = ITU.parseLenient("2012-10").toYearMonth();
         assertThat(yearMonth.getYear()).isEqualTo(2012);
         assertThat(yearMonth.getMonthValue()).isEqualTo(10);
 
-        assertThrows(DateTimeException.class, () -> w3cDateUtil.parseLenient("2012").toYearMonth());
+        assertThrows(DateTimeException.class, () -> ITU.parseLenient("2012").toYearMonth());
     }
 
     @Test
     public void testParseDate()
     {
         final String input = "2012-03-29";
-        final DateTime date = w3cDateUtil.parseLenient(input);
+        final DateTime date = ITU.parseLenient(input);
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(3);
         assertThat(date.getDayOfMonth()).isEqualTo(29);
@@ -108,7 +101,7 @@ public class W3cCorrectnessTest extends AbstractTest
     public void testParseDateTimeNanos()
     {
         final String input = "2012-10-27T17:22:39.123456789+13:30";
-        final DateTime date = w3cDateUtil.parseLenient(input);
+        final DateTime date = ITU.parseLenient(input);
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -127,7 +120,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseDateTimeWithoutFractions()
     {
-        final DateTime date = w3cDateUtil.parseLenient("2012-10-27T17:22:39+13:30");
+        final DateTime date = ITU.parseLenient("2012-10-27T17:22:39+13:30");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -162,7 +155,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseDateTimeWithoutSeconds()
     {
-        final DateTime date = w3cDateUtil.parseLenient("2012-10-27T17:22Z");
+        final DateTime date = ITU.parseLenient("2012-10-27T17:22Z");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -175,7 +168,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseDateTimeWithoutSecondsAndTimezone()
     {
-        final DateTime date = w3cDateUtil.parseLenient("2012-10-27T17:22");
+        final DateTime date = ITU.parseLenient("2012-10-27T17:22");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -198,7 +191,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseDateTimeNoOffsetToLocalDateTime()
     {
-        final DateTime date = w3cDateUtil.parseLenient("2012-10-27T17:22:39");
+        final DateTime date = ITU.parseLenient("2012-10-27T17:22:39");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -227,14 +220,14 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testToOffsetDateTimeWithoutGranularEnoughData()
     {
-        final DateTime dateTime = w3cDateUtil.parseLenient("2012-10-27");
+        final DateTime dateTime = ITU.parseLenient("2012-10-27");
         assertThrows(DateTimeException.class, dateTime::toOffsetDatetime);
     }
 
     @Test
     public void testParseLenientWithTimeToLocalDate()
     {
-        final LocalDate date = w3cDateUtil.parseLenient("2012-10-27T17:22:39+10:00").toLocalDate();
+        final LocalDate date = ITU.parseLenient("2012-10-27T17:22:39+10:00").toLocalDate();
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonthValue()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -243,7 +236,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseLenientToLocalDate()
     {
-        final LocalDate date = w3cDateUtil.parseLenient("2012-10-27").toLocalDate();
+        final LocalDate date = ITU.parseLenient("2012-10-27").toLocalDate();
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonthValue()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -252,32 +245,18 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseLenientToLocalDateNoDays()
     {
-        assertThrows(DateTimeException.class, () -> w3cDateUtil.parseLenient("2012-10").toLocalDate());
+        assertThrows(DateTimeException.class, () -> ITU.parseLenient("2012-10").toLocalDate());
     }
 
     @Test
     public void testParseBestEffort1DigitMinute()
     {
-        Assertions.assertThrows(DateTimeException.class, () -> w3cDateUtil.parseLenient("2012-03-29T23:1"));
+        Assertions.assertThrows(DateTimeException.class, () -> ITU.parseLenient("2012-03-29T23:1"));
     }
 
     @Test
     public void testParseNull()
     {
-        assertThrows(NullPointerException.class, () -> parser.parseDateTime(null));
-    }
-
-    @Override
-    protected Rfc3339 getParser()
-    {
-        final EthloITU retVal = EthloITU.getInstance();
-        this.w3cDateUtil = retVal;
-        return retVal;
-    }
-
-    @Override
-    protected Rfc3339Formatter getFormatter()
-    {
-        return EthloITU.getInstance();
+        assertThrows(NullPointerException.class, () -> ITU.parseDateTime(null));
     }
 }

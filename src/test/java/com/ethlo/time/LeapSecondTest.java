@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("CorrectnessTest")
-public abstract class LeapSecondTest extends AbstractTest
+public class LeapSecondTest
 {
     @Test
     void testParseLeapSecondUTC()
@@ -47,7 +47,7 @@ public abstract class LeapSecondTest extends AbstractTest
     {
         final LeapSecondException exc = getLeapSecondsException(input);
         assertThat(exc.isVerifiedValidLeapYearMonth()).isEqualTo(isVerifiedLeapSecond);
-        assertThat(formatter.formatUtc(exc.getNearestDateTime())).isEqualTo(expectedInUtc);
+        assertThat(ITU.formatUtc(exc.getNearestDateTime())).isEqualTo(expectedInUtc);
         assertThat(exc.getSecondsInMinute()).isEqualTo(60);
     }
 
@@ -93,7 +93,7 @@ public abstract class LeapSecondTest extends AbstractTest
     {
         try
         {
-            parser.parseDateTime(dateTime);
+            ITU.parseDateTime(dateTime);
             throw new IllegalArgumentException("Should have thrown LeapSecondException");
         }
         catch (LeapSecondException exc)

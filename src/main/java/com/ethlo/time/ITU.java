@@ -36,8 +36,6 @@ import com.ethlo.time.internal.EthloITU;
  */
 public class ITU
 {
-    private static final EthloITU delegate = EthloITU.getInstance();
-
     private ITU()
     {
     }
@@ -50,14 +48,14 @@ public class ITU
      */
     public static OffsetDateTime parseDateTime(String text)
     {
-        return delegate.parseDateTime(text);
+        return EthloITU.parseDateTime(text);
     }
 
     public static OffsetDateTime parseDateTime(String text, ParsePosition position)
     {
         try
         {
-            final OffsetDateTime result = delegate.parseDateTime(text);
+            final OffsetDateTime result = EthloITU.parseDateTime(text);
             position.setIndex(text.length());
             return result;
         }
@@ -78,7 +76,7 @@ public class ITU
      */
     public static DateTime parseLenient(String text)
     {
-        return delegate.parseLenient(text);
+        return EthloITU.parseLenient(text, ParseConfig.DEFAULT);
     }
 
     public static DateTime parseLenient(String text, ParsePosition position)
@@ -88,14 +86,14 @@ public class ITU
 
     public static DateTime parseLenient(String text, ParseConfig parseConfig)
     {
-        return delegate.parseLenient(text, parseConfig);
+        return EthloITU.parseLenient(text, parseConfig);
     }
 
     public static DateTime parseLenient(String text, ParseConfig parseConfig, ParsePosition position)
     {
         try
         {
-            final DateTime result = delegate.parseLenient(text, parseConfig);
+            final DateTime result = EthloITU.parseLenient(text, parseConfig);
             position.setIndex(text.length());
             return result;
         }
@@ -135,7 +133,7 @@ public class ITU
      */
     public static String formatUtc(OffsetDateTime offsetDateTime, int fractionDigits)
     {
-        return delegate.formatUtc(offsetDateTime, fractionDigits);
+        return EthloITU.formatUtc(offsetDateTime, fractionDigits);
     }
 
     /**
@@ -147,7 +145,7 @@ public class ITU
      */
     public static String formatUtc(OffsetDateTime offsetDateTime, Field lastIncluded)
     {
-        return delegate.formatUtc(offsetDateTime, lastIncluded);
+        return EthloITU.formatUtc(offsetDateTime, lastIncluded);
     }
 
     /**
@@ -158,7 +156,7 @@ public class ITU
      */
     public static String format(OffsetDateTime offsetDateTime)
     {
-        return delegate.format(offsetDateTime, offsetDateTime.getOffset(), 0);
+        return EthloITU.format(offsetDateTime, offsetDateTime.getOffset(), 0);
     }
 
     /**
@@ -170,7 +168,7 @@ public class ITU
      */
     public static String format(OffsetDateTime offsetDateTime, int fractionDigits)
     {
-        return delegate.format(offsetDateTime, offsetDateTime.getOffset(), fractionDigits);
+        return EthloITU.format(offsetDateTime, offsetDateTime.getOffset(), fractionDigits);
     }
 
     /**
@@ -181,7 +179,7 @@ public class ITU
      */
     public static String formatUtc(OffsetDateTime offsetDateTime)
     {
-        return delegate.formatUtc(offsetDateTime);
+        return EthloITU.formatUtc(offsetDateTime, 0);
     }
 
     /**
@@ -192,7 +190,7 @@ public class ITU
      */
     public static String formatUtcMilli(final OffsetDateTime offsetDateTime)
     {
-        return delegate.formatUtcMilli(offsetDateTime);
+        return EthloITU.formatUtc(offsetDateTime, 3);
     }
 
     /**
@@ -203,7 +201,7 @@ public class ITU
      */
     public static String formatUtcMicro(final OffsetDateTime offsetDateTime)
     {
-        return delegate.formatUtcMicro(offsetDateTime);
+        return EthloITU.formatUtc(offsetDateTime, 6);
     }
 
     /**
@@ -214,7 +212,7 @@ public class ITU
      */
     public static String formatUtcNano(final OffsetDateTime offsetDateTime)
     {
-        return delegate.formatUtcNano(offsetDateTime);
+        return EthloITU.formatUtc(offsetDateTime, 9);
     }
 
     /**
@@ -225,7 +223,7 @@ public class ITU
      */
     public static void parse(final String text, final TemporalConsumer temporalConsumer)
     {
-        final DateTime dateTime = delegate.parseLenient(text);
+        final DateTime dateTime = EthloITU.parseLenient(text, ParseConfig.DEFAULT);
         if (dateTime.includesGranularity(Field.MINUTE))
         {
             if (dateTime.getOffset().isPresent())
@@ -257,10 +255,9 @@ public class ITU
      * @param text            The text to parse as a date/date-time
      * @param temporalHandler The handler of the found date/date-time
      */
-
     public static <T> T parse(String text, TemporalHandler<T> temporalHandler)
     {
-        final DateTime dateTime = delegate.parseLenient(text);
+        final DateTime dateTime = EthloITU.parseLenient(text, ParseConfig.DEFAULT);
         if (dateTime.includesGranularity(Field.MINUTE))
         {
             if (dateTime.getOffset().isPresent())

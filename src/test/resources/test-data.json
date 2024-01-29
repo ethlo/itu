@@ -195,7 +195,7 @@
     },
     {
         "input": "2017-02-21T15:00:00.1234567891Z",
-        "error": "Too many fraction digits: 2017-02-21T15:00:00.1234567891Z",
+        "error": "Maximum supported number of fraction digits in second is 9, got 10: 2017-02-21T15:00:00.1234567891Z",
         "error_index": 29
     },
     {
@@ -332,6 +332,11 @@
     {
         "input": "2020-12-31T00:00:00-05:00",
         "expected": "1609390800,0",
+        "lenient": true
+    },
+    {
+        "input": "2021-02-29T00:00:00-05:00",
+        "error": "Invalid date 'February 29' as '2021' is not a leap year",
         "lenient": true
     }
 ]

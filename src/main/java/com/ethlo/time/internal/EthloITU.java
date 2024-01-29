@@ -33,14 +33,13 @@ import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 
 import com.ethlo.time.DateTime;
+import com.ethlo.time.DateTimeFormatException;
 import com.ethlo.time.Field;
 import com.ethlo.time.ParseConfig;
 import com.ethlo.time.TimezoneOffset;
 
-public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
+public class EthloITU
 {
-    private static final EthloITU instance = new EthloITU();
-
     public static final char DATE_SEPARATOR = '-';
     public static final char TIME_SEPARATOR = ':';
     public static final char SEPARATOR_UPPER = 'T';
@@ -51,6 +50,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
     public static final char FRACTION_SEPARATOR = '.';
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
+    public static final int MAX_FRACTION_DIGITS = 9;
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
 
     private EthloITU()
@@ -58,12 +58,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
     }
 
-    public static EthloITU getInstance()
-    {
-        return instance;
-    }
-
-    public static String finish(char[] buf, int length, final TimezoneOffset tz)
+    public static String finish(final char[] buf, final int length, final TimezoneOffset tz)
     {
         int tzLen = 0;
         if (tz != null)
@@ -73,7 +68,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return new String(buf, 0, length + tzLen);
     }
 
-    private static int writeTz(char[] buf, int start, TimezoneOffset tz)
+    private static int writeTz(final char[] buf, final int start, final TimezoneOffset tz)
     {
         if (tz.equals(TimezoneOffset.UTC))
         {
@@ -90,7 +85,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private static DateTime handleTime(ParseConfig parseConfig, String chars, int year, int month, int day, int hour, int minute)
+    private static DateTime handleTime(final ParseConfig parseConfig, final String chars, final int year, final int month, final int day, final int hour, final int minute)
     {
         switch (chars.charAt(16))
         {
@@ -120,22 +115,20 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
         if (chars.charAt(offset) != expected)
         {
-            throw new DateTimeParseException("Expected character " + expected
-                    + " at position " + (offset + 1) + ": " + chars, chars, offset);
+            throw new DateTimeParseException("Expected character " + expected + " at position " + (offset + 1) + ": " + chars, chars, offset);
         }
     }
 
-    private static void assertAllowedDateTimeSeparator(String chars, final ParseConfig config)
+    private static void assertAllowedDateTimeSeparator(final String chars, final ParseConfig config)
     {
         final char needle = chars.charAt(10);
         if (!config.isDateTimeSeparator(needle))
         {
-            throw new DateTimeParseException("Expected character " + Arrays.toString(config.getDateTimeSeparators())
-                    + " at position " + (10 + 1) + ": " + chars, chars, 10);
+            throw new DateTimeParseException("Expected character " + Arrays.toString(config.getDateTimeSeparators()) + " at position " + (10 + 1) + ": " + chars, chars, 10);
         }
     }
 
-    private static TimezoneOffset parseTimezone(ParseConfig parseConfig, String chars, int offset)
+    private static TimezoneOffset parseTimezone(final ParseConfig parseConfig, final String chars, final int offset)
     {
         if (offset >= chars.length())
         {
@@ -185,7 +178,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return TimezoneOffset.ofHoursMinutes(hours, minutes);
     }
 
-    private static void assertNoMoreChars(String chars, int lastUsed)
+    private static void assertNoMoreChars(final String chars, final int lastUsed)
     {
         if (chars.length() > lastUsed + 1)
         {
@@ -193,7 +186,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private static DateTime parse(String chars, ParseConfig parseConfig)
+    public static DateTime parseLenient(final String chars, final ParseConfig parseConfig)
     {
         if (chars == null)
         {
@@ -326,31 +319,31 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
 
         if (fractionDigits > MAX_FRACTION_DIGITS)
         {
-            throw new DateTimeParseException("Too many fraction digits: " + chars, chars, idx);
+            throw new DateTimeParseException("Maximum supported number of fraction digits in second is 9, got " + fractionDigits + ": " + chars, chars, idx);
         }
     }
 
-    @Override
-    public String formatUtc(OffsetDateTime date, int fractionDigits)
+    public static String formatUtc(OffsetDateTime date, int fractionDigits)
     {
         return doFormat(date, ZoneOffset.UTC, Field.SECOND, fractionDigits);
     }
 
-    @Override
-    public String formatUtc(OffsetDateTime date, Field lastIncluded)
+    public static String formatUtc(OffsetDateTime date, Field lastIncluded)
     {
         return doFormat(date, ZoneOffset.UTC, lastIncluded, 0);
     }
 
-    @Override
-    public String format(OffsetDateTime date, ZoneOffset adjustTo, final int fractionDigits)
+    public static String format(OffsetDateTime date, ZoneOffset adjustTo, final int fractionDigits)
     {
         return doFormat(date, adjustTo, Field.NANO, fractionDigits);
     }
 
-    private String doFormat(OffsetDateTime date, ZoneOffset adjustTo, Field lastIncluded, int fractionDigits)
+    private static String doFormat(OffsetDateTime date, ZoneOffset adjustTo, Field lastIncluded, int fractionDigits)
     {
-        assertMaxFractionDigits(fractionDigits);
+        if (fractionDigits > MAX_FRACTION_DIGITS)
+        {
+            throw new DateTimeFormatException("Maximum supported number of fraction digits in second is 9, got " + fractionDigits);
+        }
 
         OffsetDateTime adjusted = date;
         if (!date.getOffset().equals(adjustTo))
@@ -402,22 +395,21 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return finish(buffer, 19, tz);
     }
 
-    private boolean handleDatePart(final Field lastIncluded, final char[] buffer, final int value, final int offset, final int length, final Field field)
+    private static boolean handleDatePart(final Field lastIncluded, final char[] buffer, final int value, final int offset, final int length, final Field field)
     {
         LimitedCharArrayIntegerUtil.toString(value, buffer, offset, length);
         return lastIncluded == field;
     }
 
-    private void addFractions(char[] buf, int fractionDigits, int nano)
+    private static void addFractions(char[] buf, int fractionDigits, int nano)
     {
         final double d = widths[fractionDigits - 1];
         LimitedCharArrayIntegerUtil.toString((int) (nano / d), buf, 20, fractionDigits);
     }
 
-    @Override
-    public OffsetDateTime parseDateTime(final String chars)
+    public static OffsetDateTime parseDateTime(final String chars)
     {
-        final DateTime dateTime = parse(chars, ParseConfig.DEFAULT);
+        final DateTime dateTime = parseLenient(chars, ParseConfig.DEFAULT);
         if (dateTime.includesGranularity(Field.SECOND))
         {
             return dateTime.toOffsetDatetime();
@@ -425,41 +417,5 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         final Field field = dateTime.getMostGranularField();
         final Field nextGranularity = Field.values()[field.ordinal() + 1];
         throw new DateTimeParseException("Unexpected end of input, missing field " + nextGranularity + ": " + chars, chars, field.getRequiredLength());
-    }
-
-    @Override
-    public String formatUtcMilli(OffsetDateTime date)
-    {
-        return formatUtc(date, 3);
-    }
-
-    @Override
-    public String formatUtcMicro(OffsetDateTime date)
-    {
-        return formatUtc(date, 6);
-    }
-
-    @Override
-    public String formatUtcNano(OffsetDateTime date)
-    {
-        return formatUtc(date, 9);
-    }
-
-    @Override
-    public String formatUtc(OffsetDateTime date)
-    {
-        return formatUtc(date, 0);
-    }
-
-    @Override
-    public DateTime parseLenient(String chars)
-    {
-        return parse(chars, ParseConfig.DEFAULT);
-    }
-
-    @Override
-    public DateTime parseLenient(String chars, ParseConfig config)
-    {
-        return parse(chars, config);
     }
 }
