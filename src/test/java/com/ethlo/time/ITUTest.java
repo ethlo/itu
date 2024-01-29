@@ -415,4 +415,17 @@ public class ITUTest
         assertThat(pos.getIndex()).isEqualTo(30);
         assertThat(pos.getErrorIndex()).isEqualTo(-1);
     }
+
+    @Test
+    void testParsePositionSubsequent()
+    {
+        final ParsePosition pos = new ParsePosition(4);
+        final String input = "abc,2004-11-21T00:00Z1999-11-22T11:22+05:00,some-other-data";
+        ITU.parseDateTime(input, pos);
+        assertThat(pos.getIndex()).isEqualTo(21);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+        ITU.parseDateTime(input, pos);
+        assertThat(pos.getIndex()).isEqualTo(43);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+    }
 }
