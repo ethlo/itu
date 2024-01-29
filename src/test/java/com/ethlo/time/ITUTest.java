@@ -370,4 +370,62 @@ public class ITUTest
         assertThat(pos.getIndex()).isEqualTo(10);
         assertThat(pos.getErrorIndex()).isEqualTo(10);
     }
+
+    @Test
+    void testParsePositionNotZeroDateTimeValidWithMillis()
+    {
+        final ParsePosition pos = new ParsePosition(8);
+        ITU.parseDateTime("1234567,1999-11-22T11:22:17.191Z,some-other-data", pos);
+        assertThat(pos.getIndex()).isEqualTo(32);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+    }
+
+    @Test
+    void testParsePositionNotZeroDateTimeValidZeroOffsetWithMillis()
+    {
+        final ParsePosition pos = new ParsePosition(8);
+        ITU.parseDateTime("1234567,1999-11-22T11:22:17.191+00:00,some-other-data", pos);
+        assertThat(pos.getIndex()).isEqualTo(37);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+    }
+
+    @Test
+    void testParsePositionNotZeroDateTimeValidNonZuluOffsetWithMillis()
+    {
+        final ParsePosition pos = new ParsePosition(8);
+        ITU.parseDateTime("1234567,1999-11-22T11:22:17.191+05:00,some-other-data", pos);
+        assertThat(pos.getIndex()).isEqualTo(37);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+    }
+
+    @Test
+    void testParsePositionNotZeroDateTimeValidNonZuluOffsetWithSecond()
+    {
+        final ParsePosition pos = new ParsePosition(8);
+        ITU.parseDateTime("1234567,1999-11-22T11:22:17+05:00,some-other-data", pos);
+        assertThat(pos.getIndex()).isEqualTo(33);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+    }
+
+    @Test
+    void testParsePositionNotZeroDateTimeValidNonZuluOffsetWithMinute()
+    {
+        final ParsePosition pos = new ParsePosition(8);
+        ITU.parseDateTime("1234567,1999-11-22T11:22+05:00,some-other-data", pos);
+        assertThat(pos.getIndex()).isEqualTo(30);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+    }
+
+    @Test
+    void testParsePositionSubsequent()
+    {
+        final ParsePosition pos = new ParsePosition(4);
+        final String input = "abc,2004-11-21T00:00Z1999-11-22T11:22+05:00,some-other-data";
+        ITU.parseDateTime(input, pos);
+        assertThat(pos.getIndex()).isEqualTo(21);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+        ITU.parseDateTime(input, pos);
+        assertThat(pos.getIndex()).isEqualTo(43);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+    }
 }

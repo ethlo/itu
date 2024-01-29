@@ -64,7 +64,14 @@ public class DateTime implements TemporalAccessor
     private final TimezoneOffset offset;
     private final int fractionDigits;
 
+    private final int charLength;
+
     public DateTime(final Field field, final int year, final int month, final int day, final int hour, final int minute, final int second, final int nano, final TimezoneOffset offset, final int fractionDigits)
+    {
+        this(field, year, month, day, hour, minute, second, nano, offset, fractionDigits, -1);
+    }
+
+    public DateTime(final Field field, final int year, final int month, final int day, final int hour, final int minute, final int second, final int nano, final TimezoneOffset offset, final int fractionDigits, int charLength)
     {
         this.field = field;
         this.year = year;
@@ -78,6 +85,7 @@ public class DateTime implements TemporalAccessor
         this.fractionDigits = fractionDigits;
         leapSecondCheck(year, month, day, hour, minute, second, nano, offset);
         validated();
+        this.charLength = charLength;
     }
 
     /**
@@ -568,5 +576,10 @@ public class DateTime implements TemporalAccessor
         {
             throw new DateTimeException("Invalid value for SecondOfMinute (valid values 0 - 59): " + second);
         }
+    }
+
+    public int getParseLength()
+    {
+        return charLength;
     }
 }
