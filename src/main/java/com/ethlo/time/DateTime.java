@@ -560,6 +560,7 @@ public class DateTime implements TemporalAccessor
     {
         if (field.ordinal() > Field.DAY.ordinal())
         {
+            //noinspection ResultOfMethodCallIgnored
             LocalDate.of(year, month, day);
         }
 

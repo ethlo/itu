@@ -30,6 +30,6 @@ class ParseConfigTest
     void testParseConfigInvalid1()
     {
         assertThrows(IllegalArgumentException.class, () -> ParseConfig.DEFAULT.withDateTimeSeparators(null));
-        assertThrows(IllegalArgumentException.class, () -> ParseConfig.DEFAULT.withDateTimeSeparators());
+        assertThrows(IllegalArgumentException.class, () -> ParseConfig.DEFAULT.withDateTimeSeparators(new char[]{}));
     }
 }
