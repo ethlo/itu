@@ -85,24 +85,25 @@ public class EthloITU
         }
     }
 
-    private static DateTime handleTime(final ParseConfig parseConfig, final String chars, final int year, final int month, final int day, final int hour, final int minute)
+    private static DateTime handleTime(final int offset, final ParseConfig parseConfig, final String chars, final int year, final int month, final int day, final int hour, final int minute)
     {
-        switch (chars.charAt(16))
+        switch (chars.charAt(offset + 16))
         {
             case TIME_SEPARATOR:
                 // We have seconds
-                return handleTimeResolution(parseConfig, year, month, day, hour, minute, chars);
+                return handleTimeResolution(offset, parseConfig, year, month, day, hour, minute, chars);
 
             // We look for time-zone information
             case PLUS:
             case MINUS:
             case ZULU_UPPER:
             case ZULU_LOWER:
-                final TimezoneOffset zoneOffset = parseTimezone(parseConfig, chars, 16);
-                return DateTime.of(year, month, day, hour, minute, zoneOffset);
+                final TimezoneOffset zoneOffset = parseTimezone(offset, parseConfig, chars, offset + 16);
+                final int charLength = Field.MINUTE.getRequiredLength() + (zoneOffset != null ? zoneOffset.getRequiredLength() : 0);
+                return new DateTime(Field.MINUTE, year, month, day, hour, minute, 0, 0, zoneOffset, 0, charLength);
 
             default:
-                throw raiseUnexpectedCharacter(chars, 16);
+                throw raiseUnexpectedCharacter(chars, offset + 16);
         }
     }
 
@@ -119,46 +120,43 @@ public class EthloITU
         }
     }
 
-    private static void assertAllowedDateTimeSeparator(final String chars, final ParseConfig config)
+    private static void assertAllowedDateTimeSeparator(final int offset, final String chars, final ParseConfig config)
     {
-        final char needle = chars.charAt(10);
+        final char needle = chars.charAt(offset + 10);
         if (!config.isDateTimeSeparator(needle))
         {
-            throw new DateTimeParseException("Expected character " + Arrays.toString(config.getDateTimeSeparators()) + " at position " + (10 + 1) + ": " + chars, chars, 10);
+            throw new DateTimeParseException("Expected character " + Arrays.toString(config.getDateTimeSeparators()) + " at position " + (offset + 10 + 1) + ": " + chars, chars, offset + 10);
         }
     }
 
-    private static TimezoneOffset parseTimezone(final ParseConfig parseConfig, final String chars, final int offset)
+    private static TimezoneOffset parseTimezone(int offset, final ParseConfig parseConfig, final String chars, final int idx)
     {
-        if (offset >= chars.length())
+        if (idx >= chars.length())
         {
             return null;
         }
         final int len = chars.length();
-        final int left = len - offset;
-        final char c = chars.charAt(offset);
+        final int left = len - idx;
+        final char c = chars.charAt(idx);
         if (c == ZULU_UPPER || c == ZULU_LOWER)
         {
-            if (parseConfig.isFailOnTrailingJunk())
-            {
-                assertNoMoreChars(chars, offset);
-            }
+            assertNoMoreChars(offset, parseConfig, chars, idx);
             return TimezoneOffset.UTC;
         }
 
-        final char sign = chars.charAt(offset);
+        final char sign = chars.charAt(idx);
         if (sign != PLUS && sign != MINUS)
         {
-            raiseUnexpectedCharacter(chars, offset);
+            raiseUnexpectedCharacter(chars, idx);
         }
 
         if (left < 6)
         {
-            throw new DateTimeParseException("Invalid timezone offset: " + chars, chars, offset);
+            throw new DateTimeParseException("Invalid timezone offset: " + chars, chars, idx);
         }
 
-        int hours = parsePositiveInt(chars, offset + 1, offset + 3);
-        int minutes = parsePositiveInt(chars, offset + 4, offset + 4 + 2);
+        int hours = parsePositiveInt(chars, idx + 1, idx + 3);
+        int minutes = parsePositiveInt(chars, idx + 4, idx + 4 + 2);
         if (sign == MINUS)
         {
             hours = -hours;
@@ -166,67 +164,66 @@ public class EthloITU
 
             if (hours == 0 && minutes == 0)
             {
-                throw new DateTimeParseException("Unknown 'Local Offset Convention' date-time not allowed", chars, offset);
+                throw new DateTimeParseException("Unknown 'Local Offset Convention' date-time not allowed", chars, idx);
             }
         }
 
-        if (parseConfig.isFailOnTrailingJunk())
-        {
-            assertNoMoreChars(chars, offset + 6);
-        }
-
+        assertNoMoreChars(offset, parseConfig, chars, idx + 6);
         return TimezoneOffset.ofHoursMinutes(hours, minutes);
     }
 
-    private static void assertNoMoreChars(final String chars, final int lastUsed)
+    private static void assertNoMoreChars(final int offset, final ParseConfig parseConfig, final String chars, final int lastUsed)
     {
-        if (chars.length() > lastUsed + 1)
+        if (parseConfig.isFailOnTrailingJunk() && offset == 0)
         {
-            throw new DateTimeParseException("Trailing junk data after position " + (lastUsed + 2) + ": " + chars, chars, lastUsed + 1);
+            if (chars.length() > lastUsed + 1)
+            {
+                throw new DateTimeParseException("Trailing junk data after position " + (lastUsed + 2) + ": " + chars, chars, lastUsed + 1);
+            }
         }
     }
 
-    public static DateTime parseLenient(final String chars, final ParseConfig parseConfig)
+    public static DateTime parseLenient(final String chars, final ParseConfig parseConfig, int offset)
     {
         if (chars == null)
         {
             throw new NullPointerException("text cannot be null");
         }
 
-        final int len = chars.length();
+        final int len = chars.length() - offset;
 
         // Date portion
 
         // YEAR
-        final int years = parsePositiveInt(chars, 0, 4);
+        final int years = parsePositiveInt(chars, offset, offset + 4);
         if (4 == len)
         {
             return DateTime.ofYear(years);
         }
 
         // MONTH
-        assertPositionContains(Field.MONTH, chars, 4, DATE_SEPARATOR);
-        final int months = parsePositiveInt(chars, 5, 7);
+        assertPositionContains(Field.MONTH, chars, offset + 4, DATE_SEPARATOR);
+        final int months = parsePositiveInt(chars, offset + 5, offset + 7);
         if (7 == len)
         {
             return DateTime.ofYearMonth(years, months);
         }
 
         // DAY
-        assertPositionContains(Field.DAY, chars, 7, DATE_SEPARATOR);
-        final int days = parsePositiveInt(chars, 8, 10);
+        assertPositionContains(Field.DAY, chars, offset + 7, DATE_SEPARATOR);
+        final int days = parsePositiveInt(chars, offset + 8, offset + 10);
         if (10 == len)
         {
             return DateTime.ofDate(years, months, days);
         }
 
         // HOURS
-        assertAllowedDateTimeSeparator(chars, parseConfig);
-        final int hours = parsePositiveInt(chars, 11, 13);
+        assertAllowedDateTimeSeparator(offset, chars, parseConfig);
+        final int hours = parsePositiveInt(chars, offset + 11, offset + 13);
 
         // MINUTES
-        assertPositionContains(Field.MINUTE, chars, 13, TIME_SEPARATOR);
-        final int minutes = parsePositiveInt(chars, 14, 16);
+        assertPositionContains(Field.MINUTE, chars, offset + 13, TIME_SEPARATOR);
+        final int minutes = parsePositiveInt(chars, offset + 14, offset + 16);
         if (len == 16)
         {
             // Have only minutes
@@ -234,54 +231,57 @@ public class EthloITU
         }
 
         // SECONDS or TIMEZONE
-        return handleTime(parseConfig, chars, years, months, days, hours, minutes);
+        return handleTime(offset, parseConfig, chars, years, months, days, hours, minutes);
     }
 
-    private static DateTime handleTimeResolution(ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars)
+    private static DateTime handleTimeResolution(final int offset, ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars)
     {
-        final int length = chars.length();
+        final int length = chars.length() - offset;
         if (length > 19)
         {
-            final char c = chars.charAt(19);
+            final char c = chars.charAt(offset + 19);
             if (parseConfig.isFractionSeparator(c))
             {
-                return handleFractionalSeconds(parseConfig, year, month, day, hour, minute, chars, length);
+                return handleFractionalSeconds(offset, parseConfig, year, month, day, hour, minute, chars);
             }
             else if (c == ZULU_UPPER || c == ZULU_LOWER)
             {
-                final int second = parsePositiveInt(chars, 17, 19);
                 final TimezoneOffset timezoneOffset = TimezoneOffset.UTC;
-                return DateTime.of(year, month, day, hour, minute, second, timezoneOffset);
+                return handleSecondResolution(offset, year, month, day, hour, minute, chars, timezoneOffset);
             }
             else if (c == PLUS || c == MINUS)
             {
-                final int seconds = parsePositiveInt(chars, 17, 19);
-                final TimezoneOffset timezoneOffset = parseTimezone(parseConfig, chars, 19);
-                return DateTime.of(year, month, day, hour, minute, seconds, timezoneOffset);
+                final TimezoneOffset timezoneOffset = parseTimezone(offset, parseConfig, chars, offset + 19);
+                return handleSecondResolution(offset, year, month, day, hour, minute, chars, timezoneOffset);
             }
             else
             {
-                throw raiseUnexpectedCharacter(chars, 19);
+                throw raiseUnexpectedCharacter(chars, offset + 19);
             }
         }
-        else if (length == 19)
+        else if (length == offset + 19)
         {
-            final int seconds = parsePositiveInt(chars, 17, 19);
+            final int seconds = parsePositiveInt(chars, offset + 17, offset + 19);
             return DateTime.of(year, month, day, hour, minute, seconds, null);
         }
 
-        throw raiseUnexpectedEndOfText(chars, 16);
+        throw raiseUnexpectedEndOfText(chars, offset + 16);
     }
 
-    private static DateTime handleFractionalSeconds(ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars, int length)
+    private static DateTime handleSecondResolution(int offset, int year, int month, int day, int hour, int minute, String chars, TimezoneOffset timezoneOffset)
     {
-        final int second = parsePositiveInt(chars, 17, 19);
+        final int seconds = parsePositiveInt(chars, offset + 17, offset + 19);
+        final int charLength = Field.SECOND.getRequiredLength() + (timezoneOffset != null ? timezoneOffset.getRequiredLength() : 0);
+        return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, timezoneOffset, 0, charLength);
+    }
 
+    private static DateTime handleFractionalSeconds(int offset, ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars)
+    {
         // We have fractional seconds
-        int idx = 20;
+        int idx = offset + 20;
         int fractionDigits = 0;
-        int fractions = 0;
-        while (idx < length)
+        int nanos = 0;
+        while (idx < chars.length())
         {
             final char c = chars.charAt(idx);
             if (c < ZERO || c > DIGIT_9)
@@ -290,24 +290,26 @@ public class EthloITU
             }
             else
             {
-                fractionDigits = idx - 19;
-                fractions = fractions * 10 + (c - ZERO);
+                fractionDigits++;
+                nanos = nanos * 10 + (c - ZERO);
                 idx++;
             }
         }
 
-        assertFractionDigits(chars, fractionDigits, idx - 1);
+        assertFractionDigits(chars, fractionDigits, offset + (idx - 1));
 
         // Scale to nanos
         int pos = fractionDigits;
         while (pos < 9)
         {
-            fractions *= 10;
+            nanos *= 10;
             pos++;
         }
 
-        final TimezoneOffset timezoneOffset = parseTimezone(parseConfig, chars, idx);
-        return DateTime.of(year, month, day, hour, minute, second, fractions, timezoneOffset, fractionDigits);
+        final TimezoneOffset timezoneOffset = parseTimezone(offset, parseConfig, chars, idx);
+        final int charLength = (idx + (timezoneOffset != null ? timezoneOffset.getRequiredLength() : 0)) - offset;
+        final int second = parsePositiveInt(chars, offset + 17, offset + 19);
+        return DateTime.ofNanos(year, month, day, hour, minute, second, nanos, timezoneOffset, fractionDigits, charLength);
     }
 
     private static void assertFractionDigits(String chars, int fractionDigits, int idx)
@@ -407,9 +409,9 @@ public class EthloITU
         LimitedCharArrayIntegerUtil.toString((int) (nano / d), buf, 20, fractionDigits);
     }
 
-    public static OffsetDateTime parseDateTime(final String chars)
+    public static OffsetDateTime parseDateTime(final String chars, int offset)
     {
-        final DateTime dateTime = parseLenient(chars, ParseConfig.DEFAULT);
+        final DateTime dateTime = parseLenient(chars, ParseConfig.DEFAULT, offset);
         if (dateTime.includesGranularity(Field.SECOND))
         {
             return dateTime.toOffsetDatetime();

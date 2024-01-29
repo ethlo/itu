@@ -48,16 +48,17 @@ public class ITU
      */
     public static OffsetDateTime parseDateTime(String text)
     {
-        return EthloITU.parseDateTime(text);
+        return EthloITU.parseDateTime(text, 0);
     }
 
     public static OffsetDateTime parseDateTime(String text, ParsePosition position)
     {
         try
         {
-            final OffsetDateTime result = EthloITU.parseDateTime(text);
-            position.setIndex(text.length());
-            return result;
+            int offset = position.getIndex();
+            final DateTime result = EthloITU.parseLenient(text, ParseConfig.DEFAULT, position.getIndex());
+            position.setIndex(offset + result.getParseLength());
+            return result.toOffsetDatetime();
         }
         catch (DateTimeParseException exc)
         {
@@ -76,7 +77,7 @@ public class ITU
      */
     public static DateTime parseLenient(String text)
     {
-        return EthloITU.parseLenient(text, ParseConfig.DEFAULT);
+        return EthloITU.parseLenient(text, ParseConfig.DEFAULT, 0);
     }
 
     public static DateTime parseLenient(String text, ParsePosition position)
@@ -86,14 +87,14 @@ public class ITU
 
     public static DateTime parseLenient(String text, ParseConfig parseConfig)
     {
-        return EthloITU.parseLenient(text, parseConfig);
+        return EthloITU.parseLenient(text, parseConfig, 0);
     }
 
     public static DateTime parseLenient(String text, ParseConfig parseConfig, ParsePosition position)
     {
         try
         {
-            final DateTime result = EthloITU.parseLenient(text, parseConfig);
+            final DateTime result = EthloITU.parseLenient(text, parseConfig, position.getIndex());
             position.setIndex(text.length());
             return result;
         }
@@ -223,7 +224,7 @@ public class ITU
      */
     public static void parse(final String text, final TemporalConsumer temporalConsumer)
     {
-        final DateTime dateTime = EthloITU.parseLenient(text, ParseConfig.DEFAULT);
+        final DateTime dateTime = EthloITU.parseLenient(text, ParseConfig.DEFAULT, 0);
         if (dateTime.includesGranularity(Field.MINUTE))
         {
             if (dateTime.getOffset().isPresent())
@@ -257,7 +258,7 @@ public class ITU
      */
     public static <T> T parse(String text, TemporalHandler<T> temporalHandler)
     {
-        final DateTime dateTime = EthloITU.parseLenient(text, ParseConfig.DEFAULT);
+        final DateTime dateTime = EthloITU.parseLenient(text, ParseConfig.DEFAULT, 0);
         if (dateTime.includesGranularity(Field.MINUTE))
         {
             if (dateTime.getOffset().isPresent())

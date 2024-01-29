@@ -102,4 +102,9 @@ public class TimezoneOffset
     {
         return "TimezoneOffset{" + "hours=" + hours + ", minutes=" + minutes + '}';
     }
+
+    public int getRequiredLength()
+    {
+        return this == UTC ? 1 : 6;
+    }
 }
