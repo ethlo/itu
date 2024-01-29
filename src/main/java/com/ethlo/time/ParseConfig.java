@@ -20,6 +20,12 @@ package com.ethlo.time;
  * #L%
  */
 
+import static com.ethlo.time.internal.EthloITU.FRACTION_SEPARATOR;
+import static com.ethlo.time.internal.EthloITU.SEPARATOR_LOWER;
+import static com.ethlo.time.internal.EthloITU.SEPARATOR_SPACE;
+import static com.ethlo.time.internal.EthloITU.SEPARATOR_UPPER;
+
+import java.util.Arrays;
 import java.util.Optional;
 
 public class ParseConfig
@@ -32,8 +38,8 @@ public class ParseConfig
 
     protected ParseConfig(char[] allowedDateTimeSeparators, char[] allowedFractionSeparators, boolean failOnTrailingJunk)
     {
-        this.allowedDateTimeSeparators = Optional.ofNullable(allowedDateTimeSeparators).orElse(new char[]{'T', 't', ' '});
-        this.allowedFractionSeparators = Optional.ofNullable(allowedFractionSeparators).orElse(new char[]{'.'});
+        this.allowedDateTimeSeparators = Optional.ofNullable(allowedDateTimeSeparators).orElse(new char[]{SEPARATOR_UPPER, SEPARATOR_LOWER, SEPARATOR_SPACE});
+        this.allowedFractionSeparators = Optional.ofNullable(allowedFractionSeparators).orElse(new char[]{FRACTION_SEPARATOR});
         this.failOnTrailingJunk = failOnTrailingJunk;
     }
 
@@ -98,5 +104,15 @@ public class ParseConfig
             }
         }
         return false;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "ParseConfig{" +
+                "dateTimeSeparators=" + Arrays.toString(allowedDateTimeSeparators) +
+                ", fractionSeparators=" + Arrays.toString(allowedFractionSeparators) +
+                ", failOnTrailingJunk=" + failOnTrailingJunk +
+                '}';
     }
 }

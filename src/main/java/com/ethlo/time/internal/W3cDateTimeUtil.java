@@ -22,7 +22,6 @@ package com.ethlo.time.internal;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.temporal.Temporal;
 
 import com.ethlo.time.DateTime;
 import com.ethlo.time.Field;
@@ -88,9 +87,9 @@ public interface W3cDateTimeUtil
      * @param s The date/date-time to parse
      * @return The parsed date/date-time
      */
-    DateTime parse(String s);
+    DateTime parseLenient(String chars);
 
     String formatUtc(OffsetDateTime parse, Field lastIncluded);
 
-    DateTime parse(String chars, ParseConfig config);
+    DateTime parseLenient(String chars, ParseConfig config);
 }

@@ -85,7 +85,8 @@ public abstract class LeapSecondTest extends AbstractTest
     @Test
     void testParseLenientPotentialLeapSecond()
     {
-        ITU.parseLenient("2011-10-02T22:00:60.003");
+        final DateTimeException exc = assertThrows(DateTimeException.class, () -> ITU.parseLenient("2011-10-02T22:00:60.003"));
+        assertThat(exc).hasMessage("Invalid value for SecondOfMinute (valid values 0 - 59): 60");
     }
 
     private LeapSecondException getLeapSecondsException(final String dateTime)

@@ -76,13 +76,13 @@ public class ITUTest
     @Test
     void formatDateTimeWithLimitedGranularity()
     {
-        assertThat(DateTime.of(2012, 11, 31, 22, 50, TimezoneOffset.UTC).toString(Field.MINUTE)).isEqualTo("2012-11-31T22:50Z");
+        assertThat(DateTime.of(2012, 10, 31, 22, 50, TimezoneOffset.UTC).toString(Field.MINUTE)).isEqualTo("2012-10-31T22:50Z");
     }
 
     @Test
     void formatDateTimeWithFullGranularity()
     {
-        assertThat(DateTime.of(2012, 11, 31, 22, 50, 46, 1234567, TimezoneOffset.UTC, 7).toString()).isEqualTo("2012-11-31T22:50:46.1234567Z");
+        assertThat(DateTime.of(2012, 11, 30, 22, 50, 46, 1234567, TimezoneOffset.UTC, 7).toString()).isEqualTo("2012-11-30T22:50:46.1234567Z");
     }
 
     @Test

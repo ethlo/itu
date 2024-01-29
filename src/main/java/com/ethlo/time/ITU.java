@@ -78,7 +78,7 @@ public class ITU
      */
     public static DateTime parseLenient(String text)
     {
-        return delegate.parse(text);
+        return delegate.parseLenient(text);
     }
 
     public static DateTime parseLenient(String text, ParsePosition position)
@@ -88,14 +88,14 @@ public class ITU
 
     public static DateTime parseLenient(String text, ParseConfig parseConfig)
     {
-        return delegate.parse(text, parseConfig);
+        return delegate.parseLenient(text, parseConfig);
     }
 
     public static DateTime parseLenient(String text, ParseConfig parseConfig, ParsePosition position)
     {
         try
         {
-            final DateTime result = delegate.parse(text, parseConfig);
+            final DateTime result = delegate.parseLenient(text, parseConfig);
             position.setIndex(text.length());
             return result;
         }
@@ -225,7 +225,7 @@ public class ITU
      */
     public static void parse(final String text, final TemporalConsumer temporalConsumer)
     {
-        final DateTime dateTime = delegate.parse(text);
+        final DateTime dateTime = delegate.parseLenient(text);
         if (dateTime.includesGranularity(Field.MINUTE))
         {
             if (dateTime.getOffset().isPresent())
@@ -260,7 +260,7 @@ public class ITU
 
     public static <T> T parse(String text, TemporalHandler<T> temporalHandler)
     {
-        final DateTime dateTime = delegate.parse(text);
+        final DateTime dateTime = delegate.parseLenient(text);
         if (dateTime.includesGranularity(Field.MINUTE))
         {
             if (dateTime.getOffset().isPresent())

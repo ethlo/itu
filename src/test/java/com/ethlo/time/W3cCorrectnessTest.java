@@ -72,7 +72,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseYear()
     {
-        final DateTime date = w3cDateUtil.parse("2012");
+        final DateTime date = w3cDateUtil.parseLenient("2012");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMostGranularField()).isEqualTo(Field.YEAR);
         assertThat(date.toYear()).isEqualTo(Year.of(2012));
@@ -81,22 +81,22 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseYearMonth()
     {
-        final DateTime date = w3cDateUtil.parse("2012-10");
+        final DateTime date = w3cDateUtil.parseLenient("2012-10");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getMostGranularField()).isEqualTo(Field.MONTH);
-        final YearMonth yearMonth = w3cDateUtil.parse("2012-10").toYearMonth();
+        final YearMonth yearMonth = w3cDateUtil.parseLenient("2012-10").toYearMonth();
         assertThat(yearMonth.getYear()).isEqualTo(2012);
         assertThat(yearMonth.getMonthValue()).isEqualTo(10);
 
-        assertThrows(DateTimeException.class, () -> w3cDateUtil.parse("2012").toYearMonth());
+        assertThrows(DateTimeException.class, () -> w3cDateUtil.parseLenient("2012").toYearMonth());
     }
 
     @Test
     public void testParseDate()
     {
         final String input = "2012-03-29";
-        final DateTime date = w3cDateUtil.parse(input);
+        final DateTime date = w3cDateUtil.parseLenient(input);
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(3);
         assertThat(date.getDayOfMonth()).isEqualTo(29);
@@ -108,7 +108,7 @@ public class W3cCorrectnessTest extends AbstractTest
     public void testParseDateTimeNanos()
     {
         final String input = "2012-10-27T17:22:39.123456789+13:30";
-        final DateTime date = w3cDateUtil.parse(input);
+        final DateTime date = w3cDateUtil.parseLenient(input);
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -127,7 +127,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseDateTimeWithoutFractions()
     {
-        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22:39+13:30");
+        final DateTime date = w3cDateUtil.parseLenient("2012-10-27T17:22:39+13:30");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -162,7 +162,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseDateTimeWithoutSeconds()
     {
-        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22Z");
+        final DateTime date = w3cDateUtil.parseLenient("2012-10-27T17:22Z");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -175,7 +175,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseDateTimeWithoutSecondsAndTimezone()
     {
-        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22");
+        final DateTime date = w3cDateUtil.parseLenient("2012-10-27T17:22");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -185,7 +185,7 @@ public class W3cCorrectnessTest extends AbstractTest
         assertThat(date.getOffset()).isEmpty();
 
         final DateTimeException excOffsetDateTime = assertThrows(DateTimeException.class, date::toOffsetDatetime);
-        assertThat(excOffsetDateTime).hasMessage("No zone offset information found");
+        assertThat(excOffsetDateTime).hasMessage("No timezone information: 2012-10-27T17:22");
 
         final LocalDateTime localDateTime = date.toLocalDatetime();
         assertThat(localDateTime.getYear()).isEqualTo(2012);
@@ -198,7 +198,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseDateTimeNoOffsetToLocalDateTime()
     {
-        final DateTime date = w3cDateUtil.parse("2012-10-27T17:22:39");
+        final DateTime date = w3cDateUtil.parseLenient("2012-10-27T17:22:39");
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonth()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -227,14 +227,14 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testToOffsetDateTimeWithoutGranularEnoughData()
     {
-        final DateTime dateTime = w3cDateUtil.parse("2012-10-27");
+        final DateTime dateTime = w3cDateUtil.parseLenient("2012-10-27");
         assertThrows(DateTimeException.class, dateTime::toOffsetDatetime);
     }
 
     @Test
     public void testParseLenientWithTimeToLocalDate()
     {
-        final LocalDate date = w3cDateUtil.parse("2012-10-27T17:22:39+10:00").toLocalDate();
+        final LocalDate date = w3cDateUtil.parseLenient("2012-10-27T17:22:39+10:00").toLocalDate();
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonthValue()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -243,7 +243,7 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseLenientToLocalDate()
     {
-        final LocalDate date = w3cDateUtil.parse("2012-10-27").toLocalDate();
+        final LocalDate date = w3cDateUtil.parseLenient("2012-10-27").toLocalDate();
         assertThat(date.getYear()).isEqualTo(2012);
         assertThat(date.getMonthValue()).isEqualTo(10);
         assertThat(date.getDayOfMonth()).isEqualTo(27);
@@ -252,13 +252,13 @@ public class W3cCorrectnessTest extends AbstractTest
     @Test
     public void testParseLenientToLocalDateNoDays()
     {
-        assertThrows(DateTimeException.class, () -> w3cDateUtil.parse("2012-10").toLocalDate());
+        assertThrows(DateTimeException.class, () -> w3cDateUtil.parseLenient("2012-10").toLocalDate());
     }
 
     @Test
     public void testParseBestEffort1DigitMinute()
     {
-        Assertions.assertThrows(DateTimeException.class, () -> w3cDateUtil.parse("2012-03-29T23:1"));
+        Assertions.assertThrows(DateTimeException.class, () -> w3cDateUtil.parseLenient("2012-03-29T23:1"));
     }
 
     @Test

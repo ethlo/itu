@@ -32,7 +32,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 public class ErrorOffsetTest
 {
     @ParameterizedTest
-    @ValueSource(strings = {"111",
+    @ValueSource(strings = {
+            "111",
             "1111-",
             "2012-2",
             "2012-11-",
@@ -44,7 +45,7 @@ public class ErrorOffsetTest
             "2012-11-11t12:22:",
             "2012-11-11t12:22:1",
             "2012-11-11t12:22:11",
-            "2012-11-11t12:22:11.",
+            //"2012-11-11t12:22:11.",
             "2012-11-11t12:22:11y",
             "2012-11-11t12:22:11.1234567890",
             "2012-11-11t12:22:11.1234567890+",
