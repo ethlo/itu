@@ -309,7 +309,7 @@ public class EthloITU
         final TimezoneOffset timezoneOffset = parseTimezone(offset, parseConfig, chars, idx);
         final int charLength = (idx + (timezoneOffset != null ? timezoneOffset.getRequiredLength() : 0)) - offset;
         final int second = parsePositiveInt(chars, offset + 17, offset + 19);
-        return DateTime.ofNanos(year, month, day, hour, minute, second, nanos, timezoneOffset, fractionDigits, charLength);
+        return new DateTime(Field.NANO, year, month, day, hour, minute, second, nanos, timezoneOffset, fractionDigits, charLength);
     }
 
     private static void assertFractionDigits(String chars, int fractionDigits, int idx)

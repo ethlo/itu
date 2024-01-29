@@ -210,11 +210,6 @@ public class DateTime implements TemporalAccessor
         }
     }
 
-    public static DateTime ofNanos(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset timezoneOffset, int fractionDigits, int charLength)
-    {
-        return new DateTime(fractionDigits > 0 ? Field.NANO : Field.SECOND, year, month, day, hour, minute, second, nanos, timezoneOffset, fractionDigits, charLength);
-    }
-
     /**
      * Returns if the specified field is part of this date/date-time
      *
