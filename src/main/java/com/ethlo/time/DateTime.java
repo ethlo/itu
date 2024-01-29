@@ -24,14 +24,17 @@ import static com.ethlo.time.internal.EthloITU.DATE_SEPARATOR;
 import static com.ethlo.time.internal.EthloITU.SEPARATOR_UPPER;
 import static com.ethlo.time.internal.EthloITU.TIME_SEPARATOR;
 import static com.ethlo.time.internal.EthloITU.finish;
+import static com.ethlo.time.internal.LeapSecondHandler.LEAP_SECOND_SECONDS;
 
 import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalField;
@@ -40,6 +43,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.ethlo.time.internal.DateTimeMath;
+import com.ethlo.time.internal.DefaultLeapSecondHandler;
+import com.ethlo.time.internal.LeapSecondHandler;
 import com.ethlo.time.internal.LimitedCharArrayIntegerUtil;
 
 /**
@@ -47,6 +52,7 @@ import com.ethlo.time.internal.LimitedCharArrayIntegerUtil;
  */
 public class DateTime implements TemporalAccessor
 {
+    private static final LeapSecondHandler leapSecondHandler = new DefaultLeapSecondHandler();
     private final Field field;
     private final int year;
     private final int month;
@@ -62,14 +68,16 @@ public class DateTime implements TemporalAccessor
     {
         this.field = field;
         this.year = year;
-        this.month = assertSize(month, 1, 12, Field.MONTH);
-        this.day = assertSize(day, 1, 31, Field.DAY);
-        this.hour = assertSize(hour, 0, 23, Field.HOUR);
-        this.minute = assertSize(minute, 0, 59, Field.MINUTE);
-        this.second = assertSize(second, 0, 60, Field.SECOND);
-        this.nano = assertSize(nano, 0, 999_999_999, Field.NANO);
+        this.month = month;
+        this.day = day;
+        this.hour = hour;
+        this.minute = minute;
+        this.second = second;
+        this.nano = nano;
         this.offset = offset;
         this.fractionDigits = fractionDigits;
+        leapSecondCheck(year, month, day, hour, minute, second, nano, offset);
+        validated();
     }
 
     /**
@@ -171,13 +179,27 @@ public class DateTime implements TemporalAccessor
         return DateTime.of(dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond(), dateTime.getNano(), TimezoneOffset.of(dateTime.getOffset()), 9);
     }
 
-    private int assertSize(int value, int min, int max, Field field)
+    private static void leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
     {
-        if (value > max)
+        if (second == LEAP_SECOND_SECONDS)
         {
-            throw new DateTimeException("Field " + field.name() + " out of bounds. Expected " + min + "-" + max + ", got " + value);
+            // Do not fall over trying to parse leap seconds
+            final YearMonth needle = YearMonth.of(year, month);
+            final boolean isValidLeapYearMonth = leapSecondHandler.isValidLeapSecondDate(needle);
+            if (isValidLeapYearMonth || needle.isAfter(leapSecondHandler.getLastKnownLeapSecond()))
+            {
+                final int utcHour = hour - offset.getTotalSeconds() / 3_600;
+                final int utcMinute = minute - (offset.getTotalSeconds() % 3_600) / 60;
+                if (((month == Month.DECEMBER.getValue() && day == 31) || (month == Month.JUNE.getValue() && day == 30))
+                        && utcHour == 23
+                        && utcMinute == 59)
+                {
+                    // Consider it a leap second
+                    final OffsetDateTime nearest = OffsetDateTime.of(year, month, day, hour, minute, 59, nanos, offset.toZoneOffset()).plusSeconds(1);
+                    throw new LeapSecondException(nearest, second, isValidLeapYearMonth);
+                }
+            }
         }
-        return value;
     }
 
     /**
@@ -280,7 +302,8 @@ public class DateTime implements TemporalAccessor
         {
             return OffsetDateTime.of(year, month, day, hour, minute, second, nano, offset.toZoneOffset());
         }
-        throw new DateTimeFormatException("No zone offset information found");
+        final String chars = toString();
+        throw new DateTimeParseException("No timezone information: " + chars, chars, chars.length());
     }
 
     /**
@@ -530,6 +553,20 @@ public class DateTime implements TemporalAccessor
         final long secsSinceMidnight = hour * 3600L + minute * 60L + second;
         final long daysInSeconds = DateTimeMath.daysFromCivil(year, month != 0 ? month : 1, day != 0 ? day : 1) * 86_400;
         final long tsOffset = offset != null ? offset.getTotalSeconds() : 0;
-        return daysInSeconds + secsSinceMidnight - tsOffset;
+        return (daysInSeconds + secsSinceMidnight) - tsOffset;
+    }
+
+    private void validated()
+    {
+        if (field.ordinal() > Field.DAY.ordinal())
+        {
+            //noinspection ResultOfMethodCallIgnored
+            LocalDate.of(year, month, day);
+        }
+
+        if (second > 59)
+        {
+            throw new DateTimeException("Invalid value for SecondOfMinute (valid values 0 - 59): " + second);
+        }
     }
 }

@@ -21,53 +21,44 @@ package com.ethlo.time.internal;
  */
 
 import static com.ethlo.time.internal.ErrorUtil.raiseMissingGranularity;
-import static com.ethlo.time.internal.ErrorUtil.raiseMissingTimeZone;
 import static com.ethlo.time.internal.ErrorUtil.raiseUnexpectedCharacter;
 import static com.ethlo.time.internal.ErrorUtil.raiseUnexpectedEndOfText;
-import static com.ethlo.time.internal.LeapSecondHandler.LEAP_SECOND_SECONDS;
 import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.DIGIT_9;
 import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.ZERO;
 import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.parsePositiveInt;
 
-import java.time.Month;
 import java.time.OffsetDateTime;
-import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 
 import com.ethlo.time.DateTime;
+import com.ethlo.time.DateTimeFormatException;
 import com.ethlo.time.Field;
-import com.ethlo.time.LeapSecondException;
 import com.ethlo.time.ParseConfig;
 import com.ethlo.time.TimezoneOffset;
 
-public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
+public class EthloITU
 {
-    private static final EthloITU instance = new EthloITU();
-
     public static final char DATE_SEPARATOR = '-';
     public static final char TIME_SEPARATOR = ':';
     public static final char SEPARATOR_UPPER = 'T';
+    public static final char SEPARATOR_LOWER = 't';
+    public static final char SEPARATOR_SPACE = ' ';
     private static final char PLUS = '+';
     private static final char MINUS = '-';
-    private static final char FRACTION_SEPARATOR = '.';
+    public static final char FRACTION_SEPARATOR = '.';
     private static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
+    public static final int MAX_FRACTION_DIGITS = 9;
     private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
-    private static final LeapSecondHandler leapSecondHandler = new DefaultLeapSecondHandler();
 
     private EthloITU()
     {
 
     }
 
-    public static EthloITU getInstance()
-    {
-        return instance;
-    }
-
-    public static String finish(char[] buf, int length, final TimezoneOffset tz)
+    public static String finish(final char[] buf, final int length, final TimezoneOffset tz)
     {
         int tzLen = 0;
         if (tz != null)
@@ -77,7 +68,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return new String(buf, 0, length + tzLen);
     }
 
-    private static int writeTz(char[] buf, int start, TimezoneOffset tz)
+    private static int writeTz(final char[] buf, final int start, final TimezoneOffset tz)
     {
         if (tz.equals(TimezoneOffset.UTC))
         {
@@ -94,57 +85,54 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private static Object handleTime(ParseConfig parseConfig, String chars, int year, int month, int day, int hour, int minute, final boolean raw)
+    private static DateTime handleTime(final ParseConfig parseConfig, final String chars, final int year, final int month, final int day, final int hour, final int minute)
     {
         switch (chars.charAt(16))
         {
-            // We have more granularity, keep going
             case TIME_SEPARATOR:
-                return handleTimeResolution(parseConfig, year, month, day, hour, minute, chars, raw);
+                // We have seconds
+                return handleTimeResolution(parseConfig, year, month, day, hour, minute, chars);
 
+            // We look for time-zone information
             case PLUS:
             case MINUS:
             case ZULU_UPPER:
             case ZULU_LOWER:
                 final TimezoneOffset zoneOffset = parseTimezone(parseConfig, chars, 16);
-                if (!raw)
-                {
-                    raiseMissingGranularity(Field.SECOND, chars, 16);
-                }
                 return DateTime.of(year, month, day, hour, minute, zoneOffset);
+
+            default:
+                throw raiseUnexpectedCharacter(chars, 16);
         }
-        throw raiseUnexpectedCharacter(chars, 16);
     }
 
-    private static void assertPositionContains(String chars, int offset, char expected)
+    private static void assertPositionContains(Field field, String chars, int offset, char expected)
     {
         if (offset >= chars.length())
         {
-            raiseMissingGranularity(Field.MINUTE, chars, offset);
+            raiseMissingGranularity(field, chars, offset);
         }
 
         if (chars.charAt(offset) != expected)
         {
-            throw new DateTimeParseException("Expected character " + expected
-                    + " at position " + (offset + 1) + ": " + chars, chars, offset);
+            throw new DateTimeParseException("Expected character " + expected + " at position " + (offset + 1) + ": " + chars, chars, offset);
         }
     }
 
-    private static void assertAllowedDateTimeSeparator(String chars, final ParseConfig config)
+    private static void assertAllowedDateTimeSeparator(final String chars, final ParseConfig config)
     {
         final char needle = chars.charAt(10);
         if (!config.isDateTimeSeparator(needle))
         {
-            throw new DateTimeParseException("Expected character " + Arrays.toString(config.getDateTimeSeparators())
-                    + " at position " + (10 + 1) + ": " + chars, chars, 10);
+            throw new DateTimeParseException("Expected character " + Arrays.toString(config.getDateTimeSeparators()) + " at position " + (10 + 1) + ": " + chars, chars, 10);
         }
     }
 
-    private static TimezoneOffset parseTimezone(ParseConfig parseConfig, String chars, int offset)
+    private static TimezoneOffset parseTimezone(final ParseConfig parseConfig, final String chars, final int offset)
     {
         if (offset >= chars.length())
         {
-            raiseMissingTimeZone(chars, offset);
+            return null;
         }
         final int len = chars.length();
         final int left = len - offset;
@@ -190,7 +178,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return TimezoneOffset.ofHoursMinutes(hours, minutes);
     }
 
-    private static void assertNoMoreChars(String chars, int lastUsed)
+    private static void assertNoMoreChars(final String chars, final int lastUsed)
     {
         if (chars.length() > lastUsed + 1)
         {
@@ -198,7 +186,7 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         }
     }
 
-    private static Object parse(String chars, ParseConfig parseConfig, boolean raw)
+    public static DateTime parseLenient(final String chars, final ParseConfig parseConfig)
     {
         if (chars == null)
         {
@@ -213,34 +201,22 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         final int years = parsePositiveInt(chars, 0, 4);
         if (4 == len)
         {
-            if (!raw)
-            {
-                throw raiseMissingGranularity(Field.MONTH, chars, 4);
-            }
             return DateTime.ofYear(years);
         }
 
         // MONTH
-        assertPositionContains(chars, 4, DATE_SEPARATOR);
+        assertPositionContains(Field.MONTH, chars, 4, DATE_SEPARATOR);
         final int months = parsePositiveInt(chars, 5, 7);
         if (7 == len)
         {
-            if (!raw)
-            {
-                throw raiseMissingGranularity(Field.DAY, chars, 7);
-            }
             return DateTime.ofYearMonth(years, months);
         }
 
         // DAY
-        assertPositionContains(chars, 7, DATE_SEPARATOR);
+        assertPositionContains(Field.DAY, chars, 7, DATE_SEPARATOR);
         final int days = parsePositiveInt(chars, 8, 10);
         if (10 == len)
         {
-            if (!raw)
-            {
-                throw raiseMissingGranularity(Field.HOUR, chars, 11);
-            }
             return DateTime.ofDate(years, months, days);
         }
 
@@ -249,172 +225,125 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         final int hours = parsePositiveInt(chars, 11, 13);
 
         // MINUTES
-        assertPositionContains(chars, 13, TIME_SEPARATOR);
+        assertPositionContains(Field.MINUTE, chars, 13, TIME_SEPARATOR);
         final int minutes = parsePositiveInt(chars, 14, 16);
-        if (len > 16)
+        if (len == 16)
         {
-            // SECONDS or TIMEZONE
-            return handleTime(parseConfig, chars, years, months, days, hours, minutes, raw);
-        }
-
-        // Have only minutes
-        if (raw)
-        {
+            // Have only minutes
             return DateTime.of(years, months, days, hours, minutes, null);
         }
-        throw raiseMissingGranularity(Field.SECOND, chars, 16);
+
+        // SECONDS or TIMEZONE
+        return handleTime(parseConfig, chars, years, months, days, hours, minutes);
     }
 
-    private static Object handleTimeResolution(ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars, boolean raw)
+    private static DateTime handleTimeResolution(ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars)
     {
-        // From here the specification is more lenient
         final int length = chars.length();
         if (length > 19)
         {
-            TimezoneOffset offset = null;
-            int fractions = 0;
-            int fractionDigits = 0;
-            char c = chars.charAt(19);
+            final char c = chars.charAt(19);
             if (parseConfig.isFractionSeparator(c))
             {
-                final int firstFractionPos = 20;
-                if (chars.length() < 21)
-                {
-                    raiseUnexpectedEndOfText(chars, firstFractionPos);
-                }
-
-                // We have fractional seconds
-                int idx = firstFractionPos;
-                boolean nonDigitFound = false;
-                do
-                {
-                    c = chars.charAt(idx);
-                    if (c < ZERO || c > DIGIT_9)
-                    {
-                        nonDigitFound = true;
-                        fractionDigits = idx - firstFractionPos;
-                        assertFractionDigits(chars, fractionDigits, idx);
-                        offset = parseTimezone(parseConfig, chars, idx);
-                    }
-                    else
-                    {
-                        fractionDigits = idx - 19;
-                        assertFractionDigits(chars, fractionDigits, idx);
-                        fractions = fractions * 10 + (c - ZERO);
-                        idx++;
-                    }
-                } while (idx < length && !nonDigitFound);
-
-                if (fractionDigits == 0)
-                {
-                    throw new DateTimeParseException("Must have at least 1 fraction digit: " + chars, chars, idx);
-                }
-
-                // Scale
-                int pos = fractionDigits;
-                while (pos < 9)
-                {
-                    fractions *= 10;
-                    pos++;
-                }
-
-                if (!nonDigitFound)
-                {
-                    if (!raw)
-                    {
-                        offset = parseTimezone(parseConfig, chars, idx);
-                    }
-                }
+                return handleFractionalSeconds(parseConfig, year, month, day, hour, minute, chars, length);
             }
             else if (c == ZULU_UPPER || c == ZULU_LOWER)
             {
-                // Do nothing we are done
-                offset = TimezoneOffset.UTC;
+                final int second = parsePositiveInt(chars, 17, 19);
+                final TimezoneOffset timezoneOffset = TimezoneOffset.UTC;
+                return DateTime.of(year, month, day, hour, minute, second, timezoneOffset);
             }
             else if (c == PLUS || c == MINUS)
             {
-                // No fractional seconds
-                offset = parseTimezone(parseConfig, chars, 19);
+                final int seconds = parsePositiveInt(chars, 17, 19);
+                final TimezoneOffset timezoneOffset = parseTimezone(parseConfig, chars, 19);
+                return DateTime.of(year, month, day, hour, minute, seconds, timezoneOffset);
             }
             else
             {
                 throw raiseUnexpectedCharacter(chars, 19);
             }
-
-            final int second = parsePositiveInt(chars, 17, 19);
-
-            if (!raw)
-            {
-                leapSecondCheck(year, month, day, hour, minute, second, fractions, offset);
-                return OffsetDateTime.of(year, month, day, hour, minute, second, fractions, offset.toZoneOffset());
-            }
-            return fractionDigits > 0 ? DateTime.of(year, month, day, hour, minute, second, fractions, offset, fractionDigits) : DateTime.of(year, month, day, hour, minute, second, offset);
         }
         else if (length == 19)
         {
             final int seconds = parsePositiveInt(chars, 17, 19);
-            if (raw)
-            {
-                return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0);
-            }
-            raiseMissingTimeZone(chars, 19);
+            return DateTime.of(year, month, day, hour, minute, seconds, null);
         }
 
         throw raiseUnexpectedEndOfText(chars, 16);
     }
 
-    private static void assertFractionDigits(String chars, int fractionDigits, int idx)
+    private static DateTime handleFractionalSeconds(ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars, int length)
     {
-        if (fractionDigits > MAX_FRACTION_DIGITS)
-        {
-            throw new DateTimeParseException("Too many fraction digits: " + chars, chars, idx);
-        }
-    }
+        final int second = parsePositiveInt(chars, 17, 19);
 
-    private static void leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
-    {
-        if (second == LEAP_SECOND_SECONDS)
+        // We have fractional seconds
+        int idx = 20;
+        int fractionDigits = 0;
+        int fractions = 0;
+        while (idx < length)
         {
-            // Do not fall over trying to parse leap seconds
-            final YearMonth needle = YearMonth.of(year, month);
-            final boolean isValidLeapYearMonth = leapSecondHandler.isValidLeapSecondDate(needle);
-            if (isValidLeapYearMonth || needle.isAfter(leapSecondHandler.getLastKnownLeapSecond()))
+            final char c = chars.charAt(idx);
+            if (c < ZERO || c > DIGIT_9)
             {
-                final int utcHour = hour - offset.getTotalSeconds() / 3_600;
-                final int utcMinute = minute - (offset.getTotalSeconds() % 3_600) / 60;
-                if (((month == Month.DECEMBER.getValue() && day == 31) || (month == Month.JUNE.getValue() && day == 30))
-                        && utcHour == 23
-                        && utcMinute == 59)
-                {
-                    // Consider it a leap second
-                    final OffsetDateTime nearest = OffsetDateTime.of(year, month, day, hour, minute, 59, nanos, offset.toZoneOffset()).plusSeconds(1);
-                    throw new LeapSecondException(nearest, second, isValidLeapYearMonth);
-                }
+                break;
+            }
+            else
+            {
+                fractionDigits = idx - 19;
+                fractions = fractions * 10 + (c - ZERO);
+                idx++;
             }
         }
+
+        assertFractionDigits(chars, fractionDigits, idx - 1);
+
+        // Scale to nanos
+        int pos = fractionDigits;
+        while (pos < 9)
+        {
+            fractions *= 10;
+            pos++;
+        }
+
+        final TimezoneOffset timezoneOffset = parseTimezone(parseConfig, chars, idx);
+        return DateTime.of(year, month, day, hour, minute, second, fractions, timezoneOffset, fractionDigits);
     }
 
-    @Override
-    public String formatUtc(OffsetDateTime date, int fractionDigits)
+    private static void assertFractionDigits(String chars, int fractionDigits, int idx)
+    {
+        if (fractionDigits == 0)
+        {
+            throw new DateTimeParseException("Must have at least 1 fraction digit: " + chars, chars, idx);
+        }
+
+        if (fractionDigits > MAX_FRACTION_DIGITS)
+        {
+            throw new DateTimeParseException("Maximum supported number of fraction digits in second is 9, got " + fractionDigits + ": " + chars, chars, idx);
+        }
+    }
+
+    public static String formatUtc(OffsetDateTime date, int fractionDigits)
     {
         return doFormat(date, ZoneOffset.UTC, Field.SECOND, fractionDigits);
     }
 
-    @Override
-    public String formatUtc(OffsetDateTime date, Field lastIncluded)
+    public static String formatUtc(OffsetDateTime date, Field lastIncluded)
     {
         return doFormat(date, ZoneOffset.UTC, lastIncluded, 0);
     }
 
-    @Override
-    public String format(OffsetDateTime date, ZoneOffset adjustTo, final int fractionDigits)
+    public static String format(OffsetDateTime date, ZoneOffset adjustTo, final int fractionDigits)
     {
         return doFormat(date, adjustTo, Field.NANO, fractionDigits);
     }
 
-    private String doFormat(OffsetDateTime date, ZoneOffset adjustTo, Field lastIncluded, int fractionDigits)
+    private static String doFormat(OffsetDateTime date, ZoneOffset adjustTo, Field lastIncluded, int fractionDigits)
     {
-        assertMaxFractionDigits(fractionDigits);
+        if (fractionDigits > MAX_FRACTION_DIGITS)
+        {
+            throw new DateTimeFormatException("Maximum supported number of fraction digits in second is 9, got " + fractionDigits);
+        }
 
         OffsetDateTime adjusted = date;
         if (!date.getOffset().equals(adjustTo))
@@ -466,57 +395,27 @@ public class EthloITU extends AbstractRfc3339 implements W3cDateTimeUtil
         return finish(buffer, 19, tz);
     }
 
-    private boolean handleDatePart(final Field lastIncluded, final char[] buffer, final int value, final int offset, final int length, final Field field)
+    private static boolean handleDatePart(final Field lastIncluded, final char[] buffer, final int value, final int offset, final int length, final Field field)
     {
         LimitedCharArrayIntegerUtil.toString(value, buffer, offset, length);
         return lastIncluded == field;
     }
 
-    private void addFractions(char[] buf, int fractionDigits, int nano)
+    private static void addFractions(char[] buf, int fractionDigits, int nano)
     {
         final double d = widths[fractionDigits - 1];
         LimitedCharArrayIntegerUtil.toString((int) (nano / d), buf, 20, fractionDigits);
     }
 
-    @Override
-    public OffsetDateTime parseDateTime(final String dateTime)
+    public static OffsetDateTime parseDateTime(final String chars)
     {
-        return (OffsetDateTime) parse(dateTime, ParseConfig.DEFAULT, false);
-    }
-
-    @Override
-    public String formatUtcMilli(OffsetDateTime date)
-    {
-        return formatUtc(date, 3);
-    }
-
-    @Override
-    public String formatUtcMicro(OffsetDateTime date)
-    {
-        return formatUtc(date, 6);
-    }
-
-    @Override
-    public String formatUtcNano(OffsetDateTime date)
-    {
-        return formatUtc(date, 9);
-    }
-
-    @Override
-    public String formatUtc(OffsetDateTime date)
-    {
-        return formatUtc(date, 0);
-    }
-
-    @Override
-    public DateTime parse(String chars)
-    {
-        return (DateTime) parse(chars, ParseConfig.DEFAULT, true);
-    }
-
-    @Override
-    public DateTime parse(String chars, ParseConfig config)
-    {
-        return (DateTime) parse(chars, config, true);
+        final DateTime dateTime = parseLenient(chars, ParseConfig.DEFAULT);
+        if (dateTime.includesGranularity(Field.SECOND))
+        {
+            return dateTime.toOffsetDatetime();
+        }
+        final Field field = dateTime.getMostGranularField();
+        final Field nextGranularity = Field.values()[field.ordinal() + 1];
+        throw new DateTimeParseException("Unexpected end of input, missing field " + nextGranularity + ": " + chars, chars, field.getRequiredLength());
     }
 }

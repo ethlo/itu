@@ -95,9 +95,24 @@
         "error_index": 16
     },
     {
+        "input": "2017-02",
+        "error": "Unexpected end of input, missing field DAY: 2017-02",
+        "error_index": 7
+    },
+    {
+        "input": "2017-02-21",
+        "error": "Unexpected end of input, missing field HOUR: 2017-02-21",
+        "error_index": 10
+    },
+    {
         "input": "2017-02-21T15",
         "error": "Unexpected end of input, missing field MINUTE: 2017-02-21T15",
         "error_index": 13
+    },
+    {
+        "input": "2017-02-21T15:22",
+        "error": "Unexpected end of input, missing field SECOND: 2017-02-21T15:22",
+        "error_index": 16
     },
     {
         "input": "2017-02-21T15Z",
@@ -122,7 +137,7 @@
     {
         "input": "2017-02-21T15:27:39.+00:00",
         "error": "Must have at least 1 fraction digit: 2017-02-21T15:27:39.+00:00",
-        "error_index": 20
+        "error_index": 19
     },
     {
         "input": "2017-02-21T15:27:39",
@@ -180,7 +195,7 @@
     },
     {
         "input": "2017-02-21T15:00:00.1234567891Z",
-        "error": "Too many fraction digits: 2017-02-21T15:00:00.1234567891Z",
+        "error": "Maximum supported number of fraction digits in second is 9, got 10: 2017-02-21T15:00:00.1234567891Z",
         "error_index": 29
     },
     {
@@ -317,6 +332,11 @@
     {
         "input": "2020-12-31T00:00:00-05:00",
         "expected": "1609390800,0",
+        "lenient": true
+    },
+    {
+        "input": "2021-02-29T00:00:00-05:00",
+        "error": "Invalid date 'February 29' as '2021' is not a leap year",
         "lenient": true
     }
 ]

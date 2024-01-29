@@ -41,11 +41,6 @@ public class ErrorUtil
         throw new DateTimeParseException("Unexpected end of input: " + chars, chars, offset);
     }
 
-    public static DateTimeParseException raiseMissingTimeZone(String chars, int index)
-    {
-        throw new DateTimeParseException("No timezone information: " + chars, chars, index);
-    }
-
     public static DateTimeException raiseMissingGranularity(Field field, final String chars, final int offset)
     {
         throw new DateTimeParseException("Unexpected end of input, missing field " + field.name() + ": " + chars, chars, offset);
