@@ -20,6 +20,7 @@ package com.ethlo.time;
  * #L%
  */
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,13 @@ class ParseConfigTest
     @Test
     void testParseConfigInvalid1()
     {
-        assertThrows(IllegalArgumentException.class, () -> ParseConfig.DEFAULT.withDateTimeSeparators((char[])null));
+        assertThrows(IllegalArgumentException.class, () -> ParseConfig.DEFAULT.withDateTimeSeparators((char[]) null));
         assertThrows(IllegalArgumentException.class, () -> ParseConfig.DEFAULT.withDateTimeSeparators(new char[]{}));
+    }
+
+    @Test
+    void setAllowTrailingJunk()
+    {
+        assertThat(ParseConfig.DEFAULT.withFailOnTrailingJunk(true).isFailOnTrailingJunk()).isTrue();
     }
 }

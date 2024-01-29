@@ -67,7 +67,7 @@ public class ParseConfig
         return new ParseConfig(allowedDateTimeSeparators, allowed, failOnTrailingJunk);
     }
 
-    public ParseConfig failOnTrailingJunk(boolean failOnTrailingJunk)
+    public ParseConfig withFailOnTrailingJunk(boolean failOnTrailingJunk)
     {
         return new ParseConfig(allowedDateTimeSeparators, allowedFractionSeparators, failOnTrailingJunk);
     }
