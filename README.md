@@ -20,13 +20,7 @@ handle [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date
 
 ## Performance
 
-TL;DR: 30-100x faster than Java JDK classes.
-
-### Parsing
-<img src="https://github.com/ethlo/date-time-wars/blob/main/doc/parse.png?raw=true" alt="Performance of parsing">
-
-### Formatting
-<img src="https://github.com/ethlo/date-time-wars/blob/main/doc/format.png?raw=true" alt="Performance of formatting">
+TL;DR: Typically **20 - 60x faster** than parsing and formatting with Java JDK classes.
 
 The details and tests are available in a separate repository, [date-time-wars](https://github.com/ethlo/date-time-wars).
 
@@ -45,37 +39,21 @@ Add dependency
 
 Below you find some samples of usage of this library. Please check out the [javadoc](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html) for more details.
 
-```java
-import java.time.OffsetDateTime;
-import com.ethlo.time.DateTime;
-import com.ethlo.time.ITU;
+### Parsing
 
-// Parse a string
+#### RFC-3339 with offset
+
+```java
 final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
-
-// Format with seconds (no fraction digits)
-final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
-
-// Format with microsecond precision
-final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
-
-// Parse lenient
-final DateTime dateTime = ITU.parseLenient("2012-12-27T19:07Z");
 ```
 
-### Handle leap-seconds
+#### Parse leniently
 ```java
-try {
-    final OffsetDateTime dateTime = ITU.parseDateTime("1990-12-31T15:59:60-08:00");
-} catch (LeapSecondException exc) {
-    // The following helper methods are available let you decide how to progress
-    exc.getSecondsInMinute(); // 60
-    exc.getNearestDateTime(); // 1991-01-01T00:00:00Z
-    exc.isVerifiedValidLeapYearMonth(); // true
-}
+final DateTime dateTime = ITU.parseLenient("2012-12-27T19:07.23.123");
+final String formatted = dateTime.toString(); // 2012-12-27T19:07.23.123 (Note the tracking of resolution)
 ```
 
-### Parse lenient, configurable separators
+#### Parse leniently, configurable separators
 ```java
 final ParseConfig config = ParseConfig.DEFAULT
                 .withFractionSeparators('.', ',')
@@ -83,20 +61,17 @@ final ParseConfig config = ParseConfig.DEFAULT
 ITU.parseLenient("1999-11-22|11:22:17,191", config);
 ```
 
-### Parse with ParsePosition
+#### Parse with ParsePosition
+This allows you to track where to start reading.
 
+NOTE: In this mode the check for trailing junk is disabled.
 ```java
-final ParsePosition pos = new ParsePosition(0);
-ITU.parseLenient("1999-11-22T11:22", pos);
-```
-
-### Handle different granularity (ISO format)
-#### Validate with specified granularity
-```java
-ITU.isValid("2017-12-06", TemporalType.LOCAL_DATE_TIME);
+final ParsePosition pos = new ParsePosition(10);
+ITU.parseLenient("some-data,1999-11-22T11:22", pos);
 ```
 
 #### Handling different levels of granularity explicitly
+This is useful if you need to handledifferent granularity with different logic or interpolation.
 ```java
 ITU.parse("2017-12-06", new TemporalHandler<>() {
     @Override
@@ -111,13 +86,50 @@ ITU.parse("2017-12-06", new TemporalHandler<>() {
 });
 ```
 #### Parsing leniently to a timestamp
-In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `com.ethlo.time.DateTime` instance into `java.time.Instant`. Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc. 
+In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `com.ethlo.time.DateTime` instance into `java.time.Instant`. Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc.
 
 We can use `ITU.parseLenient()` with `DateTime.toInstant()` like this:
 
 ```java
 final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
 ```
+
+### Formatting
+
+#### Format with seconds (no fraction digits)
+```java
+final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
+``` 
+
+#### Format with microsecond precision
+```java
+final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
+```
+
+### Handle leap-seconds
+```java
+try {
+    final OffsetDateTime dateTime = ITU.parseDateTime("1990-12-31T15:59:60-08:00");
+} catch (LeapSecondException exc) {
+    // The following helper methods are available let you decide how to progress
+    exc.getSecondsInMinute(); // 60
+    exc.getNearestDateTime(); // 1991-01-01T00:00:00Z
+    exc.isVerifiedValidLeapYearMonth(); // true
+}
+```
+
+### Validate
+
+#### Validate as RFC-3339 date-time
+```java
+ITU.isValid("2017-12-06"); // false
+```
+
+#### Validate as specified type
+```java
+ITU.isValid("2017-12-06", TemporalType.LOCAL_DATE_TIME); // true
+```
+
 
 ## Q & A
 
