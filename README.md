@@ -20,7 +20,7 @@ handle [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date
 
 ## Performance
 
-TL;DR: Typically **20 - 60x faster** than parsing and formatting with Java JDK classes.
+TL;DR: Typically **10x to 30x faster** than parsing and formatting with Java JDK classes.
 
 The details and tests are available in a separate repository, [date-time-wars](https://github.com/ethlo/date-time-wars).
 
