@@ -69,11 +69,24 @@ public class ITU
         return ITUParser.parseLenient(text, ParseConfig.DEFAULT, 0);
     }
 
+    /**
+     * Allows parsing leniently with {@link ParseConfig to control some aspects of the parsing}
+     * @param text The text to parse
+     * @param parseConfig The configuration to use for parsing
+     * @return The date-time parsed
+     */
     public static DateTime parseLenient(String text, ParseConfig parseConfig)
     {
         return ITUParser.parseLenient(text, parseConfig, 0);
     }
 
+    /**
+     *
+     * @param text The text to parse
+     * @param parseConfig The configuration to use for parsing
+     * @param position The position to start parsing from. The index (and the errorIndex, if an error occurs) is updated after the parsing process has completed
+     * @return The date-time parsed
+     */
     public static DateTime parseLenient(String text, ParseConfig parseConfig, ParsePosition position)
     {
         try
