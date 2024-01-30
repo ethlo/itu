@@ -326,5 +326,10 @@
         "input": "2021-02-29T00:00:00-05:00",
         "error": "Invalid date 'February 29' as '2021' is not a leap year",
         "lenient": true
+    },
+    {
+        "input": "4444-04-23t44:44:60",
+        "error": "Invalid value for SecondOfMinute (valid values 0 - 59): 60",
+        "lenient": true
     }
 ]
