@@ -110,8 +110,8 @@ public class TestParam
 
     public static class SerializableParseConfig extends ParseConfig
     {
-        @ConstructorProperties({"allowed_date_separators", "allowed_fraction_separators", "fail_on_trailing_junk"})
-        protected SerializableParseConfig(final char[] allowedDateTimeSeparators, final char[] allowedFractionSeparators, final boolean failOnTrailingJunk)
+        @ConstructorProperties({"allowed_date_separators", "allowed_fraction_separators"})
+        protected SerializableParseConfig(final char[] allowedDateTimeSeparators, final char[] allowedFractionSeparators)
         {
             super(allowedDateTimeSeparators, allowedFractionSeparators);
         }
