@@ -62,16 +62,14 @@ ITU.parseLenient("1999-11-22|11:22:17,191", config);
 ```
 
 #### Parse with ParsePosition
-This allows you to track where to start reading.
-
-NOTE: In this mode the check for trailing junk is disabled.
+This allows you to track where to start reading. Note that the check for trailing junk is disabled when using ParsePosition.
 ```java
 final ParsePosition pos = new ParsePosition(10);
-ITU.parseLenient("some-data,1999-11-22T11:22", pos);
+ITU.parseDateTime("some-data,1999-11-22T11:22:00+05:30,some-other-data", pos);
 ```
 
 #### Handling different levels of granularity explicitly
-This is useful if you need to handledifferent granularity with different logic or interpolation.
+This is useful if you need to handle different granularity with different logic or interpolation.
 ```java
 ITU.parse("2017-12-06", new TemporalHandler<>() {
     @Override

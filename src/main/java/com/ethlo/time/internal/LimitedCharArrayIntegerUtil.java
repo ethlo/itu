@@ -49,20 +49,22 @@ public final class LimitedCharArrayIntegerUtil
 
     public static int parsePositiveInt(final String strNum, int startInclusive, int endExclusive)
     {
-        if (endExclusive > strNum.length())
-        {
-            ErrorUtil.raiseUnexpectedEndOfText(strNum, startInclusive);
-        }
-
         int result = 0;
         for (int i = startInclusive; i < endExclusive; i++)
         {
-            final char c = strNum.charAt(i);
-            if (c < ZERO || c > DIGIT_9)
+            try
             {
-                ErrorUtil.raiseUnexpectedCharacter(strNum, i);
+                final char c = strNum.charAt(i);
+                if (c < ZERO || c > DIGIT_9)
+                {
+                    ErrorUtil.raiseUnexpectedCharacter(strNum, i);
+                }
+                result = result * 10 + (c - ZERO);
             }
-            result = result * 10 + (c - ZERO);
+            catch (StringIndexOutOfBoundsException exc)
+            {
+                ErrorUtil.raiseUnexpectedEndOfText(strNum, startInclusive);
+            }
         }
         return result;
     }

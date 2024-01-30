@@ -20,10 +20,10 @@ package com.ethlo.time;
  * #L%
  */
 
-import static com.ethlo.time.internal.EthloITU.DATE_SEPARATOR;
-import static com.ethlo.time.internal.EthloITU.SEPARATOR_UPPER;
-import static com.ethlo.time.internal.EthloITU.TIME_SEPARATOR;
-import static com.ethlo.time.internal.EthloITU.finish;
+import static com.ethlo.time.internal.ITUParser.DATE_SEPARATOR;
+import static com.ethlo.time.internal.ITUParser.SEPARATOR_UPPER;
+import static com.ethlo.time.internal.ITUParser.TIME_SEPARATOR;
+import static com.ethlo.time.internal.ITUFormatter.finish;
 import static com.ethlo.time.internal.LeapSecondHandler.LEAP_SECOND_SECONDS;
 
 import java.time.DateTimeException;
@@ -42,6 +42,7 @@ import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.ethlo.time.internal.DateTimeFormatException;
 import com.ethlo.time.internal.DateTimeMath;
 import com.ethlo.time.internal.DefaultLeapSecondHandler;
 import com.ethlo.time.internal.LeapSecondHandler;
@@ -196,6 +197,11 @@ public class DateTime implements TemporalAccessor
             final boolean isValidLeapYearMonth = leapSecondHandler.isValidLeapSecondDate(needle);
             if (isValidLeapYearMonth || needle.isAfter(leapSecondHandler.getLastKnownLeapSecond()))
             {
+                if (offset == null)
+                {
+                    offset = TimezoneOffset.UTC;
+                }
+
                 final int utcHour = hour - offset.getTotalSeconds() / 3_600;
                 final int utcMinute = minute - (offset.getTotalSeconds() % 3_600) / 60;
                 if (((month == Month.DECEMBER.getValue() && day == 31) || (month == Month.JUNE.getValue() && day == 30))
@@ -566,7 +572,7 @@ public class DateTime implements TemporalAccessor
 
     private void validated()
     {
-        if (field.ordinal() > Field.DAY.ordinal())
+        if (field.ordinal() >= Field.DAY.ordinal())
         {
             //noinspection ResultOfMethodCallIgnored
             LocalDate.of(year, month, day);

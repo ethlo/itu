@@ -20,7 +20,8 @@ package com.ethlo.time.internal;
  * #L%
  */
 
-import java.time.DateTimeException;
+import static com.ethlo.time.internal.ITUParser.MAX_FRACTION_DIGITS;
+
 import java.time.format.DateTimeParseException;
 
 import com.ethlo.time.Field;
@@ -41,8 +42,34 @@ public class ErrorUtil
         throw new DateTimeParseException("Unexpected end of input: " + chars, chars, offset);
     }
 
-    public static DateTimeException raiseMissingGranularity(Field field, final String chars, final int offset)
+    public static DateTimeParseException raiseMissingGranularity(Field field, final String chars, final int offset)
     {
         throw new DateTimeParseException("Unexpected end of input, missing field " + field.name() + ": " + chars, chars, offset);
+    }
+
+    public static void assertPositionContains(Field field, String chars, int index, char expected)
+    {
+        if (index >= chars.length())
+        {
+            throw raiseMissingGranularity(field, chars, index);
+        }
+
+        if (chars.charAt(index) != expected)
+        {
+            throw new DateTimeParseException("Expected character " + expected + " at position " + (index + 1) + ", found " + chars.charAt(index) + ": " + chars, chars, index);
+        }
+    }
+
+    public static void assertFractionDigits(String chars, int fractionDigits, int idx)
+    {
+        if (fractionDigits == 0)
+        {
+            throw new DateTimeParseException("Must have at least 1 fraction digit: " + chars, chars, idx);
+        }
+
+        if (fractionDigits > MAX_FRACTION_DIGITS)
+        {
+            throw new DateTimeParseException("Maximum supported number of fraction digits in second is 9, got " + fractionDigits + ": " + chars, chars, idx);
+        }
     }
 }

@@ -302,7 +302,7 @@ public class ITUTest
                 assertThat(year).isEqualTo(Year.parse(input));
             }
         }));
-        assertThat(exc).hasMessage("Expected character [T, t,  ] at position 11: 2017-03-05G");
+        assertThat(exc).hasMessage("Expected character [T, t,  ] at position 11, found G: 2017-03-05G");
     }
 
     @Test
@@ -417,15 +417,58 @@ public class ITUTest
     }
 
     @Test
+    void testParsePositionRfc3339Zulu()
+    {
+        final ParsePosition pos = new ParsePosition(8);
+        ITU.parseDateTime("1234567,1999-11-22T11:22:00Z,some-other-data", pos);
+        assertThat(pos.getIndex()).isEqualTo(28);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+    }
+
+    @Test
+    void testParsePositionRfc3339Offset()
+    {
+        final ParsePosition pos = new ParsePosition(10);
+        final String input = "some-data,1999-11-22T11:22:00+05:30,some-other-data";
+        ITU.parseDateTime(input, pos);
+        assertThat(pos.getIndex()).isEqualTo(35);
+        assertThat(pos.getErrorIndex()).isEqualTo(-1);
+        assertThat(input.substring(pos.getIndex())).isEqualTo(",some-other-data");
+    }
+
+    @Test
     void testParsePositionSubsequent()
     {
         final ParsePosition pos = new ParsePosition(4);
         final String input = "abc,2004-11-21T00:00Z1999-11-22T11:22+05:00,some-other-data";
+
         ITU.parseDateTime(input, pos);
         assertThat(pos.getIndex()).isEqualTo(21);
         assertThat(pos.getErrorIndex()).isEqualTo(-1);
+
         ITU.parseDateTime(input, pos);
         assertThat(pos.getIndex()).isEqualTo(43);
         assertThat(pos.getErrorIndex()).isEqualTo(-1);
+    }
+
+    @Test
+    void testParseOutOfBoundsPosition()
+    {
+        final ParsePosition pos = new ParsePosition(40);
+        assertThrows(IndexOutOfBoundsException.class, () -> ITU.parseDateTime("123", pos));
+    }
+
+    @Test
+    void testParseOutOfBoundsPositionNegative()
+    {
+        final ParsePosition pos = new ParsePosition(-3);
+        assertThrows(IndexOutOfBoundsException.class, () -> ITU.parseDateTime("123", pos));
+    }
+
+    @Test
+    void testParseWithStrictConfig()
+    {
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ITU.parseLenient("2020-02-22t12:00:00Z", ParseConfig.STRICT));
+        assertThat(exc).hasMessage("Expected character T at position 11, found t: 2020-02-22t12:00:00Z");
     }
 }

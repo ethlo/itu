@@ -20,42 +20,47 @@ package com.ethlo.time;
  * #L%
  */
 
-import static com.ethlo.time.internal.EthloITU.FRACTION_SEPARATOR;
-import static com.ethlo.time.internal.EthloITU.SEPARATOR_LOWER;
-import static com.ethlo.time.internal.EthloITU.SEPARATOR_SPACE;
-import static com.ethlo.time.internal.EthloITU.SEPARATOR_UPPER;
+import static com.ethlo.time.internal.ITUParser.SEPARATOR_LOWER;
+import static com.ethlo.time.internal.ITUParser.SEPARATOR_SPACE;
+import static com.ethlo.time.internal.ITUParser.SEPARATOR_UPPER;
 
 import java.util.Arrays;
 import java.util.Optional;
 
 public class ParseConfig
 {
-    public static final ParseConfig DEFAULT = new ParseConfig(null, null, true);
+    private static final char[] DEFAULT_DATE_TIME_SEPARATORS = new char[]{SEPARATOR_UPPER, SEPARATOR_LOWER, SEPARATOR_SPACE};
+    private static final char[] RFC_3339_FRACTION_SEPARATOR = new char[]{'.'};
+    public static final ParseConfig DEFAULT = new ParseConfig(DEFAULT_DATE_TIME_SEPARATORS, RFC_3339_FRACTION_SEPARATOR);
+    public static final ParseConfig STRICT = new ParseConfig(new char[]{SEPARATOR_UPPER}, RFC_3339_FRACTION_SEPARATOR);
 
-    private final char[] allowedDateTimeSeparators;
-    private final char[] allowedFractionSeparators;
-    private final boolean failOnTrailingJunk;
+    private final char[] dateTimeSeparators;
+    private final char[] fractionSeparators;
 
-    protected ParseConfig(char[] allowedDateTimeSeparators, char[] allowedFractionSeparators, boolean failOnTrailingJunk)
+    protected ParseConfig(char[] dateTimeSeparators, char[] allowedFractionSeparators)
     {
-        this.allowedDateTimeSeparators = Optional.ofNullable(allowedDateTimeSeparators).orElse(new char[]{SEPARATOR_UPPER, SEPARATOR_LOWER, SEPARATOR_SPACE});
-        this.allowedFractionSeparators = Optional.ofNullable(allowedFractionSeparators).orElse(new char[]{FRACTION_SEPARATOR});
-        this.failOnTrailingJunk = failOnTrailingJunk;
+        this.dateTimeSeparators = Optional.ofNullable(dateTimeSeparators).orElse(DEFAULT_DATE_TIME_SEPARATORS);
+        this.fractionSeparators = Optional.ofNullable(allowedFractionSeparators).orElse(RFC_3339_FRACTION_SEPARATOR);
+    }
+
+    public char[] getFractionSeparators()
+    {
+        return fractionSeparators;
     }
 
     public ParseConfig withDateTimeSeparators(char... allowed)
     {
         assertChars(allowed);
-        return new ParseConfig(allowed, allowedFractionSeparators, failOnTrailingJunk);
+        return new ParseConfig(allowed, fractionSeparators);
     }
 
-    private void assertChars(char[] allowed)
+    private void assertChars(char[] chars)
     {
-        if (allowed == null)
+        if (chars == null)
         {
             throw new IllegalArgumentException("Cannot have null array of characters");
         }
-        if (allowed.length == 0)
+        if (chars.length == 0)
         {
             throw new IllegalArgumentException("Must have at least one character in allowed list");
         }
@@ -64,27 +69,27 @@ public class ParseConfig
     public ParseConfig withFractionSeparators(char... allowed)
     {
         assertChars(allowed);
-        return new ParseConfig(allowedDateTimeSeparators, allowed, failOnTrailingJunk);
+        return new ParseConfig(dateTimeSeparators, allowed);
     }
 
     public ParseConfig withFailOnTrailingJunk(boolean failOnTrailingJunk)
     {
-        return new ParseConfig(allowedDateTimeSeparators, allowedFractionSeparators, failOnTrailingJunk);
+        return new ParseConfig(dateTimeSeparators, fractionSeparators);
     }
 
     public boolean isFailOnTrailingJunk()
     {
-        return failOnTrailingJunk;
+        return true;
     }
 
     public char[] getDateTimeSeparators()
     {
-        return allowedDateTimeSeparators;
+        return dateTimeSeparators;
     }
 
     public boolean isDateTimeSeparator(char needle)
     {
-        for (char c : allowedDateTimeSeparators)
+        for (char c : dateTimeSeparators)
         {
             if (c == needle)
             {
@@ -96,7 +101,7 @@ public class ParseConfig
 
     public boolean isFractionSeparator(char needle)
     {
-        for (char c : allowedFractionSeparators)
+        for (char c : fractionSeparators)
         {
             if (c == needle)
             {
@@ -110,9 +115,8 @@ public class ParseConfig
     public String toString()
     {
         return "ParseConfig{" +
-                "dateTimeSeparators=" + Arrays.toString(allowedDateTimeSeparators) +
-                ", fractionSeparators=" + Arrays.toString(allowedFractionSeparators) +
-                ", failOnTrailingJunk=" + failOnTrailingJunk +
+                "dateTimeSeparators=" + Arrays.toString(dateTimeSeparators) +
+                ", fractionSeparators=" + Arrays.toString(fractionSeparators) +
                 '}';
     }
 }

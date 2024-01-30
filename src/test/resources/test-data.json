@@ -116,7 +116,7 @@
     },
     {
         "input": "2017-02-21T15Z",
-        "error": "Expected character : at position 14: 2017-02-21T15Z",
+        "error": "Expected character : at position 14, found Z: 2017-02-21T15Z",
         "error_index": 13
     },
     {
@@ -166,12 +166,12 @@
     },
     {
         "input": "201702-21T15:27:39.123456+0000",
-        "error": "Expected character - at position 5: 201702-21T15:27:39.123456+0000",
+        "error": "Expected character - at position 5, found 0: 201702-21T15:27:39.123456+0000",
         "error_index": 4
     },
     {
         "input": "20170221T15:27:39.123456789+0000",
-        "error": "Expected character - at position 5: 20170221T15:27:39.123456789+0000",
+        "error": "Expected character - at position 5, found 0: 20170221T15:27:39.123456789+0000",
         "error_index": 4
     },
     {
@@ -225,7 +225,7 @@
     },
     {
         "input": "1994 11-05T08:15:30-05:00",
-        "error": "Expected character - at position 5: 1994 11-05T08:15:30-05:00",
+        "error": "Expected character - at position 5, found  : 1994 11-05T08:15:30-05:00",
         "error_index": 4,
         "note": "Invalid separator between year and month"
     },
@@ -237,7 +237,7 @@
     },
     {
         "input": "1994-11-05X08:15:30-05:00",
-        "error": "Expected character [T, t,  ] at position 11: 1994-11-05X08:15:30-05:00",
+        "error": "Expected character [T, t,  ] at position 11, found X: 1994-11-05X08:15:30-05:00",
         "error_index": 10,
         "note": "invalid date/time separator"
     },
