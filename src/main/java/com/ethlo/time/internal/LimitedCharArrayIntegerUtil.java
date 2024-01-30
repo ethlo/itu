@@ -50,9 +50,10 @@ public final class LimitedCharArrayIntegerUtil
     public static int parsePositiveInt(final String strNum, int startInclusive, int endExclusive)
     {
         int result = 0;
-        for (int i = startInclusive; i < endExclusive; i++)
+        try
         {
-            try
+
+            for (int i = startInclusive; i < endExclusive; i++)
             {
                 final char c = strNum.charAt(i);
                 if (c < ZERO || c > DIGIT_9)
@@ -61,11 +62,12 @@ public final class LimitedCharArrayIntegerUtil
                 }
                 result = result * 10 + (c - ZERO);
             }
-            catch (StringIndexOutOfBoundsException exc)
-            {
-                ErrorUtil.raiseUnexpectedEndOfText(strNum, startInclusive);
-            }
         }
+        catch (StringIndexOutOfBoundsException exc)
+        {
+            ErrorUtil.raiseUnexpectedEndOfText(strNum, startInclusive);
+        }
+
         return result;
     }
 
