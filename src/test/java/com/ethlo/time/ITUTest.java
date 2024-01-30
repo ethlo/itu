@@ -348,9 +348,9 @@ public class ITUTest
     @Test
     void testParsePosition()
     {
-        final ParsePosition pos = new ParsePosition(0);
-        ITU.parseLenient("1999-11-22T11:22:17.191", ParseConfig.DEFAULT, pos);
-        assertThat(pos.getIndex()).isEqualTo(23);
+        final ParsePosition pos = new ParsePosition(10);
+        ITU.parseLenient("123456789,1999-11-22T11:22:17Z,22222222222", ParseConfig.STRICT, pos);
+        assertThat(pos.getIndex()).isEqualTo(30);
     }
 
     @Test

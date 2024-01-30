@@ -13,7 +13,7 @@ handle [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date
 ## Features
 * Very easy to use.
 * Aim for 100% specification compliance.
-* No external dependencies, minimal JAR size (16.4KB).
+* No external dependencies, minimal JAR size.
 * Apache 2 licensed, can be used in any project, even commercial.
 * Handling leap-seconds (if you want to).
 * Well-[documented API](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
@@ -31,7 +31,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.8.0</version>
+  <version>1.9.0</version>
   <!-- If you want to use minified JAR -->  
   <classifier>small</classifier>
 </dependency>
