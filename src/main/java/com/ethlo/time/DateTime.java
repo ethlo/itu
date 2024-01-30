@@ -375,7 +375,7 @@ public class DateTime implements TemporalAccessor
     {
         if (lastIncluded.ordinal() > date.getMostGranularField().ordinal())
         {
-            throw new DateTimeFormatException("Requested granularity was " + lastIncluded.name() + ", but contains only granularity " + date.getMostGranularField().name());
+            throw new DateTimeFormatException(String.format("Requested granularity was %s, but contains only granularity %s", lastIncluded.name(), date.getMostGranularField().name()));
         }
         final TimezoneOffset tz = date.getOffset().orElse(null);
         final char[] buffer = new char[35];
@@ -580,7 +580,7 @@ public class DateTime implements TemporalAccessor
 
         if (second > 59)
         {
-            throw new DateTimeException("Invalid value for SecondOfMinute (valid values 0 - 59): " + second);
+            throw new DateTimeException(String.format("Invalid value for SecondOfMinute (valid values 0 - 59): %d", second));
         }
     }
 

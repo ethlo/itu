@@ -84,7 +84,8 @@ public class ITUParser
         final char needle = chars.charAt(index);
         if (!config.isDateTimeSeparator(needle))
         {
-            throw new DateTimeParseException("Expected character " + (config.getDateTimeSeparators().length > 1 ? Arrays.toString(config.getDateTimeSeparators()) : config.getDateTimeSeparators()[0]) + " at position " + (index + 1) + ", found " + chars.charAt(index) + ": " + chars, chars, index);
+            final String allowedCharStr = config.getDateTimeSeparators().length > 1 ? Arrays.toString(config.getDateTimeSeparators()) : Character.toString(config.getDateTimeSeparators()[0]);
+            throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", allowedCharStr, index + 1, chars.charAt(index), chars), chars, index);
         }
     }
 
@@ -111,7 +112,7 @@ public class ITUParser
 
         if (left < 6)
         {
-            throw new DateTimeParseException("Invalid timezone offset: " + chars, chars, idx);
+            throw new DateTimeParseException(String.format("Invalid timezone offset: %s", chars), chars, idx);
         }
 
         int hours = parsePositiveInt(chars, idx + 1, idx + 3);
@@ -137,7 +138,7 @@ public class ITUParser
         {
             if (chars.length() > lastUsed + 1)
             {
-                throw new DateTimeParseException("Trailing junk data after position " + (lastUsed + 2) + ": " + chars, chars, lastUsed + 1);
+                throw new DateTimeParseException(String.format("Trailing junk data after position %d: %s", lastUsed + 2, chars), chars, lastUsed + 1);
             }
         }
     }
@@ -153,12 +154,12 @@ public class ITUParser
 
         if (availableLength < 0)
         {
-            throw new IndexOutOfBoundsException("offset is " + offset + " which is equal to or larger than the input length of " + chars.length());
+            throw new IndexOutOfBoundsException(String.format("offset is %d which is equal to or larger than the input length of %d", offset, chars.length()));
         }
 
         if (offset < 0)
         {
-            throw new IndexOutOfBoundsException("offset cannot be negative, was " + offset);
+            throw new IndexOutOfBoundsException(String.format("offset cannot be negative, was %d", offset));
         }
 
         // Date portion
@@ -289,6 +290,6 @@ public class ITUParser
         }
         final Field field = dateTime.getMostGranularField();
         final Field nextGranularity = Field.values()[field.ordinal() + 1];
-        throw new DateTimeParseException("Unexpected end of input, missing field " + nextGranularity + ": " + chars, chars, field.getRequiredLength());
+        throw new DateTimeParseException(String.format("Unexpected end of input, missing field %s: %s", nextGranularity, chars), chars, field.getRequiredLength());
     }
 }
