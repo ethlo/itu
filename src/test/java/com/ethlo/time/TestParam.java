@@ -113,7 +113,7 @@ public class TestParam
         @ConstructorProperties({"allowed_date_separators", "allowed_fraction_separators", "fail_on_trailing_junk"})
         protected SerializableParseConfig(final char[] allowedDateTimeSeparators, final char[] allowedFractionSeparators, final boolean failOnTrailingJunk)
         {
-            super(allowedDateTimeSeparators, allowedFractionSeparators, failOnTrailingJunk);
+            super(allowedDateTimeSeparators, allowedFractionSeparators);
         }
     }
 }
