@@ -39,4 +39,16 @@ class ParseConfigTest
     {
         assertThat(ParseConfig.DEFAULT.withFailOnTrailingJunk(true).isFailOnTrailingJunk()).isTrue();
     }
+
+    @Test
+    void checkAllowedDateTimeSeparators()
+    {
+        assertThat(ParseConfig.STRICT.getDateTimeSeparators()).containsExactly('T');
+    }
+
+    @Test
+    void checkAllowedFractionsSeparators()
+    {
+        assertThat(ParseConfig.STRICT.getFractionSeparators()).containsExactly('.');
+    }
 }

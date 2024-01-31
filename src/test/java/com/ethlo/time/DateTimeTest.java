@@ -31,6 +31,8 @@ public class DateTimeTest
     final DateTime a = ITU.parseLenient("2018-01-06T23:59:12-04:30");
     final DateTime b = ITU.parseLenient("2018-01-06T23:59:12-04:30");
     final DateTime c = ITU.parseLenient("2018-01-06T23:59:12-05:30");
+    final DateTime d = DateTime.of(2000, 12, 10, 12, 22, 18, TimezoneOffset.UTC);
+    final DateTime e = DateTime.ofDate(2000, 12, 10);
 
     @Test
     public void testEquals()

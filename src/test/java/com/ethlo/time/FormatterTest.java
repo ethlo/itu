@@ -84,6 +84,12 @@ public class FormatterTest
     }
 
     @Test
+    void testFormatHour()
+    {
+        assertThat(DateTime.of(2000, 12, 31, 22, 30, null).toString(Field.HOUR)).isEqualTo("2000-12-31T22");
+    }
+
+    @Test
     void testFormatUtcMilli()
     {
         final String s = "2017-02-21T15:00:00.123456789Z";
