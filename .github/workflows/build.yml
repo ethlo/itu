@@ -1,28 +1,33 @@
 name: Build
 
 on:
-  push:
-    branches:
-    - main
-    paths: [ '**.java', '.github/workflows/build.yml', 'pom.xml' ]
-  pull_request:
+    push:
+        branches:
+            - main
+        paths: [ '**.java', '.github/workflows/build.yml', 'pom.xml' ]
+    pull_request:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        java: [ 8, 11, 17, 21 ]
-    name: Java ${{ matrix.java }}
-    steps:
-      - uses: actions/checkout@v3
+    build:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                java: [ 8, 11, 17, 21 ]
+        name: Java ${{ matrix.java }}
+        steps:
+            - uses: actions/checkout@v3
 
-      - name: Setup JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: ${{ matrix.java }}
-          cache: maven
+            - name: Setup JDK
+              uses: actions/setup-java@v3
+              with:
+                  distribution: temurin
+                  java-version: ${{ matrix.java }}
+                  cache: maven
 
-      - name: Build
-        run: mvn -ntp -B verify
+            - name: Build
+              run: mvn -ntp -B -Pcoverage verify
+
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v3
+              env:
+                  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
