@@ -168,15 +168,15 @@ public class ITUParser
         final int years = parsePositiveInt(chars, offset, offset + 4);
         if (4 == availableLength)
         {
-            return DateTime.ofYear(years);
+            return new DateTime(Field.YEAR, years, 0, 0, 0, 0, 0, 0, null, 0, availableLength);
         }
 
         // MONTH
         assertPositionContains(Field.MONTH, chars, offset + 4, DATE_SEPARATOR);
-        final int months = parsePositiveInt(chars, offset + 5, offset + 7);
+        final int month = parsePositiveInt(chars, offset + 5, offset + 7);
         if (7 == availableLength)
         {
-            return DateTime.ofYearMonth(years, months);
+            return new DateTime(Field.MONTH, years, month, 0, 0, 0, 0, 0, null, 0, availableLength);
         }
 
         // DAY
@@ -184,7 +184,7 @@ public class ITUParser
         final int days = parsePositiveInt(chars, offset + 8, offset + 10);
         if (10 == availableLength)
         {
-            return DateTime.ofDate(years, months, days);
+            return new DateTime(Field.DAY, years, month, days, 0, 0, 0, 0, null, 0, availableLength);
         }
 
         // HOURS
@@ -197,11 +197,11 @@ public class ITUParser
         if (availableLength == 16)
         {
             // Have only minutes
-            return DateTime.of(years, months, days, hours, minutes, null);
+            return new DateTime(Field.MINUTE, years, month, days, hours, minutes, 0, 0, null, 0, 16);
         }
 
         // SECONDS or TIMEZONE
-        return handleTime(offset, parseConfig, chars, years, months, days, hours, minutes);
+        return handleTime(offset, parseConfig, chars, years, month, days, hours, minutes);
     }
 
     private static DateTime handleTimeResolution(final int offset, ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars)
@@ -229,10 +229,10 @@ public class ITUParser
                 throw raiseUnexpectedCharacter(chars, offset + 19);
             }
         }
-        else if (length == offset + 19)
+        else if (length == 19)
         {
             final int seconds = parsePositiveInt(chars, offset + 17, offset + 19);
-            return DateTime.of(year, month, day, hour, minute, seconds, null);
+            return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0, length);
         }
 
         throw raiseUnexpectedEndOfText(chars, offset + 16);
