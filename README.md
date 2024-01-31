@@ -13,14 +13,15 @@ handle [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date
 ## Features
 * Very easy to use.
 * Aim for 100% specification compliance.
-* No external dependencies, minimal JAR size.
+* No dependencies, minimal JAR size.
 * Apache 2 licensed, can be used in any project, even commercial.
 * Handling leap-seconds (if you want to).
-* Well-[documented API](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
+* [Well-documented API](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
+* Works 
 
 ## Performance
 
-TL;DR: Typically **10x to 30x faster** than parsing and formatting with Java JDK classes.
+**TL;DR:** Typically **10x to 30x faster** than parsing and formatting with Java JDK classes.
 
 The details and tests are available in a separate repository, [date-time-wars](https://github.com/ethlo/date-time-wars).
 
