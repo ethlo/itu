@@ -27,4 +27,9 @@ import com.ethlo.time.DateTime;
 public interface DateTimeParser
 {
     DateTime parse(String text, ParsePosition parsePosition);
+
+    default DateTime parse(String text)
+    {
+        return parse(text, new ParsePosition(0));
+    }
 }

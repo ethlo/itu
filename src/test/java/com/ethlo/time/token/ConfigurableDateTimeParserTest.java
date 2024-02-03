@@ -26,9 +26,14 @@ import static com.ethlo.time.Field.MINUTE;
 import static com.ethlo.time.Field.MONTH;
 import static com.ethlo.time.Field.SECOND;
 import static com.ethlo.time.Field.YEAR;
+import static com.ethlo.time.token.DigitsToken.ofFour;
+import static com.ethlo.time.token.DigitsToken.ofTwo;
+import static com.ethlo.time.token.SeparatorToken.separator;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.text.ParsePosition;
+import java.time.format.DateTimeParseException;
 
 import org.junit.jupiter.api.Test;
 
@@ -41,20 +46,22 @@ public class ConfigurableDateTimeParserTest
     void parseCustomFormat()
     {
         final ParsePosition pos = new ParsePosition(0);
-        final String input = "31-12-2000 235937";
+        final String input = "31-12-2000 235937,123456";
         final DateTimeParser parser = new ConfigurableDateTimeParser(
-                new TwoDigitToken(DAY),
-                new SeparatorToken('-'),
-                new TwoDigitToken(MONTH),
-                new SeparatorToken('-'),
-                new FourDigitToken(YEAR),
-                new SeparatorToken(' '),
-                new TwoDigitToken(HOUR),
-                new TwoDigitToken(MINUTE),
-                new TwoDigitToken(SECOND)
+                ofTwo(DAY),
+                separator('-'),
+                ofTwo(MONTH),
+                separator('-'),
+                ofFour(YEAR),
+                separator(' '),
+                ofTwo(HOUR),
+                ofTwo(MINUTE),
+                ofTwo(SECOND),
+                separator(','),
+                new FractionsToken()
         );
         final DateTime result = parser.parse(input, pos);
-        assertThat(result).isEqualTo(DateTime.of(2000, 12, 31, 23, 59, 37, null));
+        assertThat(result).isEqualTo(DateTime.of(2000, 12, 31, 23, 59, 37, 123456000, null, 6));
     }
 
     @Test
@@ -67,5 +74,65 @@ public class ConfigurableDateTimeParserTest
         assertThat(custom).isEqualTo(fixed);
         assertThat(fixed.toString()).isEqualTo(input);
         assertThat(custom.toString()).isEqualTo(input);
+    }
+
+    @Test
+    void testInvalidSeparator()
+    {
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new ConfigurableDateTimeParser(separator('X')).parse("12"));
+        assertThat(exc).hasMessage("Unexpected character 1 at position 1: 12");
+    }
+
+    @Test
+    void testEndOfTextSeparator()
+    {
+        final ParsePosition pos = new ParsePosition(0);
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, ()->separator('-').read("", pos));
+        assertThat(exc).hasMessage("Unexpected end of input: ");
+    }
+
+    @Test
+    void reachEndOfFractions()
+    {
+        final int value = new FractionsToken().read("123456X", new ParsePosition(0));
+        assertThat(value).isEqualTo(123456);
+    }
+
+    @Test
+    void readTimeZoneZuluUpper()
+    {
+        final ParsePosition pos = new ParsePosition(0);
+        assertThat(new TimeZoneOffsetToken().read("Z", pos)).isEqualTo(0);
+    }
+
+    @Test
+    void readTimeZoneZuluLower()
+    {
+        final ParsePosition pos = new ParsePosition(0);
+        assertThat(new TimeZoneOffsetToken().read("z", pos)).isEqualTo(0);
+    }
+
+    @Test
+    void readTimeZoneUnexpectedChar()
+    {
+        final ParsePosition pos = new ParsePosition(0);
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, ()->new TimeZoneOffsetToken().read("X", pos));
+        assertThat(exc).hasMessage("Unexpected character X at position 1: X");
+    }
+
+    @Test
+    void readTimeZoneTooShort()
+    {
+        final ParsePosition pos = new ParsePosition(0);
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, ()->new TimeZoneOffsetToken().read("-06:0", pos));
+        assertThat(exc).hasMessage("Invalid timezone offset: -06:0");
+    }
+
+    @Test
+    void readTimeZoneNegative()
+    {
+        final ParsePosition pos = new ParsePosition(0);
+        final int secs = new TimeZoneOffsetToken().read("-06:30", pos);
+        assertThat(secs).isEqualTo(-23400);
     }
 }

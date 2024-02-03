@@ -30,23 +30,23 @@ import static com.ethlo.time.Field.YEAR;
 public class DateTimeParsers
 {
     private static final ConfigurableDateTimeParser DATE = new ConfigurableDateTimeParser(
-            new FourDigitToken(YEAR),
+            new DigitsToken(YEAR, 4),
             new SeparatorToken('-'),
-            new TwoDigitToken(MONTH),
+            new DigitsToken(MONTH, 2),
             new SeparatorToken('-'),
-            new TwoDigitToken(DAY)
+            new DigitsToken(DAY, 2)
     );
 
     private static final ConfigurableDateTimeParser MINUTES = DATE.combine(
             new SeparatorToken('T'),
-            new TwoDigitToken(HOUR),
+            new DigitsToken(HOUR, 2),
             new SeparatorToken(':'),
-            new TwoDigitToken(MINUTE)
+            new DigitsToken(MINUTE, 2)
     );
 
     private static final ConfigurableDateTimeParser LOCAL_TIME = MINUTES.combine(
             new SeparatorToken(':'),
-            new TwoDigitToken(SECOND)
+            new DigitsToken(SECOND, 2)
     );
 
     private static final ConfigurableDateTimeParser FRACTIONAL_SECONDS_LOCAL = LOCAL_TIME.combine(

@@ -34,11 +34,16 @@ public class SeparatorToken implements DateTimeToken
         this.separator = separator;
     }
 
+    public static DateTimeToken separator(char c)
+    {
+        return new SeparatorToken(c);
+    }
+
     @Override
     public int read(final String text, final ParsePosition parsePosition)
     {
         final int index = parsePosition.getIndex();
-        if (text.length() >= index && text.charAt(index) == separator)
+        if (text.length() > index && text.charAt(index) == separator)
         {
             parsePosition.setIndex(index + 1);
         }

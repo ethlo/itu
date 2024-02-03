@@ -36,6 +36,16 @@ public class DigitsToken implements DateTimeToken
         this.length = length;
     }
 
+    public static DateTimeToken ofTwo(Field field)
+    {
+        return new DigitsToken(field, 2);
+    }
+
+    public static DateTimeToken ofFour(Field field)
+    {
+        return new DigitsToken(field, 4);
+    }
+
     @Override
     public int read(String text, ParsePosition parsePosition)
     {
