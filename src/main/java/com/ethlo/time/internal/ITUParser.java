@@ -50,6 +50,8 @@ public class ITUParser
     static final char ZULU_UPPER = 'Z';
     private static final char ZULU_LOWER = 'z';
     public static final int MAX_FRACTION_DIGITS = 9;
+    public static final int RADIX = 10;
+    public static final int DIGITS_IN_NANO = 9;
 
     private ITUParser()
     {
@@ -165,7 +167,7 @@ public class ITUParser
         // Date portion
 
         // YEAR
-        final int years = parsePositiveInt(chars, offset, offset + 4);
+        final int years = parseYears(chars, offset);
         if (4 == availableLength)
         {
             return new DateTime(Field.YEAR, years, 0, 0, 0, 0, 0, 0, null, 0, availableLength);
@@ -173,7 +175,7 @@ public class ITUParser
 
         // MONTH
         assertPositionContains(Field.MONTH, chars, offset + 4, DATE_SEPARATOR);
-        final int month = parsePositiveInt(chars, offset + 5, offset + 7);
+        final int month = parseMonth(chars, offset);
         if (7 == availableLength)
         {
             return new DateTime(Field.MONTH, years, month, 0, 0, 0, 0, 0, null, 0, availableLength);
@@ -181,7 +183,7 @@ public class ITUParser
 
         // DAY
         assertPositionContains(Field.DAY, chars, offset + 7, DATE_SEPARATOR);
-        final int days = parsePositiveInt(chars, offset + 8, offset + 10);
+        final int days = parseDays(chars, offset);
         if (10 == availableLength)
         {
             return new DateTime(Field.DAY, years, month, days, 0, 0, 0, 0, null, 0, availableLength);
@@ -189,11 +191,11 @@ public class ITUParser
 
         // HOURS
         assertAllowedDateTimeSeparator(offset, chars, parseConfig);
-        final int hours = parsePositiveInt(chars, offset + 11, offset + 13);
+        final int hours = parseHours(chars, offset);
 
         // MINUTES
         assertPositionContains(Field.MINUTE, chars, offset + 13, TIME_SEPARATOR);
-        final int minutes = parsePositiveInt(chars, offset + 14, offset + 16);
+        final int minutes = parseMinutes(chars, offset);
         if (availableLength == 16)
         {
             // Have only minutes
@@ -202,6 +204,36 @@ public class ITUParser
 
         // SECONDS or TIMEZONE
         return handleTime(offset, parseConfig, chars, years, month, days, hours, minutes);
+    }
+
+    private static int parseSeconds(int offset, String chars)
+    {
+        return parsePositiveInt(chars, offset + 17, offset + 19);
+    }
+
+    private static int parseMinutes(String chars, int offset)
+    {
+        return parsePositiveInt(chars, offset + 14, offset + 16);
+    }
+
+    private static int parseHours(String chars, int offset)
+    {
+        return parsePositiveInt(chars, offset + 11, offset + 13);
+    }
+
+    private static int parseDays(String chars, int offset)
+    {
+        return parsePositiveInt(chars, offset + 8, offset + 10);
+    }
+
+    private static int parseMonth(String chars, int offset)
+    {
+        return parsePositiveInt(chars, offset + 5, offset + 7);
+    }
+
+    private static int parseYears(String chars, int offset)
+    {
+        return parsePositiveInt(chars, offset, offset + 4);
     }
 
     private static DateTime handleTimeResolution(final int offset, ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars)
@@ -231,7 +263,7 @@ public class ITUParser
         }
         else if (length == 19)
         {
-            final int seconds = parsePositiveInt(chars, offset + 17, offset + 19);
+            final int seconds = parseSeconds(offset, chars);
             return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0, length);
         }
 
@@ -240,7 +272,7 @@ public class ITUParser
 
     private static DateTime handleSecondResolution(int offset, int year, int month, int day, int hour, int minute, String chars, TimezoneOffset timezoneOffset)
     {
-        final int seconds = parsePositiveInt(chars, offset + 17, offset + 19);
+        final int seconds = parseSeconds(offset, chars);
         final int charLength = Field.SECOND.getRequiredLength() + (timezoneOffset != null ? timezoneOffset.getRequiredLength() : 0);
         return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, timezoneOffset, 0, charLength);
     }
@@ -260,24 +292,24 @@ public class ITUParser
             else
             {
                 fractionDigits++;
-                nanos = nanos * 10 + (c - ZERO);
+                nanos = nanos * RADIX + (c - ZERO);
                 idx++;
             }
         }
 
         assertFractionDigits(chars, fractionDigits, offset + (idx - 1));
 
-        // Scale to nanos
+        // Scale to nanoseconds
         int pos = fractionDigits;
-        while (pos < 9)
+        while (pos < DIGITS_IN_NANO)
         {
-            nanos *= 10;
+            nanos *= RADIX;
             pos++;
         }
 
         final TimezoneOffset timezoneOffset = parseTimezone(offset, parseConfig, chars, idx);
         final int charLength = (idx + (timezoneOffset != null ? timezoneOffset.getRequiredLength() : 0)) - offset;
-        final int second = parsePositiveInt(chars, offset + 17, offset + 19);
+        final int second = parseSeconds(offset, chars);
         return new DateTime(Field.NANO, year, month, day, hour, minute, second, nanos, timezoneOffset, fractionDigits, charLength);
     }
 
