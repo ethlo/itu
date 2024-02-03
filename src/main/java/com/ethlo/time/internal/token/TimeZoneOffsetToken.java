@@ -1,4 +1,4 @@
-package com.ethlo.time.token;
+package com.ethlo.time.internal.token;
 
 /*-
  * #%L
@@ -9,9 +9,9 @@ package com.ethlo.time.token;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,13 +20,18 @@ package com.ethlo.time.token;
  * #L%
  */
 
-import static com.ethlo.time.internal.ErrorUtil.raiseUnexpectedCharacter;
-import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.parsePositiveInt;
+import static com.ethlo.time.internal.fixed.ITUParser.MINUS;
+import static com.ethlo.time.internal.fixed.ITUParser.PLUS;
+import static com.ethlo.time.internal.fixed.ITUParser.ZULU_LOWER;
+import static com.ethlo.time.internal.fixed.ITUParser.ZULU_UPPER;
+import static com.ethlo.time.internal.util.ErrorUtil.raiseUnexpectedCharacter;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parsePositiveInt;
 
 import java.text.ParsePosition;
 import java.time.format.DateTimeParseException;
 
 import com.ethlo.time.Field;
+import com.ethlo.time.token.DateTimeToken;
 
 public class TimeZoneOffsetToken implements DateTimeToken
 {
@@ -51,7 +56,7 @@ public class TimeZoneOffsetToken implements DateTimeToken
         final char sign = text.charAt(idx);
         if (sign != '+' && sign != '-')
         {
-            raiseUnexpectedCharacter(text, idx);
+            raiseUnexpectedCharacter(text, idx, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
         }
 
         if (left < 6)

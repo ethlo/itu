@@ -29,8 +29,8 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 
-import com.ethlo.time.internal.ITUFormatter;
-import com.ethlo.time.internal.ITUParser;
+import com.ethlo.time.internal.fixed.ITUFormatter;
+import com.ethlo.time.internal.fixed.ITUParser;
 
 /**
  * The main access to the parse and formatting functions in this library.

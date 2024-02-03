@@ -1,4 +1,4 @@
-package com.ethlo.time.token;
+package com.ethlo.time.internal.token;
 
 /*-
  * #%L
@@ -24,8 +24,8 @@ import java.text.ParsePosition;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 
-import com.ethlo.time.Field;
-import com.ethlo.time.internal.ErrorUtil;
+import com.ethlo.time.internal.util.ErrorUtil;
+import com.ethlo.time.token.DateTimeToken;
 
 public class SeparatorsToken implements DateTimeToken
 {
@@ -55,11 +55,5 @@ public class SeparatorsToken implements DateTimeToken
             }
         }
         throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", Arrays.toString(separators), index + 1, text.charAt(index), text), text, index);
-    }
-
-    @Override
-    public Field getField()
-    {
-        return null;
     }
 }

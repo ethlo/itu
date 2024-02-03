@@ -26,7 +26,7 @@ import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
-import com.ethlo.time.internal.LimitedCharArrayIntegerUtil;
+import com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil;
 
 public class CharArrayUtilTest
 {

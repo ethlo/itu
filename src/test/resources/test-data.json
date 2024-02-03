@@ -91,7 +91,7 @@
     },
     {
         "input": "2020-22-12T12:11.56+04:30",
-        "error": "Unexpected character . at position 17: 2020-22-12T12:11.56+04:30",
+        "error": "Expected character [:, Z, z, +, -] at position 17, found .: 2020-22-12T12:11.56+04:30",
         "error_index": 16
     },
     {
@@ -131,7 +131,7 @@
     },
     {
         "input": "2017-02-21T15:27:22~10:00",
-        "error": "Unexpected character ~ at position 20: 2017-02-21T15:27:22~10:00",
+        "error": "Expected character [., Z, z, +, -] at position 20, found ~: 2017-02-21T15:27:22~10:00",
         "error_index": 19
     },
     {
@@ -181,7 +181,7 @@
     },
     {
         "input": "2017-12-21T12:20:45.9b7Z",
-        "error": "Unexpected character b at position 22: 2017-12-21T12:20:45.9b7Z",
+        "error": "Expected character [Z, z, +, -] at position 22, found b: 2017-12-21T12:20:45.9b7Z",
         "error_index": 21
     },
     {
@@ -231,7 +231,7 @@
     },
     {
         "input": "199g-11-05T08:15:30-05:00",
-        "error": "Unexpected character g at position 4: 199g-11-05T08:15:30-05:00",
+        "error": "Expected character [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] at position 4, found g: 199g-11-05T08:15:30-05:00",
         "error_index": 3,
         "note": "Non-digit in year"
     },

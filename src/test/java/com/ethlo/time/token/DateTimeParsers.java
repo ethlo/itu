@@ -20,42 +20,47 @@ package com.ethlo.time.token;
  * #L%
  */
 
+import com.ethlo.time.internal.token.TimeZoneOffsetToken;
+
 import static com.ethlo.time.Field.DAY;
 import static com.ethlo.time.Field.HOUR;
 import static com.ethlo.time.Field.MINUTE;
 import static com.ethlo.time.Field.MONTH;
 import static com.ethlo.time.Field.SECOND;
 import static com.ethlo.time.Field.YEAR;
+import static com.ethlo.time.token.DateTimeTokens.*;
+import static com.ethlo.time.token.DateTimeTokens.digits;
+import static com.ethlo.time.token.DateTimeTokens.separators;
 
 public class DateTimeParsers
 {
     private static final ConfigurableDateTimeParser DATE = new ConfigurableDateTimeParser(
-            new DigitsToken(YEAR, 4),
-            new SeparatorToken('-'),
-            new DigitsToken(MONTH, 2),
-            new SeparatorToken('-'),
-            new DigitsToken(DAY, 2)
+            digits(YEAR, 4),
+            separators('-'),
+            digits(MONTH, 2),
+            separators('-'),
+            digits(DAY, 2)
     );
 
     private static final ConfigurableDateTimeParser MINUTES = DATE.combine(
-            new SeparatorToken('T'),
-            new DigitsToken(HOUR, 2),
-            new SeparatorToken(':'),
-            new DigitsToken(MINUTE, 2)
+            separators('T'),
+            digits(HOUR, 2),
+            separators(':'),
+            digits(MINUTE, 2)
     );
 
     private static final ConfigurableDateTimeParser LOCAL_TIME = MINUTES.combine(
-            new SeparatorToken(':'),
-            new DigitsToken(SECOND, 2)
+            separators(':'),
+            digits(SECOND, 2)
     );
 
     private static final ConfigurableDateTimeParser FRACTIONAL_SECONDS_LOCAL = LOCAL_TIME.combine(
-            new SeparatorToken('.'),
-            new FractionsToken()
+            separators('.'),
+            fractions()
     );
 
     private static final ConfigurableDateTimeParser FRACTIONAL_SECONDS_OFFSET = FRACTIONAL_SECONDS_LOCAL.combine(
-            new TimeZoneOffsetToken()
+            DateTimeTokens.timeZoneOffset()
     );
 
     public static DateTimeParser rfc3339()

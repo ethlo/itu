@@ -1,4 +1,4 @@
-package com.ethlo.time.token;
+package com.ethlo.time.internal.token;
 
 /*-
  * #%L
@@ -23,7 +23,8 @@ package com.ethlo.time.token;
 import java.text.ParsePosition;
 
 import com.ethlo.time.Field;
-import com.ethlo.time.internal.ErrorUtil;
+import com.ethlo.time.internal.util.ErrorUtil;
+import com.ethlo.time.token.DateTimeToken;
 
 public class SeparatorToken implements DateTimeToken
 {
@@ -32,11 +33,6 @@ public class SeparatorToken implements DateTimeToken
     public SeparatorToken(char separator)
     {
         this.separator = separator;
-    }
-
-    public static DateTimeToken separator(char c)
-    {
-        return new SeparatorToken(c);
     }
 
     @Override
@@ -53,7 +49,7 @@ public class SeparatorToken implements DateTimeToken
         }
         else if (text.charAt(index) != separator)
         {
-            ErrorUtil.raiseUnexpectedCharacter(text, index);
+            ErrorUtil.raiseUnexpectedCharacter(text, index, separator);
         }
         parsePosition.setIndex(index + 1);
         return 1;

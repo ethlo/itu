@@ -28,5 +28,8 @@ public interface DateTimeToken
 {
     int read(String text, ParsePosition parsePosition);
 
-    Field getField();
+    default Field getField()
+    {
+        return null;
+    }
 }

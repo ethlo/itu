@@ -1,4 +1,4 @@
-package com.ethlo.time.internal;
+package com.ethlo.time.internal.fixed;
 
 /*-
  * #%L
@@ -20,13 +20,13 @@ package com.ethlo.time.internal;
  * #L%
  */
 
-import static com.ethlo.time.internal.ErrorUtil.assertFractionDigits;
-import static com.ethlo.time.internal.ErrorUtil.assertPositionContains;
-import static com.ethlo.time.internal.ErrorUtil.raiseUnexpectedCharacter;
-import static com.ethlo.time.internal.ErrorUtil.raiseUnexpectedEndOfText;
-import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.DIGIT_9;
-import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.ZERO;
-import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.parsePositiveInt;
+import static com.ethlo.time.internal.util.ErrorUtil.assertFractionDigits;
+import static com.ethlo.time.internal.util.ErrorUtil.assertPositionContains;
+import static com.ethlo.time.internal.util.ErrorUtil.raiseUnexpectedCharacter;
+import static com.ethlo.time.internal.util.ErrorUtil.raiseUnexpectedEndOfText;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.DIGIT_9;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parsePositiveInt;
 
 import java.text.ParsePosition;
 import java.time.OffsetDateTime;
@@ -37,6 +37,7 @@ import com.ethlo.time.DateTime;
 import com.ethlo.time.Field;
 import com.ethlo.time.ParseConfig;
 import com.ethlo.time.TimezoneOffset;
+import com.ethlo.time.internal.util.ArrayUtils;
 import com.ethlo.time.token.DateTimeParser;
 
 public class ITUParser implements DateTimeParser
@@ -46,11 +47,11 @@ public class ITUParser implements DateTimeParser
     public static final char SEPARATOR_UPPER = 'T';
     public static final char SEPARATOR_LOWER = 't';
     public static final char SEPARATOR_SPACE = ' ';
-    static final char PLUS = '+';
-    static final char MINUS = '-';
+    public static final char PLUS = '+';
+    public static final char MINUS = '-';
     public static final char FRACTION_SEPARATOR = '.';
-    static final char ZULU_UPPER = 'Z';
-    private static final char ZULU_LOWER = 'z';
+    public static final char ZULU_UPPER = 'Z';
+    public static final char ZULU_LOWER = 'z';
     public static final int MAX_FRACTION_DIGITS = 9;
     public static final int RADIX = 10;
     public static final int DIGITS_IN_NANO = 9;
@@ -78,7 +79,7 @@ public class ITUParser implements DateTimeParser
                 return new DateTime(Field.MINUTE, year, month, day, hour, minute, 0, 0, zoneOffset, 0, charLength);
 
             default:
-                throw raiseUnexpectedCharacter(chars, offset + 16);
+                throw raiseUnexpectedCharacter(chars, offset + 16, TIME_SEPARATOR, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
         }
     }
 
@@ -111,7 +112,7 @@ public class ITUParser implements DateTimeParser
         final char sign = chars.charAt(idx);
         if (sign != PLUS && sign != MINUS)
         {
-            raiseUnexpectedCharacter(chars, idx);
+            raiseUnexpectedCharacter(chars, idx, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
         }
 
         if (left < 6)
@@ -260,7 +261,7 @@ public class ITUParser implements DateTimeParser
             }
             else
             {
-                throw raiseUnexpectedCharacter(chars, offset + 19);
+                throw raiseUnexpectedCharacter(chars, offset + 19, ArrayUtils.merge(parseConfig.getFractionSeparators(), new char[]{ZULU_UPPER, ZULU_LOWER, PLUS, MINUS}));
             }
         }
         else if (length == 19)

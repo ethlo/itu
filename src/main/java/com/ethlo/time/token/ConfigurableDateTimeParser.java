@@ -28,6 +28,7 @@ import java.text.ParsePosition;
 import com.ethlo.time.DateTime;
 import com.ethlo.time.Field;
 import com.ethlo.time.TimezoneOffset;
+import com.ethlo.time.internal.token.FractionsToken;
 
 public class ConfigurableDateTimeParser implements DateTimeParser
 {

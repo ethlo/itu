@@ -26,9 +26,9 @@ import static com.ethlo.time.Field.MINUTE;
 import static com.ethlo.time.Field.MONTH;
 import static com.ethlo.time.Field.SECOND;
 import static com.ethlo.time.Field.YEAR;
-import static com.ethlo.time.token.DigitsToken.ofFour;
-import static com.ethlo.time.token.DigitsToken.ofTwo;
-import static com.ethlo.time.token.SeparatorToken.separator;
+import static com.ethlo.time.token.DateTimeTokens.digits;
+import static com.ethlo.time.token.DateTimeTokens.fractions;
+import static com.ethlo.time.token.DateTimeTokens.separators;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -39,6 +39,8 @@ import org.junit.jupiter.api.Test;
 
 import com.ethlo.time.DateTime;
 import com.ethlo.time.ITU;
+import com.ethlo.time.internal.token.FractionsToken;
+import com.ethlo.time.internal.token.TimeZoneOffsetToken;
 
 public class ConfigurableDateTimeParserTest
 {
@@ -48,17 +50,17 @@ public class ConfigurableDateTimeParserTest
         final ParsePosition pos = new ParsePosition(0);
         final String input = "31-12-2000 235937,123456";
         final DateTimeParser parser = new ConfigurableDateTimeParser(
-                ofTwo(DAY),
-                separator('-'),
-                ofTwo(MONTH),
-                separator('-'),
-                ofFour(YEAR),
-                separator(' '),
-                ofTwo(HOUR),
-                ofTwo(MINUTE),
-                ofTwo(SECOND),
-                separator(','),
-                new FractionsToken()
+                digits(DAY, 2),
+                separators('-'),
+                digits(MONTH, 2),
+                separators('-'),
+                digits(YEAR, 4),
+                separators(' '),
+                digits(HOUR, 2),
+                digits(MINUTE, 2),
+                digits(SECOND, 2),
+                separators(','),
+                fractions()
         );
         final DateTime result = parser.parse(input, pos);
         assertThat(result).isEqualTo(DateTime.of(2000, 12, 31, 23, 59, 37, 123456000, null, 6));
@@ -77,17 +79,32 @@ public class ConfigurableDateTimeParserTest
     }
 
     @Test
+    void testInvalidSeparators()
+    {
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new ConfigurableDateTimeParser(separators('X')).parse("12"));
+        assertThat(exc).hasMessage("Expected character [X] at position 1, found 1: 12");
+    }
+
+    @Test
+    void testSeparators()
+    {
+        final ParsePosition position = new ParsePosition(0);
+        final int result = separators('-', '_').read("_", position);
+        assertThat(result).isEqualTo(1);
+    }
+
+    @Test
     void testInvalidSeparator()
     {
-        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new ConfigurableDateTimeParser(separator('X')).parse("12"));
-        assertThat(exc).hasMessage("Unexpected character 1 at position 1: 12");
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new ConfigurableDateTimeParser(separators('X')).parse("12"));
+        assertThat(exc).hasMessage("Expected character [X] at position 1, found 1: 12");
     }
 
     @Test
     void testEndOfTextSeparator()
     {
         final ParsePosition pos = new ParsePosition(0);
-        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, ()->separator('-').read("", pos));
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> separators('-').read("", pos));
         assertThat(exc).hasMessage("Unexpected end of input: ");
     }
 
@@ -116,15 +133,15 @@ public class ConfigurableDateTimeParserTest
     void readTimeZoneUnexpectedChar()
     {
         final ParsePosition pos = new ParsePosition(0);
-        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, ()->new TimeZoneOffsetToken().read("X", pos));
-        assertThat(exc).hasMessage("Unexpected character X at position 1: X");
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new TimeZoneOffsetToken().read("X", pos));
+        assertThat(exc).hasMessage("Expected character [Z, z, +, -] at position 1, found X: X");
     }
 
     @Test
     void readTimeZoneTooShort()
     {
         final ParsePosition pos = new ParsePosition(0);
-        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, ()->new TimeZoneOffsetToken().read("-06:0", pos));
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new TimeZoneOffsetToken().read("-06:0", pos));
         assertThat(exc).hasMessage("Invalid timezone offset: -06:0");
     }
 

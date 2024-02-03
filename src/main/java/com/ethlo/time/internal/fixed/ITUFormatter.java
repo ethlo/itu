@@ -1,4 +1,4 @@
-package com.ethlo.time.internal;
+package com.ethlo.time.internal.fixed;
 
 /*-
  * #%L
@@ -20,20 +20,22 @@ package com.ethlo.time.internal;
  * #L%
  */
 
-import static com.ethlo.time.internal.ITUParser.DATE_SEPARATOR;
-import static com.ethlo.time.internal.ITUParser.FRACTION_SEPARATOR;
-import static com.ethlo.time.internal.ITUParser.MAX_FRACTION_DIGITS;
-import static com.ethlo.time.internal.ITUParser.MINUS;
-import static com.ethlo.time.internal.ITUParser.PLUS;
-import static com.ethlo.time.internal.ITUParser.SEPARATOR_UPPER;
-import static com.ethlo.time.internal.ITUParser.TIME_SEPARATOR;
-import static com.ethlo.time.internal.ITUParser.ZULU_UPPER;
+import static com.ethlo.time.internal.fixed.ITUParser.DATE_SEPARATOR;
+import static com.ethlo.time.internal.fixed.ITUParser.FRACTION_SEPARATOR;
+import static com.ethlo.time.internal.fixed.ITUParser.MAX_FRACTION_DIGITS;
+import static com.ethlo.time.internal.fixed.ITUParser.MINUS;
+import static com.ethlo.time.internal.fixed.ITUParser.PLUS;
+import static com.ethlo.time.internal.fixed.ITUParser.SEPARATOR_UPPER;
+import static com.ethlo.time.internal.fixed.ITUParser.TIME_SEPARATOR;
+import static com.ethlo.time.internal.fixed.ITUParser.ZULU_UPPER;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 import com.ethlo.time.Field;
 import com.ethlo.time.TimezoneOffset;
+import com.ethlo.time.internal.DateTimeFormatException;
+import com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil;
 
 public class ITUFormatter
 {

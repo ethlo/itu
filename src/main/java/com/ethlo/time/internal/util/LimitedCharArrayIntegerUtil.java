@@ -1,4 +1,4 @@
-package com.ethlo.time.internal;
+package com.ethlo.time.internal.util;
 
 /*-
  * #%L
@@ -57,7 +57,7 @@ public final class LimitedCharArrayIntegerUtil
                 final char c = strNum.charAt(i);
                 if (c < ZERO || c > DIGIT_9)
                 {
-                    ErrorUtil.raiseUnexpectedCharacter(strNum, i);
+                    ErrorUtil.raiseUnexpectedCharacter(strNum, i, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
                 }
                 result = (result * 10) + (c - ZERO);
             }

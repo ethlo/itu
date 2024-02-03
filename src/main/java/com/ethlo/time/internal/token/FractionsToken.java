@@ -1,4 +1,4 @@
-package com.ethlo.time.token;
+package com.ethlo.time.internal.token;
 
 /*-
  * #%L
@@ -9,9 +9,9 @@ package com.ethlo.time.token;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,12 +20,13 @@ package com.ethlo.time.token;
  * #L%
  */
 
-import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.DIGIT_9;
-import static com.ethlo.time.internal.LimitedCharArrayIntegerUtil.ZERO;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.DIGIT_9;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
 
 import java.text.ParsePosition;
 
 import com.ethlo.time.Field;
+import com.ethlo.time.token.DateTimeToken;
 
 public class FractionsToken implements DateTimeToken
 {
