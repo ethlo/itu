@@ -52,7 +52,6 @@ public final class LimitedCharArrayIntegerUtil
         int result = 0;
         try
         {
-
             for (int i = startInclusive; i < endExclusive; i++)
             {
                 final char c = strNum.charAt(i);
@@ -60,7 +59,7 @@ public final class LimitedCharArrayIntegerUtil
                 {
                     ErrorUtil.raiseUnexpectedCharacter(strNum, i);
                 }
-                result = result * 10 + (c - ZERO);
+                result = (result * 10) + (c - ZERO);
             }
         }
         catch (StringIndexOutOfBoundsException exc)

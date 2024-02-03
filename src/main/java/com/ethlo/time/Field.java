@@ -40,7 +40,8 @@ public enum Field
     HOUR(13),
     MINUTE(16),
     SECOND(19),
-    NANO(20);
+    NANO(20),
+    ZONE_OFFSET(17);
 
     private final int requiredLength;
 

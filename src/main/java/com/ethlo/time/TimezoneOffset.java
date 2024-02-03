@@ -29,6 +29,9 @@ import java.util.Objects;
 public class TimezoneOffset
 {
     public static final TimezoneOffset UTC = new TimezoneOffset(0, 0);
+    private static final int SECONDS_PER_HOUR = 3600;
+    private static final int SECONDS_PER_MINUTE = 60;
+    private static final int MINUTES_PER_HOUR = 60;
     private final int hours;
     private final int minutes;
 
@@ -41,6 +44,13 @@ public class TimezoneOffset
     public static TimezoneOffset ofHoursMinutes(int hours, int minutes)
     {
         return new TimezoneOffset(hours, minutes);
+    }
+
+    public static TimezoneOffset ofTotalSeconds(int seconds)
+    {
+        final int absHours = seconds / SECONDS_PER_HOUR;
+        int absMinutes = (seconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR;
+        return ofHoursMinutes(absHours, absMinutes);
     }
 
     public static TimezoneOffset of(ZoneOffset offset)
