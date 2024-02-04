@@ -50,6 +50,7 @@ public class TimeZoneOffsetToken implements DateTimeToken
         final char c = text.charAt(idx);
         if (c == 'Z' || c == 'z')
         {
+            parsePosition.setIndex(idx + 1);
             return 0;
         }
 
@@ -77,6 +78,7 @@ public class TimeZoneOffsetToken implements DateTimeToken
             }
         }
 
+        parsePosition.setIndex(idx + 6);
         return hours * 3600 + minutes * 60;
     }
 

@@ -45,11 +45,26 @@ import com.ethlo.time.internal.token.TimeZoneOffsetToken;
 
 public class ConfigurableDateTimeParserTest
 {
+    private final DateTimeParser rfc3339Parser = DateTimeParsers.of(
+            digits(YEAR, 4),
+            separators('-'),
+            digits(MONTH, 2),
+            separators('-'),
+            digits(DAY, 2),
+            separators('T', 't', ' '),
+            digits(HOUR, 2),
+            separators(':'),
+            digits(MINUTE, 2),
+            separators(':'),
+            digits(SECOND, 2),
+            separators('.'),
+            fractions(),
+            zoneOffset()
+    );
+
     @Test
     void parseCustomFormat()
     {
-        final ParsePosition pos = new ParsePosition(0);
-        final String input = "31-12-2000 235937,123456";
         final DateTimeParser parser = DateTimeParsers.of(
                 digits(DAY, 2),
                 separators('-'),
@@ -63,6 +78,8 @@ public class ConfigurableDateTimeParserTest
                 separators(','),
                 fractions()
         );
+        final ParsePosition pos = new ParsePosition(0);
+        final String input = "31-12-2000 235937,123456";
         final DateTime result = parser.parse(input, pos);
         assertThat(result).isEqualTo(DateTime.of(2000, 12, 31, 23, 59, 37, 123456000, null, 6));
     }
@@ -183,5 +200,24 @@ public class ConfigurableDateTimeParserTest
         final ParsePosition pos = new ParsePosition(0);
         final int secs = new TimeZoneOffsetToken().read("-06:30", pos);
         assertThat(secs).isEqualTo(-23400);
+    }
+
+    @Test
+    void testOffset()
+    {
+        final ParsePosition pos = new ParsePosition(10);
+        final String text = "2019-12-31T22:20:14.123+05:30";
+        rfc3339Parser.parse("123456789," + text + ",something", pos);
+        assertThat(pos.getIndex()).isEqualTo(10 + text.length());
+    }
+
+    @Test
+    void testOffsetError()
+    {
+        final ParsePosition pos = new ParsePosition(10);
+        final String text = "2019-12-31T22:20X14.123+05:30";
+        assertThrows(DateTimeParseException.class, () -> rfc3339Parser.parse("123456789," + text + ",something", pos));
+        assertThat(pos.getIndex()).isEqualTo(26);
+        assertThat(pos.getErrorIndex()).isEqualTo(26);
     }
 }

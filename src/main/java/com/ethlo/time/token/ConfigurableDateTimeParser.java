@@ -24,6 +24,7 @@ import static com.ethlo.time.Field.NANO;
 import static com.ethlo.time.Field.YEAR;
 
 import java.text.ParsePosition;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -58,9 +59,24 @@ public class ConfigurableDateTimeParser implements DateTimeParser
     @Override
     public DateTime parse(String text, ParsePosition parsePosition)
     {
+        try
+        {
+            return doParse(text, parsePosition);
+        }
+        catch (DateTimeParseException exc)
+        {
+            parsePosition.setIndex(exc.getErrorIndex());
+            parsePosition.setErrorIndex(exc.getErrorIndex());
+            throw exc;
+        }
+    }
+
+    private DateTime doParse(String text, ParsePosition parsePosition)
+    {
         int fractionsLength = 0;
         int highestOrdinal = YEAR.ordinal();
         final int[] values = new int[]{0, 1, 1, 0, 0, 0, 0, -1};
+
         for (DateTimeToken token : tokens)
         {
             final int index = parsePosition.getIndex();
