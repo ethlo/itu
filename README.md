@@ -111,27 +111,27 @@ import static com.ethlo.time.token.DateTimeTokens.separators;
 import static com.ethlo.time.token.DateTimeTokens.zoneOffset;
 ...
 
-    @Test
-    void parseCustomFormat()
-    {
-        final DateTimeParser parser = DateTimeParsers.of(
-                digits(DAY, 2),
-                separators('-'),
-                digits(MONTH, 2),
-                separators('-'),
-                digits(YEAR, 4),
-                separators(' '),
-                digits(HOUR, 2),
-                digits(MINUTE, 2),
-                digits(SECOND, 2),
-                separators(','),
-                fractions()
-        );
-        final ParsePosition pos = new ParsePosition(0);
-        final String input = "31-12-2000 235937,123456";
-        final DateTime result = parser.parse(input, pos); 
-        // equals 2000-12-31T23:59:37.123456
-    }
+@Test
+void parseCustomFormat()
+{
+    final DateTimeParser parser = DateTimeParsers.of(
+            digits(DAY, 2),
+            separators('-'),
+            digits(MONTH, 2),
+            separators('-'),
+            digits(YEAR, 4),
+            separators(' '),
+            digits(HOUR, 2),
+            digits(MINUTE, 2),
+            digits(SECOND, 2),
+            separators(','),
+            fractions()
+    );
+    final ParsePosition pos = new ParsePosition(0);
+    final String input = "31-12-2000 235937,123456";
+    final DateTime result = parser.parse(input, pos); 
+    // equals 2000-12-31T23:59:37.123456
+}
 ```
 
 ### Formatting
