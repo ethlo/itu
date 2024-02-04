@@ -29,8 +29,8 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 
-import com.ethlo.time.internal.ITUFormatter;
-import com.ethlo.time.internal.ITUParser;
+import com.ethlo.time.internal.fixed.ITUFormatter;
+import com.ethlo.time.internal.fixed.ITUParser;
 
 /**
  * The main access to the parse and formatting functions in this library.
@@ -71,7 +71,8 @@ public class ITU
 
     /**
      * Allows parsing leniently with {@link ParseConfig to control some aspects of the parsing}
-     * @param text The text to parse
+     *
+     * @param text        The text to parse
      * @param parseConfig The configuration to use for parsing
      * @return The date-time parsed
      */
@@ -81,10 +82,9 @@ public class ITU
     }
 
     /**
-     *
-     * @param text The text to parse
+     * @param text        The text to parse
      * @param parseConfig The configuration to use for parsing
-     * @param position The position to start parsing from. The index (and the errorIndex, if an error occurs) is updated after the parsing process has completed
+     * @param position    The position to start parsing from. The index (and the errorIndex, if an error occurs) is updated after the parsing process has completed
      * @return The date-time parsed
      */
     public static DateTime parseLenient(String text, ParseConfig parseConfig, ParsePosition position)

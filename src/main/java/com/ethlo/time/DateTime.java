@@ -20,11 +20,11 @@ package com.ethlo.time;
  * #L%
  */
 
-import static com.ethlo.time.internal.ITUParser.DATE_SEPARATOR;
-import static com.ethlo.time.internal.ITUParser.SEPARATOR_UPPER;
-import static com.ethlo.time.internal.ITUParser.TIME_SEPARATOR;
-import static com.ethlo.time.internal.ITUFormatter.finish;
-import static com.ethlo.time.internal.LeapSecondHandler.LEAP_SECOND_SECONDS;
+import static com.ethlo.time.internal.fixed.ITUFormatter.finish;
+import static com.ethlo.time.internal.fixed.ITUParser.DATE_SEPARATOR;
+import static com.ethlo.time.internal.fixed.ITUParser.SEPARATOR_UPPER;
+import static com.ethlo.time.internal.fixed.ITUParser.TIME_SEPARATOR;
+import static com.ethlo.time.internal.util.LeapSecondHandler.LEAP_SECOND_SECONDS;
 
 import java.time.DateTimeException;
 import java.time.Instant;
@@ -43,10 +43,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.ethlo.time.internal.DateTimeFormatException;
-import com.ethlo.time.internal.DateTimeMath;
-import com.ethlo.time.internal.DefaultLeapSecondHandler;
-import com.ethlo.time.internal.LeapSecondHandler;
-import com.ethlo.time.internal.LimitedCharArrayIntegerUtil;
+import com.ethlo.time.internal.util.DateTimeMath;
+import com.ethlo.time.internal.util.DefaultLeapSecondHandler;
+import com.ethlo.time.internal.util.LeapSecondHandler;
+import com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil;
 
 /**
  * Container class for parsed date/date-time data. The {@link #getMostGranularField()} contains the highest granularity field found, like MONTH, MINUTE, SECOND.

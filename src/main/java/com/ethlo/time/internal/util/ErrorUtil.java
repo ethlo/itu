@@ -1,4 +1,4 @@
-package com.ethlo.time.internal;
+package com.ethlo.time.internal.util;
 
 /*-
  * #%L
@@ -20,9 +20,10 @@ package com.ethlo.time.internal;
  * #L%
  */
 
-import static com.ethlo.time.internal.ITUParser.MAX_FRACTION_DIGITS;
+import static com.ethlo.time.internal.fixed.ITUParser.MAX_FRACTION_DIGITS;
 
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 
 import com.ethlo.time.Field;
 
@@ -32,9 +33,9 @@ public class ErrorUtil
     {
     }
 
-    public static DateTimeParseException raiseUnexpectedCharacter(String chars, int index)
+    public static DateTimeParseException raiseUnexpectedCharacter(String chars, int index, char... expected)
     {
-        throw new DateTimeParseException(String.format("Unexpected character %s at position %d: %s", chars.charAt(index), index + 1, chars), chars, index);
+        throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", Arrays.toString(expected), index + 1, chars.charAt(index), chars), chars, index);
     }
 
     public static DateTimeParseException raiseUnexpectedEndOfText(final String chars, final int offset)
