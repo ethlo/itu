@@ -28,7 +28,6 @@ import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.DIGIT_9;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parsePositiveInt;
 
-import java.text.ParsePosition;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
@@ -38,9 +37,8 @@ import com.ethlo.time.Field;
 import com.ethlo.time.ParseConfig;
 import com.ethlo.time.TimezoneOffset;
 import com.ethlo.time.internal.util.ArrayUtils;
-import com.ethlo.time.token.DateTimeParser;
 
-public class ITUParser implements DateTimeParser
+public class ITUParser
 {
     public static final char DATE_SEPARATOR = '-';
     public static final char TIME_SEPARATOR = ':';
@@ -326,23 +324,5 @@ public class ITUParser implements DateTimeParser
         final Field field = dateTime.getMostGranularField();
         final Field nextGranularity = Field.values()[field.ordinal() + 1];
         throw new DateTimeParseException(String.format("Unexpected end of input, missing field %s: %s", nextGranularity, chars), chars, field.getRequiredLength());
-    }
-
-    @Override
-    public DateTime parse(final String text, final ParsePosition position)
-    {
-        try
-        {
-            int offset = position.getIndex();
-            final DateTime result = ITUParser.parseLenient(text, ParseConfig.DEFAULT, position.getIndex());
-            position.setIndex(offset + result.getParseLength());
-            return result;
-        }
-        catch (DateTimeParseException exc)
-        {
-            position.setErrorIndex(exc.getErrorIndex());
-            position.setIndex(position.getErrorIndex());
-            throw exc;
-        }
     }
 }

@@ -29,6 +29,7 @@ import static com.ethlo.time.Field.YEAR;
 import static com.ethlo.time.token.DateTimeTokens.digits;
 import static com.ethlo.time.token.DateTimeTokens.fractions;
 import static com.ethlo.time.token.DateTimeTokens.separators;
+import static com.ethlo.time.token.DateTimeTokens.zoneOffset;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -49,7 +50,7 @@ public class ConfigurableDateTimeParserTest
     {
         final ParsePosition pos = new ParsePosition(0);
         final String input = "31-12-2000 235937,123456";
-        final DateTimeParser parser = new ConfigurableDateTimeParser(
+        final DateTimeParser parser = DateTimeParsers.of(
                 digits(DAY, 2),
                 separators('-'),
                 digits(MONTH, 2),
@@ -67,12 +68,43 @@ public class ConfigurableDateTimeParserTest
     }
 
     @Test
+    void duplicateField()
+    {
+        final IllegalArgumentException exc = assertThrows(IllegalArgumentException.class, () -> DateTimeParsers.of(
+                        digits(HOUR, 2),
+                        separators('a', 'z'),
+                        digits(HOUR, 4),
+                        separators('X')
+                )
+        );
+        assertThat(exc).hasMessage("Duplicate field HOUR in list of tokens: [digits: HOUR(2), separators: [a, z], digits: HOUR(4), separator: X]");
+    }
+
+    @Test
     void parseRfc3339Format()
     {
+        final DateTimeParser parser = DateTimeParsers.of(
+                digits(YEAR, 4),
+                separators('-'),
+                digits(MONTH, 2),
+                separators('-'),
+                digits(DAY, 2),
+                separators('T', 't'),
+                digits(HOUR, 2),
+                separators(':'),
+                digits(MINUTE, 2),
+                separators(':'),
+                digits(SECOND, 2),
+                separators('.'),
+                fractions(),
+                zoneOffset()
+        );
         final String input = "2023-01-01T23:38:34.987654321+06:00";
         final DateTime fixed = ITU.parseLenient(input);
+
         final ParsePosition pos = new ParsePosition(0);
-        final DateTime custom = DateTimeParsers.rfc3339().parse(input, pos);
+        final DateTime custom = parser.parse(input, pos);
+
         assertThat(custom).isEqualTo(fixed);
         assertThat(fixed.toString()).isEqualTo(input);
         assertThat(custom.toString()).isEqualTo(input);
@@ -81,7 +113,7 @@ public class ConfigurableDateTimeParserTest
     @Test
     void testInvalidSeparators()
     {
-        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new ConfigurableDateTimeParser(separators('X')).parse("12"));
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> DateTimeParsers.of(separators('X')).parse("12"));
         assertThat(exc).hasMessage("Expected character [X] at position 1, found 1: 12");
     }
 
@@ -96,7 +128,7 @@ public class ConfigurableDateTimeParserTest
     @Test
     void testInvalidSeparator()
     {
-        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new ConfigurableDateTimeParser(separators('X')).parse("12"));
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> DateTimeParsers.of(separators('X')).parse("12"));
         assertThat(exc).hasMessage("Expected character [X] at position 1, found 1: 12");
     }
 

@@ -22,7 +22,6 @@ package com.ethlo.time.internal.token;
 
 import java.text.ParsePosition;
 
-import com.ethlo.time.Field;
 import com.ethlo.time.internal.util.ErrorUtil;
 import com.ethlo.time.token.DateTimeToken;
 
@@ -56,8 +55,8 @@ public class SeparatorToken implements DateTimeToken
     }
 
     @Override
-    public Field getField()
+    public String toString()
     {
-        return null;
+        return "separator: " + separator;
     }
 }

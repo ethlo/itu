@@ -51,4 +51,10 @@ public class DigitsToken implements DateTimeToken
     {
         return field;
     }
+
+    @Override
+    public String toString()
+    {
+        return "digits: " + field + "(" + length + ")";
+    }
 }

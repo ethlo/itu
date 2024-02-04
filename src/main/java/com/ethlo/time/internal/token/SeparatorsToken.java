@@ -56,4 +56,10 @@ public class SeparatorsToken implements DateTimeToken
         }
         throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", Arrays.toString(separators), index + 1, text.charAt(index), text), text, index);
     }
+
+    @Override
+    public String toString()
+    {
+        return "separators: " + Arrays.toString(separators);
+    }
 }

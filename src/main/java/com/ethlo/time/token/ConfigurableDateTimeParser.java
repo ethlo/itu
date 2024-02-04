@@ -24,6 +24,9 @@ import static com.ethlo.time.Field.NANO;
 import static com.ethlo.time.Field.YEAR;
 
 import java.text.ParsePosition;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.ethlo.time.DateTime;
 import com.ethlo.time.Field;
@@ -34,22 +37,22 @@ public class ConfigurableDateTimeParser implements DateTimeParser
 {
     private final DateTimeToken[] tokens;
 
-    public ConfigurableDateTimeParser(DateTimeToken... tokens)
+    private ConfigurableDateTimeParser(DateTimeToken... tokens)
     {
+        final Set<Field> fieldsSeen = new HashSet<>();
+        Arrays.asList(tokens).forEach(t ->
+        {
+            if (t.getField() != null && !fieldsSeen.add(t.getField()))
+            {
+                throw new IllegalArgumentException("Duplicate field " + t.getField() + " in list of tokens: " + Arrays.toString(tokens));
+            }
+        });
         this.tokens = tokens;
     }
 
-    public ConfigurableDateTimeParser combine(DateTimeToken... tokens)
+    public static DateTimeParser of(DateTimeToken... tokens)
     {
-        return new ConfigurableDateTimeParser(combine(this.tokens, tokens));
-    }
-
-    private DateTimeToken[] combine(DateTimeToken[] a, DateTimeToken[] b)
-    {
-        final DateTimeToken[] result = new DateTimeToken[a.length + b.length];
-        System.arraycopy(a, 0, result, 0, a.length);
-        System.arraycopy(b, 0, result, a.length, b.length);
-        return result;
+        return new ConfigurableDateTimeParser(tokens);
     }
 
     @Override

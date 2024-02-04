@@ -20,21 +20,19 @@ package com.ethlo.time.token;
  * #L%
  */
 
-import com.ethlo.time.internal.token.TimeZoneOffsetToken;
-
 import static com.ethlo.time.Field.DAY;
 import static com.ethlo.time.Field.HOUR;
 import static com.ethlo.time.Field.MINUTE;
 import static com.ethlo.time.Field.MONTH;
 import static com.ethlo.time.Field.SECOND;
 import static com.ethlo.time.Field.YEAR;
-import static com.ethlo.time.token.DateTimeTokens.*;
 import static com.ethlo.time.token.DateTimeTokens.digits;
+import static com.ethlo.time.token.DateTimeTokens.fractions;
 import static com.ethlo.time.token.DateTimeTokens.separators;
 
 public class DateTimeParsers
 {
-    private static final ConfigurableDateTimeParser DATE = new ConfigurableDateTimeParser(
+    private static final ConfigurableDateTimeParser DATE = (ConfigurableDateTimeParser) DateTimeParsers.of(
             digits(YEAR, 4),
             separators('-'),
             digits(MONTH, 2),
@@ -42,44 +40,27 @@ public class DateTimeParsers
             digits(DAY, 2)
     );
 
-    private static final ConfigurableDateTimeParser MINUTES = DATE.combine(
-            separators('T'),
+    public static DateTimeParser of(DateTimeToken... tokens)
+    {
+        return ConfigurableDateTimeParser.of(tokens);
+    }
+
+    private static final DateTimeParser LOCAL_TIME = of(
             digits(HOUR, 2),
             separators(':'),
-            digits(MINUTE, 2)
-    );
-
-    private static final ConfigurableDateTimeParser LOCAL_TIME = MINUTES.combine(
+            digits(MINUTE, 2),
             separators(':'),
-            digits(SECOND, 2)
-    );
-
-    private static final ConfigurableDateTimeParser FRACTIONAL_SECONDS_LOCAL = LOCAL_TIME.combine(
-            separators('.'),
+            digits(SECOND, 2),
             fractions()
     );
 
-    private static final ConfigurableDateTimeParser FRACTIONAL_SECONDS_OFFSET = FRACTIONAL_SECONDS_LOCAL.combine(
-            DateTimeTokens.timeZoneOffset()
-    );
-
-    public static DateTimeParser rfc3339()
+    public static DateTimeParser localDate()
     {
-        return FRACTIONAL_SECONDS_OFFSET;
+        return DATE;
     }
 
-    public static DateTimeParser minutes()
-    {
-        return MINUTES;
-    }
-
-    public static DateTimeParser seconds()
+    public static DateTimeParser localTime()
     {
         return LOCAL_TIME;
-    }
-
-    public static DateTimeParser fractionalSeconds()
-    {
-        return FRACTIONAL_SECONDS_LOCAL;
     }
 }
