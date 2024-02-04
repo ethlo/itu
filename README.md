@@ -34,7 +34,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.9.0</version>
+  <version>1.10.0</version>
   <!-- If you want to use minified JAR -->  
   <classifier>small</classifier>
 </dependency>
@@ -93,6 +93,45 @@ We can use `ITU.parseLenient()` with `DateTime.toInstant()` like this:
 
 ```java
 final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
+```
+
+#### Parse with custom format
+
+In case the format is not supported directly, you can build your own parser:
+```java
+import static com.ethlo.time.Field.DAY;
+import static com.ethlo.time.Field.HOUR;
+import static com.ethlo.time.Field.MINUTE;
+import static com.ethlo.time.Field.MONTH;
+import static com.ethlo.time.Field.SECOND;
+import static com.ethlo.time.Field.YEAR;
+import static com.ethlo.time.token.DateTimeTokens.digits;
+import static com.ethlo.time.token.DateTimeTokens.fractions;
+import static com.ethlo.time.token.DateTimeTokens.separators;
+import static com.ethlo.time.token.DateTimeTokens.zoneOffset;
+...
+
+    @Test
+    void parseCustomFormat()
+    {
+        final DateTimeParser parser = DateTimeParsers.of(
+                digits(DAY, 2),
+                separators('-'),
+                digits(MONTH, 2),
+                separators('-'),
+                digits(YEAR, 4),
+                separators(' '),
+                digits(HOUR, 2),
+                digits(MINUTE, 2),
+                digits(SECOND, 2),
+                separators(','),
+                fractions()
+        );
+        final ParsePosition pos = new ParsePosition(0);
+        final String input = "31-12-2000 235937,123456";
+        final DateTime result = parser.parse(input, pos); 
+        // equals 2000-12-31T23:59:37.123456
+    }
 ```
 
 ### Formatting
