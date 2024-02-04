@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 import com.ethlo.time.DateTime;
 import com.ethlo.time.ITU;
 import com.ethlo.time.internal.token.FractionsToken;
-import com.ethlo.time.internal.token.TimeZoneOffsetToken;
+import com.ethlo.time.internal.token.ZoneOffsetToken;
 
 public class ConfigurableDateTimeParserTest
 {
@@ -168,21 +168,21 @@ public class ConfigurableDateTimeParserTest
     void readTimeZoneZuluUpper()
     {
         final ParsePosition pos = new ParsePosition(0);
-        assertThat(new TimeZoneOffsetToken().read("Z", pos)).isEqualTo(0);
+        assertThat(new ZoneOffsetToken().read("Z", pos)).isEqualTo(0);
     }
 
     @Test
     void readTimeZoneZuluLower()
     {
         final ParsePosition pos = new ParsePosition(0);
-        assertThat(new TimeZoneOffsetToken().read("z", pos)).isEqualTo(0);
+        assertThat(new ZoneOffsetToken().read("z", pos)).isEqualTo(0);
     }
 
     @Test
     void readTimeZoneUnexpectedChar()
     {
         final ParsePosition pos = new ParsePosition(0);
-        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new TimeZoneOffsetToken().read("X", pos));
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new ZoneOffsetToken().read("X", pos));
         assertThat(exc).hasMessage("Expected character [Z, z, +, -] at position 1, found X: X");
     }
 
@@ -190,7 +190,7 @@ public class ConfigurableDateTimeParserTest
     void readTimeZoneTooShort()
     {
         final ParsePosition pos = new ParsePosition(0);
-        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new TimeZoneOffsetToken().read("-06:0", pos));
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> new ZoneOffsetToken().read("-06:0", pos));
         assertThat(exc).hasMessage("Invalid timezone offset: -06:0");
     }
 
@@ -198,7 +198,7 @@ public class ConfigurableDateTimeParserTest
     void readTimeZoneNegative()
     {
         final ParsePosition pos = new ParsePosition(0);
-        final int secs = new TimeZoneOffsetToken().read("-06:30", pos);
+        final int secs = new ZoneOffsetToken().read("-06:30", pos);
         assertThat(secs).isEqualTo(-23400);
     }
 

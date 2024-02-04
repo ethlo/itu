@@ -25,7 +25,7 @@ import com.ethlo.time.internal.token.DigitsToken;
 import com.ethlo.time.internal.token.FractionsToken;
 import com.ethlo.time.internal.token.SeparatorToken;
 import com.ethlo.time.internal.token.SeparatorsToken;
-import com.ethlo.time.internal.token.TimeZoneOffsetToken;
+import com.ethlo.time.internal.token.ZoneOffsetToken;
 
 public class DateTimeTokens
 {
@@ -55,6 +55,6 @@ public class DateTimeTokens
 
     public static DateTimeToken zoneOffset()
     {
-        return new TimeZoneOffsetToken();
+        return new ZoneOffsetToken();
     }
 }

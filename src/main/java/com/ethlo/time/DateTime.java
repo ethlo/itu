@@ -20,10 +20,10 @@ package com.ethlo.time;
  * #L%
  */
 
+import static com.ethlo.time.internal.fixed.ITUFormatter.finish;
 import static com.ethlo.time.internal.fixed.ITUParser.DATE_SEPARATOR;
 import static com.ethlo.time.internal.fixed.ITUParser.SEPARATOR_UPPER;
 import static com.ethlo.time.internal.fixed.ITUParser.TIME_SEPARATOR;
-import static com.ethlo.time.internal.fixed.ITUFormatter.finish;
 import static com.ethlo.time.internal.util.LeapSecondHandler.LEAP_SECOND_SECONDS;
 
 import java.time.DateTimeException;

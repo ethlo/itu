@@ -20,12 +20,10 @@ package com.ethlo.time;
  * #L%
  */
 
-import static com.ethlo.time.internal.fixed.ITUParser.SEPARATOR_LOWER;
-import static com.ethlo.time.internal.fixed.ITUParser.SEPARATOR_SPACE;
-import static com.ethlo.time.internal.fixed.ITUParser.SEPARATOR_UPPER;
-
 import java.util.Arrays;
 import java.util.Optional;
+
+import static com.ethlo.time.internal.fixed.ITUParser.*;
 
 public class ParseConfig
 {

@@ -39,12 +39,6 @@ public class DateTimeParsers
             separators('-'),
             digits(DAY, 2)
     );
-
-    public static DateTimeParser of(DateTimeToken... tokens)
-    {
-        return ConfigurableDateTimeParser.of(tokens);
-    }
-
     private static final DateTimeParser LOCAL_TIME = of(
             digits(HOUR, 2),
             separators(':'),
@@ -53,6 +47,11 @@ public class DateTimeParsers
             digits(SECOND, 2),
             fractions()
     );
+
+    public static DateTimeParser of(DateTimeToken... tokens)
+    {
+        return ConfigurableDateTimeParser.of(tokens);
+    }
 
     public static DateTimeParser localDate()
     {

@@ -33,7 +33,7 @@ import java.time.format.DateTimeParseException;
 import com.ethlo.time.Field;
 import com.ethlo.time.token.DateTimeToken;
 
-public class TimeZoneOffsetToken implements DateTimeToken
+public class ZoneOffsetToken implements DateTimeToken
 {
     @Override
     public int read(final String text, final ParsePosition parsePosition)
