@@ -1,4 +1,4 @@
-package com.ethlo.time.token;
+package com.ethlo.time;
 
 /*-
  * #%L
@@ -26,6 +26,7 @@ import com.ethlo.time.internal.token.FractionsToken;
 import com.ethlo.time.internal.token.SeparatorToken;
 import com.ethlo.time.internal.token.SeparatorsToken;
 import com.ethlo.time.internal.token.ZoneOffsetToken;
+import com.ethlo.time.token.DateTimeToken;
 
 public class DateTimeTokens
 {

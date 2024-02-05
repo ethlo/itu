@@ -25,7 +25,7 @@ import com.ethlo.time.token.ConfigurableDateTimeParser;
 import com.ethlo.time.token.DateTimeToken;
 
 import static com.ethlo.time.Field.*;
-import static com.ethlo.time.token.DateTimeTokens.*;
+import static com.ethlo.time.DateTimeTokens.*;
 
 public class DateTimeParsers {
     private static final ConfigurableDateTimeParser DATE = (ConfigurableDateTimeParser) DateTimeParsers.of(

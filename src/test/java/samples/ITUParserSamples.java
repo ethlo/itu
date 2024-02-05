@@ -1,14 +1,14 @@
 package samples;
 
+import static com.ethlo.time.DateTimeTokens.digits;
+import static com.ethlo.time.DateTimeTokens.fractions;
+import static com.ethlo.time.DateTimeTokens.separators;
 import static com.ethlo.time.Field.DAY;
 import static com.ethlo.time.Field.HOUR;
 import static com.ethlo.time.Field.MINUTE;
 import static com.ethlo.time.Field.MONTH;
 import static com.ethlo.time.Field.SECOND;
 import static com.ethlo.time.Field.YEAR;
-import static com.ethlo.time.token.DateTimeTokens.digits;
-import static com.ethlo.time.token.DateTimeTokens.fractions;
-import static com.ethlo.time.token.DateTimeTokens.separators;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.text.ParsePosition;

@@ -20,28 +20,27 @@ package com.ethlo.time.token;
  * #L%
  */
 
+import static com.ethlo.time.DateTimeTokens.digits;
+import static com.ethlo.time.DateTimeTokens.fractions;
+import static com.ethlo.time.DateTimeTokens.separators;
+import static com.ethlo.time.DateTimeTokens.zoneOffset;
 import static com.ethlo.time.Field.DAY;
 import static com.ethlo.time.Field.HOUR;
 import static com.ethlo.time.Field.MINUTE;
 import static com.ethlo.time.Field.MONTH;
 import static com.ethlo.time.Field.SECOND;
 import static com.ethlo.time.Field.YEAR;
-import static com.ethlo.time.token.DateTimeTokens.digits;
-import static com.ethlo.time.token.DateTimeTokens.fractions;
-import static com.ethlo.time.token.DateTimeTokens.separators;
-import static com.ethlo.time.token.DateTimeTokens.zoneOffset;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.text.ParsePosition;
 import java.time.format.DateTimeParseException;
 
-import com.ethlo.time.DateTimeParser;
-import com.ethlo.time.DateTimeParsers;
-
 import org.junit.jupiter.api.Test;
 
 import com.ethlo.time.DateTime;
+import com.ethlo.time.DateTimeParser;
+import com.ethlo.time.DateTimeParsers;
 import com.ethlo.time.ITU;
 import com.ethlo.time.internal.token.FractionsToken;
 import com.ethlo.time.internal.token.ZoneOffsetToken;
