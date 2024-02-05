@@ -89,19 +89,7 @@ public class ITU
      */
     public static DateTime parseLenient(String text, ParseConfig parseConfig, ParsePosition position)
     {
-        try
-        {
-            int offset = position.getIndex();
-            final DateTime result = ITUParser.parseLenient(text, parseConfig, position.getIndex());
-            position.setIndex(offset + result.getParseLength());
-            return result;
-        }
-        catch (DateTimeParseException exc)
-        {
-            position.setErrorIndex(exc.getErrorIndex());
-            position.setIndex(position.getErrorIndex());
-            throw exc;
-        }
+        return ITUParser.parseLenient(text, parseConfig, position);
     }
 
     /**

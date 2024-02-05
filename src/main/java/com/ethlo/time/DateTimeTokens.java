@@ -20,7 +20,6 @@ package com.ethlo.time;
  * #L%
  */
 
-import com.ethlo.time.Field;
 import com.ethlo.time.internal.token.DigitsToken;
 import com.ethlo.time.internal.token.FractionsToken;
 import com.ethlo.time.internal.token.SeparatorToken;

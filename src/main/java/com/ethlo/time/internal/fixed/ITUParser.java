@@ -28,17 +28,19 @@ import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.DIGIT_9;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parsePositiveInt;
 
+import java.text.ParsePosition;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 
 import com.ethlo.time.DateTime;
+import com.ethlo.time.DateTimeParser;
 import com.ethlo.time.Field;
 import com.ethlo.time.ParseConfig;
 import com.ethlo.time.TimezoneOffset;
 import com.ethlo.time.internal.util.ArrayUtils;
 
-public class ITUParser
+public class ITUParser implements DateTimeParser
 {
     public static final char DATE_SEPARATOR = '-';
     public static final char TIME_SEPARATOR = ':';
@@ -53,6 +55,7 @@ public class ITUParser
     public static final int MAX_FRACTION_DIGITS = 9;
     public static final int RADIX = 10;
     public static final int DIGITS_IN_NANO = 9;
+    private static final DateTimeParser instance = new ITUParser();
 
     private ITUParser()
     {
@@ -324,5 +327,39 @@ public class ITUParser
         final Field field = dateTime.getMostGranularField();
         final Field nextGranularity = Field.values()[field.ordinal() + 1];
         throw new DateTimeParseException(String.format("Unexpected end of input, missing field %s: %s", nextGranularity, chars), chars, field.getRequiredLength());
+    }
+
+    public static DateTime parseLenient(String text, ParseConfig parseConfig, ParsePosition position)
+    {
+        try
+        {
+            int offset = position.getIndex();
+            final DateTime result = ITUParser.parseLenient(text, parseConfig, position.getIndex());
+            position.setIndex(offset + result.getParseLength());
+            return result;
+        }
+        catch (DateTimeParseException exc)
+        {
+            position.setErrorIndex(exc.getErrorIndex());
+            position.setIndex(position.getErrorIndex());
+            throw exc;
+        }
+    }
+
+    public static DateTimeParser getInstance()
+    {
+        return instance;
+    }
+
+    @Override
+    public DateTime parse(final String text, final ParsePosition parsePosition)
+    {
+        return parseLenient(text, ParseConfig.DEFAULT, parsePosition);
+    }
+
+    @Override
+    public DateTime parse(final String text)
+    {
+        return parseLenient(text, ParseConfig.DEFAULT, 0);
     }
 }

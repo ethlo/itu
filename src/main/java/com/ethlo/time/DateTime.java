@@ -30,6 +30,7 @@ import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.Year;
@@ -505,7 +506,12 @@ public class DateTime implements TemporalAccessor
     @Override
     public boolean isSupported(final TemporalField field)
     {
-        return Field.of(field).ordinal() <= this.field.ordinal();
+        if (field == ChronoField.NANO_OF_DAY)
+        {
+            return true;
+        }
+        final Field f = Field.of(field);
+        return f.ordinal() <= this.field.ordinal();
     }
 
     @Override
@@ -539,12 +545,13 @@ public class DateTime implements TemporalAccessor
         {
             return nano;
         }
+        else if (temporalField.equals(ChronoField.NANO_OF_DAY))
+        {
+            return (hour * 3600L + minute * 60L + second) * 1000_000_000 + nano;
+        }
         else if (temporalField.equals(ChronoField.INSTANT_SECONDS))
         {
-            if (offset != null)
-            {
-                return toEpochSeconds();
-            }
+            return toEpochSeconds();
         }
 
         throw new UnsupportedTemporalTypeException("Unsupported field: " + temporalField);
@@ -587,5 +594,10 @@ public class DateTime implements TemporalAccessor
     public int getParseLength()
     {
         return charLength;
+    }
+
+    public LocalTime toLocalTime()
+    {
+        return LocalTime.from(this);
     }
 }

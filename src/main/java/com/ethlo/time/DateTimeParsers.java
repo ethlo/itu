@@ -20,14 +20,22 @@ package com.ethlo.time;
  * #L%
  */
 
-import com.ethlo.time.DateTimeParser;
+import static com.ethlo.time.DateTimeTokens.digits;
+import static com.ethlo.time.DateTimeTokens.fractions;
+import static com.ethlo.time.DateTimeTokens.separators;
+import static com.ethlo.time.Field.DAY;
+import static com.ethlo.time.Field.HOUR;
+import static com.ethlo.time.Field.MINUTE;
+import static com.ethlo.time.Field.MONTH;
+import static com.ethlo.time.Field.SECOND;
+import static com.ethlo.time.Field.YEAR;
+
+import com.ethlo.time.internal.fixed.ITUParser;
 import com.ethlo.time.token.ConfigurableDateTimeParser;
 import com.ethlo.time.token.DateTimeToken;
 
-import static com.ethlo.time.Field.*;
-import static com.ethlo.time.DateTimeTokens.*;
-
-public class DateTimeParsers {
+public class DateTimeParsers
+{
     private static final ConfigurableDateTimeParser DATE = (ConfigurableDateTimeParser) DateTimeParsers.of(
             digits(YEAR, 4),
             separators('-'),
@@ -41,18 +49,27 @@ public class DateTimeParsers {
             digits(MINUTE, 2),
             separators(':'),
             digits(SECOND, 2),
+            separators('.'),
             fractions()
     );
 
-    public static DateTimeParser of(DateTimeToken... tokens) {
+    public static DateTimeParser of(DateTimeToken... tokens)
+    {
         return ConfigurableDateTimeParser.of(tokens);
     }
 
-    public static DateTimeParser localDate() {
+    public static DateTimeParser rfc3339()
+    {
+        return ITUParser.getInstance();
+    }
+
+    public static DateTimeParser localDate()
+    {
         return DATE;
     }
 
-    public static DateTimeParser localTime() {
+    public static DateTimeParser localTime()
+    {
         return LOCAL_TIME;
     }
 }

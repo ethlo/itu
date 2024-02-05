@@ -21,14 +21,13 @@ package com.ethlo.time;
  */
 
 import java.text.ParsePosition;
-
-import com.ethlo.time.DateTime;
+import java.time.DateTimeException;
 
 public interface DateTimeParser
 {
-    DateTime parse(String text, ParsePosition parsePosition);
+    DateTime parse(String text, ParsePosition parsePosition) throws DateTimeException;
 
-    default DateTime parse(String text)
+    default DateTime parse(String text) throws DateTimeException
     {
         return parse(text, new ParsePosition(0));
     }
