@@ -20,8 +20,11 @@ package com.ethlo.time.token;
  * #L%
  */
 
-import static com.ethlo.time.Field.NANO;
-import static com.ethlo.time.Field.YEAR;
+import com.ethlo.time.DateTime;
+import com.ethlo.time.DateTimeParser;
+import com.ethlo.time.Field;
+import com.ethlo.time.TimezoneOffset;
+import com.ethlo.time.internal.token.FractionsToken;
 
 import java.text.ParsePosition;
 import java.time.format.DateTimeParseException;
@@ -29,66 +32,52 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.ethlo.time.DateTime;
-import com.ethlo.time.Field;
-import com.ethlo.time.TimezoneOffset;
-import com.ethlo.time.internal.token.FractionsToken;
+import static com.ethlo.time.Field.NANO;
+import static com.ethlo.time.Field.YEAR;
 
-public class ConfigurableDateTimeParser implements DateTimeParser
-{
+public class ConfigurableDateTimeParser implements DateTimeParser {
     private final DateTimeToken[] tokens;
 
-    private ConfigurableDateTimeParser(DateTimeToken... tokens)
-    {
+    private ConfigurableDateTimeParser(DateTimeToken... tokens) {
         final Set<Field> fieldsSeen = new HashSet<>();
         Arrays.asList(tokens).forEach(t ->
         {
-            if (t.getField() != null && !fieldsSeen.add(t.getField()))
-            {
+            if (t.getField() != null && !fieldsSeen.add(t.getField())) {
                 throw new IllegalArgumentException("Duplicate field " + t.getField() + " in list of tokens: " + Arrays.toString(tokens));
             }
         });
         this.tokens = tokens;
     }
 
-    public static DateTimeParser of(DateTimeToken... tokens)
-    {
+    public static DateTimeParser of(DateTimeToken... tokens) {
         return new ConfigurableDateTimeParser(tokens);
     }
 
     @Override
-    public DateTime parse(String text, ParsePosition parsePosition)
-    {
-        try
-        {
+    public DateTime parse(String text, ParsePosition parsePosition) {
+        try {
             return doParse(text, parsePosition);
-        }
-        catch (DateTimeParseException exc)
-        {
+        } catch (DateTimeParseException exc) {
             parsePosition.setIndex(exc.getErrorIndex());
             parsePosition.setErrorIndex(exc.getErrorIndex());
             throw exc;
         }
     }
 
-    private DateTime doParse(String text, ParsePosition parsePosition)
-    {
+    private DateTime doParse(String text, ParsePosition parsePosition) {
         int fractionsLength = 0;
         int highestOrdinal = YEAR.ordinal();
         final int[] values = new int[]{0, 1, 1, 0, 0, 0, 0, -1};
 
-        for (DateTimeToken token : tokens)
-        {
+        for (DateTimeToken token : tokens) {
             final int index = parsePosition.getIndex();
             final int value = token.read(text, parsePosition);
             final Field field = token.getField();
-            if (field != null)
-            {
+            if (field != null) {
                 final int ordinal = field.ordinal();
                 values[ordinal] = value;
                 highestOrdinal = Math.max(ordinal, highestOrdinal);
-                if (token instanceof FractionsToken)
-                {
+                if (token instanceof FractionsToken) {
                     fractionsLength = parsePosition.getIndex() - index;
                     values[ordinal] = scale(value, fractionsLength);
                 }
@@ -109,11 +98,9 @@ public class ConfigurableDateTimeParser implements DateTimeParser
         );
     }
 
-    private int scale(int value, int length)
-    {
+    private int scale(int value, int length) {
         int pos = length;
-        while (pos < 9)
-        {
+        while (pos < 9) {
             value *= 10;
             pos++;
         }

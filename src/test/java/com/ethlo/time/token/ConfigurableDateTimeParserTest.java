@@ -36,6 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.text.ParsePosition;
 import java.time.format.DateTimeParseException;
 
+import com.ethlo.time.DateTimeParser;
+import com.ethlo.time.DateTimeParsers;
+
 import org.junit.jupiter.api.Test;
 
 import com.ethlo.time.DateTime;

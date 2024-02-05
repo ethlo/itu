@@ -1,4 +1,4 @@
-package com.ethlo.time.token;
+package com.ethlo.time;
 
 /*-
  * #%L
