@@ -290,6 +290,10 @@ limitations under the License.
                                 <option>-keep public class com.ethlo.time.TemporalConsumer { *; }</option>
                                 <option>-keep public class com.ethlo.time.TemporalHandler { *; }</option>
                                 <option>-keep public class com.ethlo.time.TimezoneOffset { *; }</option>
+                                <option>-keep public class com.ethlo.time.DateTimeParsers { *; }</option>
+                                <option>-keep public class com.ethlo.time.DateTimeParser { *; }</option>
+                                <option>-keep public class com.ethlo.time.DateTimeTokens { *; }</option>
+                                <option>-keep public class com.ethlo.time.token.DateTimeToken { *; }</option>
                             </options>
                             <libs>
                                 <lib>${java.home}/jmods/java.base.jmod</lib>
