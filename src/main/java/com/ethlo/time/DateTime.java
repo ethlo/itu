@@ -444,12 +444,12 @@ public class DateTime implements TemporalAccessor
         }
 
         // Fractions
-        if (lastIncluded.ordinal() >= Field.NANO.ordinal())
+        if (fractionDigits > 0 && lastIncluded.ordinal() >= Field.NANO.ordinal())
         {
             buffer[19] = '.';
             LimitedCharArrayIntegerUtil.toString(date.getNano(), buffer, 20, fractionDigits);
         }
-        return finish(buffer, 20 + fractionDigits, tz);
+        return finish(buffer, 19 + (fractionDigits > 0 ? 1 : 0) + fractionDigits, tz);
     }
 
     /**

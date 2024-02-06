@@ -120,4 +120,11 @@ public class FormatterTest
         final OffsetDateTime date = ITU.parseDateTime(s);
         assertThat(ITU.formatUtcMilli(date)).isEqualTo("2017-02-21T02:27:39.123Z");
     }
+
+    @Test
+    void testTostring()
+    {
+        final DateTime dateTime = DateTime.of(2000,12, 31, 22, 30, 0, 0,null, 0);
+        assertThat(dateTime.toString()).isEqualTo("2000-12-31T22:30:00");
+    }
 }
