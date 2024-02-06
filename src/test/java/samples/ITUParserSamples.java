@@ -70,7 +70,7 @@ class ITUParserSamples
     }
 
     @Test
-    void parseLenientlyWithCustomSeparators()
+    void parseLenientWithCustomSeparators()
     {
         final ParseConfig config = ParseConfig.DEFAULT
                 .withDateTimeSeparators('T', '|')
@@ -122,7 +122,7 @@ class ITUParserSamples
      * <p></p>Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc.</p>
      */
     @Test
-    void test()
+    void lenientTimestamp()
     {
         final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
         assertThat(instant.toString()).isEqualTo("2017-12-06T00:00:00Z");
@@ -153,7 +153,7 @@ class ITUParserSamples
     }
 
     @Test
-    void parseUsingInterface()
+    void parseUsingInterfaceRfc33939()
     {
         final DateTimeParser parser = DateTimeParsers.rfc3339();
         final String text = "2000-12-31 23:59:37.123456";
@@ -162,7 +162,7 @@ class ITUParserSamples
     }
 
     @Test
-    void testParseLocalTime()
+    void parseUsingInterfaceLocalTime()
     {
         final DateTimeParser parser = DateTimeParsers.localTime();
         final String text = "23:59:37.123456";
@@ -171,7 +171,7 @@ class ITUParserSamples
     }
 
     @Test
-    void testParseLocalDate()
+    void parseUsingInterfaceLocalDate()
     {
         final DateTimeParser parser = DateTimeParsers.localDate();
         final String text = "2013-12-24";
