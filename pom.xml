@@ -23,7 +23,7 @@ limitations under the License.
     <groupId>com.ethlo.time</groupId>
     <packaging>bundle</packaging>
     <artifactId>itu</artifactId>
-    <version>1.10.0</version>
+    <version>1.10.1-SNAPSHOT</version>
     <name>Internet Time Utility</name>
     <description>Extremely fast date-time parser and formatter - RFC 3339 (ISO 8601 profile) and W3C format
     </description>
@@ -171,7 +171,7 @@ limitations under the License.
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>2.0.0</version>
+                <version>2.2.0</version>
                 <configuration>
                     <verbose>false</verbose>
                     <addSvnKeyWords>true</addSvnKeyWords>
@@ -186,7 +186,7 @@ limitations under the License.
                         <configuration>
                             <licenseName>apache_v2</licenseName>
                             <inceptionYear>2017</inceptionYear>
-                            <organizationName>Morten Haraldsen (ethlo)</organizationName>
+                            <organizationName>Morten Haraldsen @ethlo</organizationName>
                             <addSvnKeyWords>false</addSvnKeyWords>
                             <canUpdateDescription>false</canUpdateDescription>
                             <roots>
@@ -228,6 +228,19 @@ limitations under the License.
                 <version>3.4.3</version>
             </extension>
         </extensions>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <filtering>true</filtering>
+                <directory>${project.basedir}/src/site</directory>
+                <includes>
+                    <include>README.md</include>
+                </includes>
+                <targetPath>${project.basedir}</targetPath>
+            </resource>
+        </resources>
     </build>
     <distributionManagement>
         <repository>
@@ -299,6 +312,27 @@ limitations under the License.
                                 <lib>${java.home}/jmods/java.base.jmod</lib>
                             </libs>
                         </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.ethlo.maven</groupId>
+                        <artifactId>java-code-extractor-maven-plugin</artifactId>
+                        <version>1.0.0-SNAPSHOT</version>
+                        <configuration>
+                            <template>src/site/sample-code.template.md</template>
+                            <sources>
+                                <source>src/test/java/samples/parsing</source>
+                                <source>src/test/java/samples/formatting</source>
+                                <source>src/test/java/samples/leapsecond</source>
+                            </sources>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>extract</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

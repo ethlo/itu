@@ -135,7 +135,6 @@ class ITUParserSamples
 
     /*
     In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `DateTime` instance into `Instant`.
-
     Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc.
     */
     @Test
