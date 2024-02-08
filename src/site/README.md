@@ -33,7 +33,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.10.0</version>
+  <version>${project.version}</version>
   <!-- If you want to use minified JAR -->  
   <classifier>small</classifier>
 </dependency>
@@ -41,67 +41,11 @@ Add dependency
 
 Below you find some samples of usage of this library. Please check out the [javadoc](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html) for more details.
 
-### Parsing
+${src/test/java/samples/parsing}
 
-${src/test/java/samples}
+${src/test/java/samples/formatting}
 
-### Formatting
-
-<details>
-<summary><b>Format with seconds (no fraction digits)</b></summary>
-
-```java
-final String formatted = ITU.formatUtc(dateTime); // 2012-12-27T22:07:22Z
-``` 
-</details>
-
-
-<details>
-<summary><b>Format with microsecond precision</b></summary>
-
-```java
-final String formattedMicro = ITU.formatUtcMicro(dateTime); // 2012-12-27T22:07:22.123457Z
-```
-</details>
-
-### Validate
-
-<details>
-
-<summary><b>Validate as RFC-3339 date-time</b></summary>
-```java
-ITU.isValid("2017-12-06"); // false
-```
-</details>
-
-<details>
-<summary><b>Validate as specific type</b></summary>
-```java
-ITU.isValid("2017-12-06", TemporalType.LOCAL_DATE_TIME); // true
-```
-</details>
-
-### Handle leap-seconds
-
-<details>
-<summary><b>Sample</b></summary>
-
-```java
-class Sample {
-    void parse() {
-        try {
-            final OffsetDateTime dateTime = ITU.parseDateTime("1990-12-31T15:59:60-08:00");
-        } catch (
-                LeapSecondException exc) {
-            // The following helper methods are available let you decide how to progress
-            exc.getSecondsInMinute(); // 60
-            exc.getNearestDateTime(); // 1991-01-01T00:00:00Z
-            exc.isVerifiedValidLeapYearMonth(); // true
-        }
-    }
-}
-```
-</details>
+${src/test/java/samples/leapsecond}
 
 ## Q & A
 
