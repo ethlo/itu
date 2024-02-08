@@ -48,8 +48,18 @@ import com.ethlo.time.ITU;
 import com.ethlo.time.ParseConfig;
 import com.ethlo.time.TemporalHandler;
 
+/*
+
+## Parsing
+
+This is a collection of usage examples for parsing.
+
+ */
 class ITUParserSamples
 {
+    /*
+    The simplest and fastest way to parse an RFC-3339 (ISO-8601 profile) timestamp by far!
+     */
     @Test
     void parseRfc3339()
     {
@@ -58,6 +68,9 @@ class ITUParserSamples
         assertThat(dateTime.toString()).isEqualTo(text);
     }
 
+    /*
+    Parses a date-time with flexible granularity. Works for anything from a year to a timestamp with nanoseconds, wih or without timezone offset!
+     */
     @Test
     void parseLenient()
     {
@@ -69,6 +82,10 @@ class ITUParserSamples
         assertThat(formatted).isEqualTo(text);
     }
 
+    /*
+    In case you encounter the need for a somewhat different time-separator or fraction separator
+    you can use the `ParseConfig` to set up you preferred delimiters.
+     */
     @Test
     void parseLenientWithCustomSeparators()
     {
@@ -79,8 +96,8 @@ class ITUParserSamples
         assertThat(result.toString()).isEqualTo("1999-11-22T11:22:17.191");
     }
 
-    /**
-     * This allows you to track where to start reading. Note that the check for trailing junk is disabled when using ParsePosition.
+    /*
+     This allows you to track where to start reading. Note that the check for trailing junk is disabled when using ParsePosition.
      */
     @Test
     void parsePosition()
@@ -91,8 +108,8 @@ class ITUParserSamples
         assertThat(pos.getIndex()).isEqualTo(35);
     }
 
-    /**
-     * This is useful if you need to handle different granularity with different logic or interpolation.
+    /*
+     This is useful if you need to handle different granularity with different logic or interpolation.
      */
     @Test
     void explicitGranularity()
@@ -116,11 +133,11 @@ class ITUParserSamples
         assertThat(result.toString()).isEqualTo("2017-12-06T00:00Z");
     }
 
-    /**
-     * <p>In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw {@link DateTime} instance into {@link Instant}.</p>
-     *
-     * <p></p>Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc.</p>
-     */
+    /*
+    In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `DateTime` instance into `Instant`.
+
+    Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc.
+    */
     @Test
     void lenientTimestamp()
     {
@@ -128,8 +145,8 @@ class ITUParserSamples
         assertThat(instant.toString()).isEqualTo("2017-12-06T00:00:00Z");
     }
 
-    /**
-     * In case the format is not supported directly, you can build your own parser.
+    /*
+     In case the format is not supported directly, you can build your own parser.
      */
     @Test
     void parseCustomFormat()
@@ -152,6 +169,9 @@ class ITUParserSamples
         assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
     }
 
+    /*
+    `DateTimerParser` interface for RFC-3339
+     */
     @Test
     void parseUsingInterfaceRfc33939()
     {
@@ -161,6 +181,9 @@ class ITUParserSamples
         assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
     }
 
+    /*
+    `DateTimerParser` interface for local time
+     */
     @Test
     void parseUsingInterfaceLocalTime()
     {
@@ -170,6 +193,9 @@ class ITUParserSamples
         assertThat(result.toString()).isEqualTo(text);
     }
 
+    /*
+    `DateTimerParser` interface for local date
+     */
     @Test
     void parseUsingInterfaceLocalDate()
     {

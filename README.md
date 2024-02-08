@@ -2,7 +2,7 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.ethlo.time/itu.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ethlo.time%22%20a%3A%22itu%22)
 [![javadoc](https://javadoc.io/badge2/com.ethlo.time/itu/javadoc.svg)](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html)
-[![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
+[![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](../../LICENSE)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/598913bc1fe9405c82be73d9a4f105c8)](https://app.codacy.com/gh/ethlo/itu/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![codecov](https://codecov.io/gh/ethlo/itu/graph/badge.svg?token=V3H15LKC5V)](https://codecov.io/gh/ethlo/itu)
 
@@ -43,150 +43,153 @@ Below you find some samples of usage of this library. Please check out the [java
 
 ### Parsing
 
-<details>
-<summary><b>RFC-3339 with offset</b></summary>
+<!--
+  #%L
+  java-code-extractor-maven-plugin
+  %%
+  Copyright (C) 2024 Morten Haraldsen (ethlo)
+  %%
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+       http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  #L%
+  -->
 
+### parseRfc3339
+The simplest and fastest way to parse an RFC-3339 (ISO-8601 profile) timestamp by far!
 ```java
-final OffsetDateTime dateTime = ITU.parseDateTime("2012-12-27T19:07:22.123456789-03:00");
+final String text = "2012-12-27T19:07:22.123456789-03:00";
+final OffsetDateTime dateTime = ITU.parseDateTime(text);
+assertThat(dateTime.toString()).isEqualTo(text);
 ```
-</details>
 
-<details>
-<summary><b>Parse leniently</b></summary>
+[View source code](src/test/java/samples/ITUParserSamples.java#L63C5-L69C5)
 
+
+### parseLenient
+Parses a date-time with flexible granularity. Works for anything from a year to a timestamp with nanoseconds, wih or without timezone offset!
 ```java
-final DateTime dateTime = ITU.parseLenient("2012-12-27T19:07.23:123");
-final String formatted = dateTime.toString(); // 2012-12-27T19:07:23.123 (Note the tracking of resolution)
+final String text = "2012-12-27T19:07:23.123";
+final DateTime dateTime = ITU.parseLenient(text);
+final String formatted = dateTime.toString();
+//Note the tracking of fractional resolution
+assertThat(formatted).isEqualTo(text);
 ```
-</details>
 
-<details>
-<summary><b>Parse leniently, configurable separators</b></summary>
+[View source code](src/test/java/samples/ITUParserSamples.java#L74C5-L83C5)
 
+
+### parseLenientWithCustomSeparators
+In case you encounter the need for a somewhat different time-separator or fraction separator you can use the `ParseConfig` to set up you preferred delimiters.
 ```java
-import com.ethlo.time.ITU;
-import com.ethlo.time.ParseConfig;
-
-class Sample {
-    private final ParseConfig config = ParseConfig.DEFAULT
-            .withFractionSeparators('.', ',')
-            .withDateTimeSeparators('T', '|');
-
-    void parse() {
-        ITU.parseLenient("1999-11-22|11:22:17,191", config);
-    }
-}
+final ParseConfig config = ParseConfig.DEFAULT.withDateTimeSeparators('T', '|').withFractionSeparators('.', ',');
+final DateTime result = ITU.parseLenient("1999-11-22|11:22:17,191", config);
+assertThat(result.toString()).isEqualTo("1999-11-22T11:22:17.191");
 ```
-</details>
 
-<details>
-<summary><b>Parse with ParsePosition</b></summary>
+[View source code](src/test/java/samples/ITUParserSamples.java#L89C5-L97C5)
 
+
+### parsePosition
 This allows you to track where to start reading. Note that the check for trailing junk is disabled when using ParsePosition.
-
 ```java
-import com.ethlo.time.ITU;
-
-import java.text.ParsePosition;
-
-class Sample {
-    void parse() {
-        final ParsePosition pos = new ParsePosition(10);
-        ITU.parseDateTime("some-data,1999-11-22T11:22:00+05:30,some-other-data", pos);
-    }
-}
+final ParsePosition pos = new ParsePosition(10);
+final OffsetDateTime result = ITU.parseDateTime("some-data,1999-11-22T11:22:19+05:30,some-other-data", pos);
+assertThat(result.toString()).isEqualTo("1999-11-22T11:22:19+05:30");
+assertThat(pos.getIndex()).isEqualTo(35);
 ```
-</details>
 
-<details>
-<summary><b>Handling different levels of granularity explicitly</b></summary>
+[View source code](src/test/java/samples/ITUParserSamples.java#L102C5-L109C5)
 
 
+### explicitGranularity
 This is useful if you need to handle different granularity with different logic or interpolation.
-
 ```java
-import com.ethlo.time.ITU;
-import com.ethlo.time.TemporalHandler;
+final TemporalHandler<OffsetDateTime> handler = new TemporalHandler<OffsetDateTime>() {
 
-import java.time.OffsetDateTime;
-
-class Sample {
-    void parse() {
-        ITU.parse("2017-12-06", new TemporalHandler<>() {
-            @Override
-            public OffsetDateTime handle(final LocalDate localDate) {
-                return localDate.atTime(OffsetTime.of(LocalTime.of(0, 0), ZoneOffset.UTC));
-            }
-
-            @Override
-            public OffsetDateTime handle(final OffsetDateTime offsetDateTime) {
-                return offsetDateTime;
-            }
-        });
+    @Override
+    public OffsetDateTime handle(final LocalDate localDate) {
+        return localDate.atTime(OffsetTime.of(LocalTime.of(0, 0), ZoneOffset.UTC));
     }
-}
-```
-</details>
 
-<details>
-<summary><b>Parsing leniently to a timestamp</b></summary>
-
-In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `com.ethlo.time.DateTime` instance into `java.time.Instant`. Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc.
-
-We can use `ITU.parseLenient()` with `DateTime.toInstant()` like this:
-
-```java
-import com.ethlo.time.ITU;
-
-import java.time.Instant;
-
-class Sample {
-    final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
-}
-```
-</details>
-
-<details>
-<summary><b>Parse with custom format</b></summary>
-
-In case the format is not supported directly, you can build your own parser:
-
-```java
-import static com.ethlo.time.Field.DAY;
-import static com.ethlo.time.Field.HOUR;
-import static com.ethlo.time.Field.MINUTE;
-import static com.ethlo.time.Field.MONTH;
-import static com.ethlo.time.Field.SECOND;
-import static com.ethlo.time.Field.YEAR;
-import static com.ethlo.time.DateTimeTokens.digits;
-import static com.ethlo.time.DateTimeTokens.fractions;
-import static com.ethlo.time.DateTimeTokens.separators;
-import static com.ethlo.time.DateTimeTokens.zoneOffset;
-
-class Sample
-{
-    void parseCustomFormat()
-    {
-        final DateTimeParser parser = DateTimeParsers.of(
-                digits(DAY, 2),
-                separators('-'),
-                digits(MONTH, 2),
-                separators('-'),
-                digits(YEAR, 4),
-                separators(' '),
-                digits(HOUR, 2),
-                digits(MINUTE, 2),
-                digits(SECOND, 2),
-                separators(','),
-                fractions()
-        );
-        final String input = "31-12-2000 235937,123456";
-        final DateTime result = parser.parse(input); 
-        // equals 2000-12-31T23:59:37.123456
+    @Override
+    public OffsetDateTime handle(final OffsetDateTime offsetDateTime) {
+        return offsetDateTime;
     }
-}
+};
+final OffsetDateTime result = ITU.parse("2017-12-06", handler);
+assertThat(result.toString()).isEqualTo("2017-12-06T00:00Z");
 ```
-</details>
+
+[View source code](src/test/java/samples/ITUParserSamples.java#L114C5-L134C5)
+
+
+### lenientTimestamp
+In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `DateTime` instance into `Instant`. Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc.
+```java
+final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
+assertThat(instant.toString()).isEqualTo("2017-12-06T00:00:00Z");
+```
+
+[View source code](src/test/java/samples/ITUParserSamples.java#L141C5-L146C5)
+
+
+### parseCustomFormat
+In case the format is not supported directly, you can build your own parser.
+```java
+final DateTimeParser parser = DateTimeParsers.of(digits(DAY, 2), separators('-'), digits(MONTH, 2), separators('-'), digits(YEAR, 4), separators(' '), digits(HOUR, 2), digits(MINUTE, 2), digits(SECOND, 2), separators(','), fractions());
+final String text = "31-12-2000 235937,123456";
+final DateTime result = parser.parse(text);
+assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
+```
+
+[View source code](src/test/java/samples/ITUParserSamples.java#L151C5-L170C5)
+
+
+### parseUsingInterfaceRfc33939
+`DateTimerParser` interface for RFC-3339
+```java
+final DateTimeParser parser = DateTimeParsers.rfc3339();
+final String text = "2000-12-31 23:59:37.123456";
+final DateTime result = parser.parse(text);
+assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
+```
+
+[View source code](src/test/java/samples/ITUParserSamples.java#L175C5-L182C5)
+
+
+### parseUsingInterfaceLocalTime
+`DateTimerParser` interface for local time
+```java
+final DateTimeParser parser = DateTimeParsers.localTime();
+final String text = "23:59:37.123456";
+final LocalTime result = parser.parse(text).toLocalTime();
+assertThat(result.toString()).isEqualTo(text);
+```
+
+[View source code](src/test/java/samples/ITUParserSamples.java#L187C5-L194C5)
+
+
+### parseUsingInterfaceLocalDate
+`DateTimerParser` interface for local date
+```java
+final DateTimeParser parser = DateTimeParsers.localDate();
+final String text = "2013-12-24";
+final LocalDate result = parser.parse(text).toLocalDate();
+assertThat(result.toString()).isEqualTo(text);
+```
+
+[View source code](src/test/java/samples/ITUParserSamples.java#L199C5-L206C5)
+
+
 
 ### Formatting
 
@@ -309,4 +312,4 @@ well.
 Since Java's `java.time` classes do not support storing leap seconds, ITU will throw a `LeapSecondException` if one is
 encountered to signal that this is a leap second. The exception can then be queried for the second-value. Storing such
 values is not possible in a `java.time.OffsetDateTime`, the `60` is therefore abandoned and the date-time will use `59`
-instead of `60`. 
+instead of `60`.
