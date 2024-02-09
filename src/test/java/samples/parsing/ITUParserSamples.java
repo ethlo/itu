@@ -58,7 +58,7 @@ This is a collection of usage examples for parsing.
 class ITUParserSamples
 {
     /*
-    The simplest and fastest way to parse an RFC-3339 (ISO-8601 profile) timestamp by far!
+    The simplest and fastest way to parse an RFC-3339 timestamp by far!
      */
     @Test
     void parseRfc3339()
@@ -69,7 +69,7 @@ class ITUParserSamples
     }
 
     /*
-    Parses a date-time with flexible granularity. Works for anything from a year to a timestamp with nanoseconds, wih or without timezone offset!
+    Parses a date-time with flexible granularity. Works for anything from a year to a timestamp with nanoseconds, with or without timezone offset.
      */
     @Test
     void parseLenient()
@@ -97,7 +97,7 @@ class ITUParserSamples
     }
 
     /*
-     This allows you to track where to start reading. Note that the check for trailing junk is disabled when using ParsePosition.
+     This allows you to track where to start reading. Note that the check for trailing junk is disabled when using `ParsePosition`.
      */
     @Test
     void parsePosition()
@@ -135,6 +135,7 @@ class ITUParserSamples
 
     /*
     In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `DateTime` instance into `Instant`.
+
     Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc.
     */
     @Test
@@ -169,7 +170,7 @@ class ITUParserSamples
     }
 
     /*
-    `DateTimerParser` interface for RFC-3339
+    `DateTimerParser` interface for RFC-3339.
      */
     @Test
     void parseUsingInterfaceRfc33939()
@@ -181,7 +182,7 @@ class ITUParserSamples
     }
 
     /*
-    `DateTimerParser` interface for local time
+    `DateTimerParser` interface for local time.
      */
     @Test
     void parseUsingInterfaceLocalTime()
@@ -193,7 +194,7 @@ class ITUParserSamples
     }
 
     /*
-    `DateTimerParser` interface for local date
+    `DateTimerParser` interface for local date.
      */
     @Test
     void parseUsingInterfaceLocalDate()

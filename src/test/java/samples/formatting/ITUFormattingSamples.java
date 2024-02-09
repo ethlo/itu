@@ -27,6 +27,8 @@ import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Test;
 
+import com.ethlo.time.DateTime;
+import com.ethlo.time.Field;
 import com.ethlo.time.ITU;
 
 /*
@@ -39,7 +41,7 @@ This is a collection of usage examples for formatting.
 class ITUFormattingSamples
 {
     /*
-    The simplest and fastest way to format an RFC-3339 (ISO-8601 profile) timestamp by far!
+    The simplest and fastest way to format an RFC-3339 timestamp by far!
      */
     @Test
     void formatRfc3339WithUTC()
@@ -49,5 +51,16 @@ class ITUFormattingSamples
         assertThat(ITU.formatUtcMicro(input)).isEqualTo("2012-12-27T22:07:22.123456Z");
         assertThat(ITU.formatUtcMilli(input)).isEqualTo("2012-12-27T22:07:22.123Z");
         assertThat(ITU.formatUtc(input)).isEqualTo("2012-12-27T22:07:22Z");
+    }
+
+    /*
+     Format with `DateTime`.
+     */
+    @Test
+    void formatWithDateTime()
+    {
+        final DateTime input = DateTime.of(2020, 11, 27, 12, 39, 19, null);
+        assertThat(input.toString(Field.MINUTE)).isEqualTo("2020-11-27T12:39");
+        assertThat(input.toString(Field.SECOND)).isEqualTo("2020-11-27T12:39:19");
     }
 }

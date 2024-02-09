@@ -51,7 +51,7 @@ This is a collection of usage examples for parsing.
 
 #### parseRfc3339 <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L63C5-L69C6)</span>
 
-The simplest and fastest way to parse an RFC-3339 (ISO-8601 profile) timestamp by far!
+The simplest and fastest way to parse an RFC-3339 timestamp by far!
 ```java
 final String text = "2012-12-27T19:07:22.123456789-03:00";
 final OffsetDateTime dateTime = ITU.parseDateTime(text);
@@ -61,7 +61,7 @@ assertThat(dateTime.toString()).isEqualTo(text);
 
 #### parseLenient <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L74C5-L83C6)</span>
 
-Parses a date-time with flexible granularity. Works for anything from a year to a timestamp with nanoseconds, wih or without timezone offset!
+Parses a date-time with flexible granularity. Works for anything from a year to a timestamp with nanoseconds, with or without timezone offset.
 ```java
 final String text = "2012-12-27T19:07:23.123";
 final DateTime dateTime = ITU.parseLenient(text);
@@ -84,7 +84,7 @@ assertThat(result.toString()).isEqualTo("1999-11-22T11:22:17.191");
 
 #### parsePosition <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L102C5-L109C6)</span>
 
-This allows you to track where to start reading. Note that the check for trailing junk is disabled when using ParsePosition.
+This allows you to track where to start reading. Note that the check for trailing junk is disabled when using `ParsePosition`.
 ```java
 final ParsePosition pos = new ParsePosition(10);
 final OffsetDateTime result = ITU.parseDateTime("some-data,1999-11-22T11:22:19+05:30,some-other-data", pos);
@@ -114,9 +114,10 @@ assertThat(result.toString()).isEqualTo("2017-12-06T00:00Z");
 ```
 
 
-#### lenientTimestamp <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L140C5-L145C6)</span>
+#### lenientTimestamp <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L141C5-L146C6)</span>
 
 In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `DateTime` instance into `Instant`.
+
  Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc.
 ```java
 final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
@@ -124,7 +125,7 @@ assertThat(instant.toString()).isEqualTo("2017-12-06T00:00:00Z");
 ```
 
 
-#### parseCustomFormat <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L150C5-L169C6)</span>
+#### parseCustomFormat <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L151C5-L170C6)</span>
 
 In case the format is not supported directly, you can build your own parser.
 ```java
@@ -135,9 +136,9 @@ assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
 ```
 
 
-#### parseUsingInterfaceRfc33939 <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L174C5-L181C6)</span>
+#### parseUsingInterfaceRfc33939 <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L175C5-L182C6)</span>
 
-`DateTimerParser` interface for RFC-3339
+`DateTimerParser` interface for RFC-3339.
 ```java
 final DateTimeParser parser = DateTimeParsers.rfc3339();
 final String text = "2000-12-31 23:59:37.123456";
@@ -146,9 +147,9 @@ assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
 ```
 
 
-#### parseUsingInterfaceLocalTime <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L186C5-L193C6)</span>
+#### parseUsingInterfaceLocalTime <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L187C5-L194C6)</span>
 
-`DateTimerParser` interface for local time
+`DateTimerParser` interface for local time.
 ```java
 final DateTimeParser parser = DateTimeParsers.localTime();
 final String text = "23:59:37.123456";
@@ -157,9 +158,9 @@ assertThat(result.toString()).isEqualTo(text);
 ```
 
 
-#### parseUsingInterfaceLocalDate <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L198C5-L205C6)</span>
+#### parseUsingInterfaceLocalDate <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L199C5-L206C6)</span>
 
-`DateTimerParser` interface for local date
+`DateTimerParser` interface for local date.
 ```java
 final DateTimeParser parser = DateTimeParsers.localDate();
 final String text = "2013-12-24";
@@ -177,15 +178,25 @@ This is a collection of usage examples for formatting.
 
 
 
-#### formatRfc3339WithUTC <span style="font-weight: normal">[&raquo; source](src/test/java/samples/formatting/ITUFormattingSamples.java#L44C5-L52C6)</span>
+#### formatRfc3339WithUTC <span style="font-weight: normal">[&raquo; source](src/test/java/samples/formatting/ITUFormattingSamples.java#L46C5-L54C6)</span>
 
-The simplest and fastest way to format an RFC-3339 (ISO-8601 profile) timestamp by far!
+The simplest and fastest way to format an RFC-3339 timestamp by far!
 ```java
 final OffsetDateTime input = OffsetDateTime.of(2012, 12, 27, 19, 7, 22, 123456789, ZoneOffset.ofHoursMinutes(-3, 0));
 assertThat(ITU.formatUtcNano(input)).isEqualTo("2012-12-27T22:07:22.123456789Z");
 assertThat(ITU.formatUtcMicro(input)).isEqualTo("2012-12-27T22:07:22.123456Z");
 assertThat(ITU.formatUtcMilli(input)).isEqualTo("2012-12-27T22:07:22.123Z");
 assertThat(ITU.formatUtc(input)).isEqualTo("2012-12-27T22:07:22Z");
+```
+
+
+#### formatWithDateTime <span style="font-weight: normal">[&raquo; source](src/test/java/samples/formatting/ITUFormattingSamples.java#L59C5-L65C6)</span>
+
+Format with `DateTime`.
+```java
+final DateTime input = DateTime.of(2020, 11, 27, 12, 39, 19, null);
+assertThat(input.toString(Field.MINUTE)).isEqualTo("2020-11-27T12:39");
+assertThat(input.toString(Field.SECOND)).isEqualTo("2020-11-27T12:39:19");
 ```
 
 
@@ -219,12 +230,12 @@ try {
 There are an endless amount of APIs with non-standard date/time exchange, and the goal of this project is to make it a
 no-brainer to do-the-right-thing(c).
 
-### Why the performance docus?
+### Why the performance focus?
 
 Some projects use epoch time-stamps for date-time exchange, and from a performance perspective this *may* make sense
-in *some* cases. With this project one can do-the-right-thing and maintain performance in date-time handling.
+in some cases. With this project one can do-the-right-thing and maintain performance in date-time handling.
 
-This project is _not_ a premature optimization! In real-life scenarios there are examples of date-time parsing hindering optimal performance. The samples include data ingestion into databases and search engines, to importing/exporting data on less powerful devices, like cheaper Android devices.  
+Importantly, this project is _not_ a premature optimization. In real-life scenarios there are examples of date-time parsing hindering optimal performance. The samples include data ingestion into databases and search engines, to importing/exporting data on less powerful devices, like cheaper Android devices.  
 
 ### What is wrong with epoch timestamps?
 

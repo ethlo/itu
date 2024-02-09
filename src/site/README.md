@@ -54,12 +54,12 @@ ${src/test/java/samples/leapsecond}
 There are an endless amount of APIs with non-standard date/time exchange, and the goal of this project is to make it a
 no-brainer to do-the-right-thing(c).
 
-### Why the performance optimized version?
+### Why the performance focus?
 
 Some projects use epoch time-stamps for date-time exchange, and from a performance perspective this *may* make sense
-in *some* cases. With this project one can do-the-right-thing and maintain performance in date-time handling.
+in some cases. With this project one can do-the-right-thing and maintain performance in date-time handling.
 
-This project is _not_ a premature optimization! In real-life scenarios there are examples of date-time parsing hindering optimal performance. The samples include data ingestion into databases and search engines, to importing/exporting data on less powerful devices, like cheaper Android devices.  
+Importantly, this project is _not_ a premature optimization. In real-life scenarios there are examples of date-time parsing hindering optimal performance. The samples include data ingestion into databases and search engines, to importing/exporting data on less powerful devices, like cheaper Android devices.  
 
 ### What is wrong with epoch timestamps?
 
