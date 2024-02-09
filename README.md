@@ -219,7 +219,7 @@ try {
 There are an endless amount of APIs with non-standard date/time exchange, and the goal of this project is to make it a
 no-brainer to do-the-right-thing(c).
 
-### Why the performance optimized version?
+### Why the performance docus?
 
 Some projects use epoch time-stamps for date-time exchange, and from a performance perspective this *may* make sense
 in *some* cases. With this project one can do-the-right-thing and maintain performance in date-time handling.
