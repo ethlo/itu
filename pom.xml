@@ -314,9 +314,9 @@ limitations under the License.
                         </configuration>
                     </plugin>
                     <plugin>
-                        <groupId>com.ethlo.maven</groupId>
-                        <artifactId>java-code-extractor-maven-plugin</artifactId>
-                        <version>1.0.0-SNAPSHOT</version>
+                        <groupId>com.ethlo.documentation</groupId>
+                        <artifactId>source-extractor-maven-plugin</artifactId>
+                        <version>0.1.0</version>
                         <configuration>
                             <template>src/site/sample-code.template.md</template>
                             <sources>
@@ -411,4 +411,14 @@ limitations under the License.
             </build>
         </profile>
     </profiles>
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Nexus Snapshot repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
 </project>
