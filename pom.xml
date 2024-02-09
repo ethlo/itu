@@ -316,7 +316,7 @@ limitations under the License.
                     <plugin>
                         <groupId>com.ethlo.documentation</groupId>
                         <artifactId>source-extractor-maven-plugin</artifactId>
-                        <version>0.1.0</version>
+                        <version>0.2.0</version>
                         <configuration>
                             <template>src/site/sample-code.template.md</template>
                             <sources>
