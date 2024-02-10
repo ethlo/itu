@@ -49,7 +49,7 @@ This is a collection of usage examples for parsing.
 
 
 
-#### parseRfc3339 <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L63C5-L69C6)</span>
+#### parseRfc3339 <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L60C5-L69C6)</span>
 
 The simplest and fastest way to parse an RFC-3339 timestamp by far!
 ```java
@@ -59,7 +59,7 @@ assertThat(dateTime.toString()).isEqualTo(text);
 ```
 
 
-#### parseLenient <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L74C5-L83C6)</span>
+#### parseLenient <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L71C5-L83C6)</span>
 
 Parses a date-time with flexible granularity. Works for anything from a year to a timestamp with nanoseconds, with or without timezone offset.
 ```java
@@ -70,7 +70,7 @@ assertThat(formatted).isEqualTo(text);
 ```
 
 
-#### parseLenientWithCustomSeparators <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L89C5-L97C6)</span>
+#### parseLenientWithCustomSeparators <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L85C5-L97C6)</span>
 
 In case you encounter the need for a somewhat different time-separator or fraction separator
  you can use the `ParseConfig` to set up you preferred delimiters.
@@ -83,7 +83,7 @@ assertThat(result.toString()).isEqualTo("1999-11-22T11:22:17.191");
 ```
 
 
-#### parsePosition <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L102C5-L109C6)</span>
+#### parsePosition <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L99C5-L109C6)</span>
 
 This allows you to track where to start reading. Note that the check for trailing junk is disabled when using `ParsePosition`.
 ```java
@@ -94,7 +94,7 @@ assertThat(pos.getIndex()).isEqualTo(35);
 ```
 
 
-#### explicitGranularity <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L114C5-L134C6)</span>
+#### explicitGranularity <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L111C5-L134C6)</span>
 
 This is useful if you need to handle different granularity with different logic or interpolation.
 ```java
@@ -117,7 +117,7 @@ assertThat(result.toString()).isEqualTo("2017-12-06T00:00Z");
 ```
 
 
-#### lenientTimestamp <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L141C5-L146C6)</span>
+#### lenientTimestamp <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L136C5-L146C6)</span>
 
 In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `DateTime` instance into `Instant`.
 
@@ -128,7 +128,7 @@ assertThat(instant.toString()).isEqualTo("2017-12-06T00:00:00Z");
 ```
 
 
-#### parseCustomFormat <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L151C5-L170C6)</span>
+#### parseCustomFormat <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L148C5-L170C6)</span>
 
 In case the format is not supported directly, you can build your own parser.
 ```java
@@ -151,7 +151,7 @@ assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
 ```
 
 
-#### parseUsingInterfaceRfc33939 <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L175C5-L182C6)</span>
+#### parseUsingInterfaceRfc33939 <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L172C5-L182C6)</span>
 
 `DateTimerParser` interface for RFC-3339.
 ```java
@@ -162,7 +162,7 @@ assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
 ```
 
 
-#### parseUsingInterfaceLocalTime <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L187C5-L194C6)</span>
+#### parseUsingInterfaceLocalTime <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L184C5-L194C6)</span>
 
 `DateTimerParser` interface for local time.
 ```java
@@ -173,7 +173,7 @@ assertThat(result.toString()).isEqualTo(text);
 ```
 
 
-#### parseUsingInterfaceLocalDate <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L199C5-L206C6)</span>
+#### parseUsingInterfaceLocalDate <span style="font-weight: normal">[&raquo; source](src/test/java/samples/parsing/ITUParserSamples.java#L196C5-L206C6)</span>
 
 `DateTimerParser` interface for local date.
 ```java
@@ -193,7 +193,7 @@ This is a collection of usage examples for formatting.
 
 
 
-#### formatRfc3339WithUTC <span style="font-weight: normal">[&raquo; source](src/test/java/samples/formatting/ITUFormattingSamples.java#L46C5-L54C6)</span>
+#### formatRfc3339WithUTC <span style="font-weight: normal">[&raquo; source](src/test/java/samples/formatting/ITUFormattingSamples.java#L43C5-L54C6)</span>
 
 The simplest and fastest way to format an RFC-3339 timestamp by far!
 ```java
@@ -205,7 +205,7 @@ assertThat(ITU.formatUtc(input)).isEqualTo("2012-12-27T22:07:22Z");
 ```
 
 
-#### formatWithDateTime <span style="font-weight: normal">[&raquo; source](src/test/java/samples/formatting/ITUFormattingSamples.java#L59C5-L65C6)</span>
+#### formatWithDateTime <span style="font-weight: normal">[&raquo; source](src/test/java/samples/formatting/ITUFormattingSamples.java#L56C5-L65C6)</span>
 
 Format with `DateTime`.
 ```java
@@ -222,21 +222,21 @@ assertThat(input.toString(Field.SECOND)).isEqualTo("2020-11-27T12:39:19");
 
 
 
-#### parseLeapSecond <span style="font-weight: normal">[&raquo; source](src/test/java/samples/leapsecond/ITULeapSecondSamples.java#L43C5-L57C6)</span>
+#### parseLeapSecond <span style="font-weight: normal">[&raquo; source](src/test/java/samples/leapsecond/ITULeapSecondSamples.java#L40C5-L57C6)</span>
 
 Parse a valid leap-second (i.e. it is on a date that would allow for it, and it is also in the list of known actual leap-seconds).
 ```java
 try
-        {
-            ITU.parseDateTime("1990-12-31T15:59:60-08:00");
-        }
-        catch (LeapSecondException exc)
-        {
-            // The following helper methods are available let you decide how to progress
-            assertThat(exc.getSecondsInMinute()).isEqualTo(60);
-            assertThat(exc.getNearestDateTime()).isEqualTo(OffsetDateTime.of(1990, 12, 31, 16, 0, 0, 0, ZoneOffset.ofHours(-8)));
-            assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
-        }
+{
+    ITU.parseDateTime("1990-12-31T15:59:60-08:00");
+}
+catch (LeapSecondException exc)
+{
+    // The following helper methods are available let you decide how to progress
+    assertThat(exc.getSecondsInMinute()).isEqualTo(60);
+    assertThat(exc.getNearestDateTime()).isEqualTo(OffsetDateTime.of(1990, 12, 31, 16, 0, 0, 0, ZoneOffset.ofHours(-8)));
+    assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
+}
 ```
 
 
