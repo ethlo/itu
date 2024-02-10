@@ -241,6 +241,8 @@ public class ITU
      *
      * @param text            The text to parse as a date/date-time
      * @param temporalHandler The handler of the found date/date-time
+     * @param <T> The type of Temporal returned
+     * @return The temporal matching the type handled
      */
     public static <T> T parse(String text, TemporalHandler<T> temporalHandler)
     {

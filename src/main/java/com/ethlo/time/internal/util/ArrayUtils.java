@@ -22,6 +22,10 @@ package com.ethlo.time.internal.util;
 
 public class ArrayUtils
 {
+    private ArrayUtils()
+    {
+    }
+
     public static char[] merge(char[] a, char[] b)
     {
         final char[] result = new char[a.length + b.length];

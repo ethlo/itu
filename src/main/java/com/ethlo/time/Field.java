@@ -34,13 +34,37 @@ import java.time.temporal.UnsupportedTemporalTypeException;
  */
 public enum Field
 {
+    /**
+     * Year
+     */
     YEAR(4),
+    /**
+     * Month of year
+     */
     MONTH(7),
+    /**
+     * Day of month
+     */
     DAY(10),
+    /**
+     * Hour of day
+     */
     HOUR(13),
+    /**
+     * Minute of hour
+     */
     MINUTE(16),
+    /**
+     * Second of minute
+     */
     SECOND(19),
+    /**
+     * Nanos
+     */
     NANO(20),
+    /**
+     * Timezone offset
+     */
     ZONE_OFFSET(17);
 
     private final int requiredLength;

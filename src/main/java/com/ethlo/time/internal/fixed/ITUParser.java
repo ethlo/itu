@@ -42,10 +42,25 @@ import com.ethlo.time.internal.util.ArrayUtils;
 
 public class ITUParser implements DateTimeParser
 {
+    /**
+     * Default date field seperator
+     */
     public static final char DATE_SEPARATOR = '-';
+    /**
+     * Default time field seperator
+     */
     public static final char TIME_SEPARATOR = ':';
+    /**
+     * Default date/time seperator
+     */
     public static final char SEPARATOR_UPPER = 'T';
+    /**
+     * Default date/time seperator lower-case
+     */
     public static final char SEPARATOR_LOWER = 't';
+    /**
+     * Alternative date/time seperator
+     */
     public static final char SEPARATOR_SPACE = ' ';
     public static final char PLUS = '+';
     public static final char MINUS = '-';

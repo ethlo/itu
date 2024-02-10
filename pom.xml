@@ -126,7 +126,9 @@ limitations under the License.
                 <configuration>
                     <show>public</show>
                     <source>8</source>
-                    <excludePackageNames>com.ethlo.time.internal</excludePackageNames>
+                    <excludePackageNames>com.ethlo.time.internal;com.ethlo.time.internal.*</excludePackageNames>
+                    <quiet>true</quiet>
+                    <doclint>all,-missing</doclint>
                 </configuration>
             </plugin>
             <plugin>
@@ -215,7 +217,7 @@ limitations under the License.
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            com.ethlo.time
+                            com.ethlo.time,com.ethlo.time.token
                         </Export-Package>
                     </instructions>
                 </configuration>
@@ -316,7 +318,7 @@ limitations under the License.
                     <plugin>
                         <groupId>com.ethlo.documentation</groupId>
                         <artifactId>source-extractor-maven-plugin</artifactId>
-                        <version>0.2.0</version>
+                        <version>0.3.0</version>
                         <configuration>
                             <template>src/site/sample-code.template.md</template>
                             <sources>
@@ -336,15 +338,6 @@ limitations under the License.
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <id>java8-doclint-disabled</id>
-            <activation>
-                <jdk>[1.8,)</jdk>
-            </activation>
-            <properties>
-                <javadoc.opts>-Xdoclint:none</javadoc.opts>
-            </properties>
         </profile>
         <profile>
             <id>java-module</id>
@@ -370,7 +363,8 @@ limitations under the License.
                                     <module>
                                         <moduleInfo>
                                             <name>com.ethlo.time</name>
-                                            <exports>com.ethlo.time;</exports>
+                                            <exports>com.ethlo.time</exports>
+                                            <exports>com.ethlo.time.token</exports>
                                             <addServiceUses>true</addServiceUses>
                                         </moduleInfo>
                                     </module>

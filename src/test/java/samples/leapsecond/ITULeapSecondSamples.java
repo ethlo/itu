@@ -51,7 +51,7 @@ class ITULeapSecondSamples
         {
             // The following helper methods are available let you decide how to progress
             assertThat(exc.getSecondsInMinute()).isEqualTo(60);
-            assertThat(exc.getNearestDateTime()).isEqualTo(OffsetDateTime.of(1991, 12, 31, 1, 0, 0, 0, ZoneOffset.UTC));
+            assertThat(exc.getNearestDateTime()).isEqualTo(OffsetDateTime.of(1990, 12, 31, 16, 0, 0, 0, ZoneOffset.ofHours(-8)));
             assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
         }
     }

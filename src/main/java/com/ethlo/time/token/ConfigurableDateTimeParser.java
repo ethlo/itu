@@ -35,6 +35,9 @@ import com.ethlo.time.Field;
 import com.ethlo.time.TimezoneOffset;
 import com.ethlo.time.internal.token.FractionsToken;
 
+/**
+ * A configurable format `DateTimeParser`.
+ */
 public class ConfigurableDateTimeParser implements DateTimeParser
 {
     private final DateTimeToken[] tokens;
@@ -51,6 +54,11 @@ public class ConfigurableDateTimeParser implements DateTimeParser
         this.tokens = tokens;
     }
 
+    /**
+     * Create a new parser with the specified tokens
+     * @param tokens The tokens expected in the format
+     * @return A new parser instance
+     */
     public static DateTimeParser of(DateTimeToken... tokens)
     {
         return new ConfigurableDateTimeParser(tokens);

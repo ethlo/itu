@@ -25,6 +25,13 @@ import java.time.DateTimeException;
 
 public interface DateTimeParser
 {
+    /**
+     * Parse the text from the given position of the parsePosition
+     * @param text The text to parse
+     * @param parsePosition The position in which to start
+     * @return A DateTime holding the parsed data
+     * @throws DateTimeException If the data is not according to the format specified
+     */
     DateTime parse(String text, ParsePosition parsePosition) throws DateTimeException;
 
     default DateTime parse(String text) throws DateTimeException
