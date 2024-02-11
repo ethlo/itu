@@ -33,7 +33,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.10.1-SNAPSHOT</version>
+  <version>1.10.1</version>
   <!-- If you want to use minified JAR -->  
   <classifier>small</classifier>
 </dependency>
@@ -227,16 +227,16 @@ assertThat(input.toString(Field.SECOND)).isEqualTo("2020-11-27T12:39:19");
 Parse a valid leap-second (i.e. it is on a date that would allow for it, and it is also in the list of known actual leap-seconds).
 ```java
 try
-{
-    ITU.parseDateTime("1990-12-31T15:59:60-08:00");
-}
-catch (LeapSecondException exc)
-{
-    // The following helper methods are available let you decide how to progress
-    assertThat(exc.getSecondsInMinute()).isEqualTo(60);
-    assertThat(exc.getNearestDateTime()).isEqualTo(OffsetDateTime.of(1990, 12, 31, 16, 0, 0, 0, ZoneOffset.ofHours(-8)));
-    assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
-}
+        {
+            ITU.parseDateTime("1990-12-31T15:59:60-08:00");
+        }
+        catch (LeapSecondException exc)
+        {
+            // The following helper methods are available let you decide how to progress
+            assertThat(exc.getSecondsInMinute()).isEqualTo(60);
+            assertThat(exc.getNearestDateTime()).isEqualTo(OffsetDateTime.of(1990, 12, 31, 16, 0, 0, 0, ZoneOffset.ofHours(-8)));
+            assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
+        }
 ```
 
 
