@@ -6,10 +6,8 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/598913bc1fe9405c82be73d9a4f105c8)](https://app.codacy.com/gh/ethlo/itu/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![codecov](https://codecov.io/gh/ethlo/itu/graph/badge.svg?token=V3H15LKC5V)](https://codecov.io/gh/ethlo/itu)
 
-An extremely fast parser and formatter of specific ISO-8601 format date and date-times.
-
-This project's goal is to  do one thing: Make it easy to
-handle [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) in Java.
+An extremely fast parser and formatter of ISO-8601 date-times. Handle
+ [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) with ease!
 
 ## Features
 * Very easy to use.
@@ -18,11 +16,12 @@ handle [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date
 * Aware of leap-seconds
 * No dependencies, small jar.
 * Apache 2 licensed, can be used in any project, even commercial.
+* Java 8+ compatible
 
 
 ## Performance
 
-**TL;DR:** Typically **10x to 30x faster** than parsing and formatting with Java JDK classes.
+Typically, **10x to 30x faster** than parsing and formatting with Java JDK classes.
 
 The details and tests are available in a separate repository, [date-time-wars](https://github.com/ethlo/date-time-wars).
 
@@ -52,7 +51,7 @@ ${src/test/java/samples/leapsecond}
 ### Why this little project?
 
 There are an endless amount of APIs with non-standard date/time exchange, and the goal of this project is to make it a
-no-brainer to do-the-right-thing(c).
+breeze to do the right thing!
 
 ### Why the performance focus?
 
@@ -67,7 +66,7 @@ Importantly, this project is _not_ a premature optimization. In real-life scenar
 * Limited resolution and/or time-range available
 * Unclear resolution and/or time-range
 
-## What is RFC-3339?
+### What is RFC-3339?
 
 [RFC-3339](https://www.ietf.org/rfc/rfc3339.txt) is a subset/profile defined by [W3C](https://www.w3.org/) of the
 formats defined in [ISO-8601](http://www.iso.org/iso/home/standards/iso8601.htm), to simplify date and time exhange in
@@ -84,7 +83,7 @@ Typical formats include:
 * `2017-12-27T18:45:32.999999-05:00` - Microsecond fractions, EST time
 * `2017-12-27T18:45:32.999999999-05:00` - Nanosecond fractions, EST time
 
-## What is W3C - Date and Time Formats
+### What is W3C - Date and Time Formats
 
 [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) is a _note_, meaning it is not endorsed, but it still
 serves as a sane subset of ISO-8601, just like RFC-3339.
