@@ -283,7 +283,8 @@
     },
     {
         "input": "2020-12-31T00:00:00-05:00 x",
-        "error": "Trailing junk data after position 27: 2020-12-31T00:00:00-05:00 x",
+        "error": "Trailing junk data after position 26: 2020-12-31T00:00:00-05:00 x",
+        "error_index": 25,
         "lenient": true
     },
     {
@@ -331,5 +332,10 @@
         "input": "4444-04-23t44:44:60",
         "error": "Invalid value for SecondOfMinute (valid values 0 - 59): 60",
         "lenient": true
+    },
+    {
+        "input": "1963-06-19T08:30:06.28123+01:00Z",
+        "error": "Trailing junk data after position 32: 1963-06-19T08:30:06.28123+01:00Z",
+        "error_index": 31
     }
 ]
