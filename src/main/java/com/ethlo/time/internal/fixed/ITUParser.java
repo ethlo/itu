@@ -149,7 +149,7 @@ public class ITUParser implements DateTimeParser
             }
         }
 
-        assertNoMoreChars(offset, parseConfig, chars, idx + 6);
+        assertNoMoreChars(offset, parseConfig, chars, idx + 5);
         return TimezoneOffset.ofHoursMinutes(hours, minutes);
     }
 
