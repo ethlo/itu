@@ -217,7 +217,7 @@ limitations under the License.
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            com.ethlo.time,com.ethlo.time.token
+                            com.ethlo.time
                         </Export-Package>
                     </instructions>
                 </configuration>
