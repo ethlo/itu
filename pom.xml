@@ -257,7 +257,7 @@ limitations under the License.
         </snapshotRepository>
     </distributionManagement>
     <scm>
-        <url>https://github.com:ethlo/itu</url>
+        <url>https://github.com/ethlo/itu</url>
         <connection>scm:git:git@github.com:ethlo/itu.git</connection>
         <developerConnection>scm:git:git@github.com:ethlo/itu.git</developerConnection>
     </scm>
