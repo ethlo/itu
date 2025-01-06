@@ -258,8 +258,8 @@ limitations under the License.
     </distributionManagement>
     <scm>
         <url>https://github.com/ethlo/itu</url>
-        <connection>scm:git:git@github.com:ethlo/itu.git</connection>
-        <developerConnection>scm:git:git@github.com:ethlo/itu.git</developerConnection>
+        <connection>scm:git:git@github.com/ethlo/itu.git</connection>
+        <developerConnection>scm:git:git@github.com/ethlo/itu.git</developerConnection>
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
