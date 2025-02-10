@@ -32,7 +32,7 @@ Add dependency
 <dependency>
   <groupId>com.ethlo.time</groupId>
   <artifactId>itu</artifactId>
-  <version>1.10.3</version>
+  <version>1.10.2</version>
   <!-- If you want to use minified JAR -->  
   <classifier>small</classifier>
 </dependency>
@@ -40,11 +40,205 @@ Add dependency
 
 Below you find some samples of usage of this library. Please check out the [javadoc](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html) for more details.
 
-${src/test/java/samples/parsing}
 
-${src/test/java/samples/formatting}
 
-${src/test/java/samples/leapsecond}
+## Parsing
+
+This is a collection of usage examples for parsing.
+
+
+
+#### parseRfc3339
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L60C5-L69C6)</smaller>
+
+The simplest and fastest way to parse an RFC-3339 timestamp by far!
+```java
+final String text = "2012-12-27T19:07:22.123456789-03:00";
+final OffsetDateTime dateTime = ITU.parseDateTime(text);
+assertThat(dateTime.toString()).isEqualTo(text);
+```
+
+#### parseLenient
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L71C5-L83C6)</smaller>
+
+Parses a date-time with flexible granularity. Works for anything from a year to a timestamp with nanoseconds, with or without timezone offset.
+```java
+final String text = "2012-12-27T19:07:23.123";
+final DateTime dateTime = ITU.parseLenient(text);
+final String formatted = dateTime.toString();
+assertThat(formatted).isEqualTo(text);
+```
+
+#### parseLenientWithCustomSeparators
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L85C5-L97C6)</smaller>
+
+In case you encounter the need for a somewhat different time-separator or fraction separator
+ you can use the `ParseConfig` to set up you preferred delimiters.
+```java
+final ParseConfig config = ParseConfig.DEFAULT
+                .withDateTimeSeparators('T', '|')
+                .withFractionSeparators('.', ',');
+final DateTime result = ITU.parseLenient("1999-11-22|11:22:17,191", config);
+assertThat(result.toString()).isEqualTo("1999-11-22T11:22:17.191");
+```
+
+#### parsePosition
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L99C5-L109C6)</smaller>
+
+This allows you to track where to start reading. Note that the check for trailing junk is disabled when using `ParsePosition`.
+```java
+final ParsePosition pos = new ParsePosition(10);
+final OffsetDateTime result = ITU.parseDateTime("some-data,1999-11-22T11:22:19+05:30,some-other-data", pos);
+assertThat(result.toString()).isEqualTo("1999-11-22T11:22:19+05:30");
+assertThat(pos.getIndex()).isEqualTo(35);
+```
+
+#### explicitGranularity
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L111C5-L134C6)</smaller>
+
+This is useful if you need to handle different granularity with different logic or interpolation.
+```java
+final TemporalHandler<OffsetDateTime> handler = new TemporalHandler<OffsetDateTime>()
+        {
+            @Override
+            public OffsetDateTime handle(final LocalDate localDate)
+            {
+                return localDate.atTime(OffsetTime.of(LocalTime.of(0, 0), ZoneOffset.UTC));
+            }
+
+            @Override
+            public OffsetDateTime handle(final OffsetDateTime offsetDateTime)
+            {
+                return offsetDateTime;
+            }
+        };
+final OffsetDateTime result = ITU.parse("2017-12-06", handler);
+assertThat(result.toString()).isEqualTo("2017-12-06T00:00Z");
+```
+
+#### lenientTimestamp
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L136C5-L146C6)</smaller>
+
+In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `DateTime` instance into `Instant`.
+
+ Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc.
+```java
+final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
+assertThat(instant.toString()).isEqualTo("2017-12-06T00:00:00Z");
+```
+
+#### parseCustomFormat
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L148C5-L170C6)</smaller>
+
+In case the format is not supported directly, you can build your own parser.
+```java
+final DateTimeParser parser = DateTimeParsers.of(
+                digits(DAY, 2),
+                separators('-'),
+                digits(MONTH, 2),
+                separators('-'),
+                digits(YEAR, 4),
+                separators(' '),
+                digits(HOUR, 2),
+                digits(MINUTE, 2),
+                digits(SECOND, 2),
+                separators(','),
+                fractions()
+        );
+final String text = "31-12-2000 235937,123456";
+final DateTime result = parser.parse(text);
+assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
+```
+
+#### parseUsingInterfaceRfc33939
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L172C5-L182C6)</smaller>
+
+`DateTimerParser` interface for RFC-3339.
+```java
+final DateTimeParser parser = DateTimeParsers.rfc3339();
+final String text = "2000-12-31 23:59:37.123456";
+final DateTime result = parser.parse(text);
+assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
+```
+
+#### parseUsingInterfaceLocalTime
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L184C5-L194C6)</smaller>
+
+`DateTimerParser` interface for local time.
+```java
+final DateTimeParser parser = DateTimeParsers.localTime();
+final String text = "23:59:37.123456";
+final LocalTime result = parser.parse(text).toLocalTime();
+assertThat(result.toString()).isEqualTo(text);
+```
+
+#### parseUsingInterfaceLocalDate
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L196C5-L206C6)</smaller>
+
+`DateTimerParser` interface for local date.
+```java
+final DateTimeParser parser = DateTimeParsers.localDate();
+final String text = "2013-12-24";
+final LocalDate result = parser.parse(text).toLocalDate();
+assertThat(result.toString()).isEqualTo(text);
+```
+
+
+
+
+## Formatting
+
+This is a collection of usage examples for formatting.
+
+
+
+#### formatRfc3339WithUTC
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L43C5-L54C6)</smaller>
+
+The simplest and fastest way to format an RFC-3339 timestamp by far!
+```java
+final OffsetDateTime input = OffsetDateTime.of(2012, 12, 27, 19, 7, 22, 123456789, ZoneOffset.ofHoursMinutes(-3, 0));
+assertThat(ITU.formatUtcNano(input)).isEqualTo("2012-12-27T22:07:22.123456789Z");
+assertThat(ITU.formatUtcMicro(input)).isEqualTo("2012-12-27T22:07:22.123456Z");
+assertThat(ITU.formatUtcMilli(input)).isEqualTo("2012-12-27T22:07:22.123Z");
+assertThat(ITU.formatUtc(input)).isEqualTo("2012-12-27T22:07:22Z");
+```
+
+#### formatWithDateTime
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L56C5-L65C6)</smaller>
+
+Format with `DateTime`.
+```java
+final DateTime input = DateTime.of(2020, 11, 27, 12, 39, 19, null);
+assertThat(input.toString(Field.MINUTE)).isEqualTo("2020-11-27T12:39");
+assertThat(input.toString(Field.SECOND)).isEqualTo("2020-11-27T12:39:19");
+```
+
+
+
+
+## Leap-second handling
+
+
+
+#### parseLeapSecond
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/leapsecond/ITULeapSecondSamples.java#L40C5-L57C6)</smaller>
+
+Parse a valid leap-second (i.e. it is on a date that would allow for it, and it is also in the list of known actual leap-seconds).
+```java
+try
+        {
+            ITU.parseDateTime("1990-12-31T15:59:60-08:00");
+        }
+        catch (LeapSecondException exc)
+        {
+            // The following helper methods are available let you decide how to progress
+            assertThat(exc.getSecondsInMinute()).isEqualTo(60);
+            assertThat(exc.getNearestDateTime()).isEqualTo(OffsetDateTime.of(1990, 12, 31, 16, 0, 0, 0, ZoneOffset.ofHours(-8)));
+            assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
+        }
+```
+
 
 ## Q & A
 
