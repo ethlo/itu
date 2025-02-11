@@ -34,8 +34,6 @@ Add dependency
     <groupId>com.ethlo.time</groupId>
     <artifactId>itu</artifactId>
     <version>${project.version}</version>
-    <!-- If you want to use minified JAR -->
-    <classifier>small</classifier>
 </dependency>
 ```
 

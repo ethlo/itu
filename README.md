@@ -33,9 +33,7 @@ Add dependency
 <dependency>
     <groupId>com.ethlo.time</groupId>
     <artifactId>itu</artifactId>
-    <version>1.11.0-SNAPSHOT</version>
-    <!-- If you want to use minified JAR -->
-    <classifier>small</classifier>
+    <version>1.11.0</version>
 </dependency>
 ```
 
