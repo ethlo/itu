@@ -27,7 +27,6 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
-import java.time.format.DateTimeParseException;
 
 import com.ethlo.time.internal.fixed.ITUFormatter;
 import com.ethlo.time.internal.fixed.ITUParser;
@@ -241,7 +240,7 @@ public class ITU
      *
      * @param text            The text to parse as a date/date-time
      * @param temporalHandler The handler of the found date/date-time
-     * @param <T> The type of Temporal returned
+     * @param <T>             The type of Temporal returned
      * @return The temporal matching the type handled
      */
     public static <T> T parse(String text, TemporalHandler<T> temporalHandler)

@@ -124,7 +124,7 @@ public class FormatterTest
     @Test
     void testTostring()
     {
-        final DateTime dateTime = DateTime.of(2000,12, 31, 22, 30, 0, 0,null, 0);
+        final DateTime dateTime = DateTime.of(2000, 12, 31, 22, 30, 0, 0, null, 0);
         assertThat(dateTime.toString()).isEqualTo("2000-12-31T22:30:00");
     }
 }
