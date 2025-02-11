@@ -7,17 +7,16 @@
 [![codecov](https://codecov.io/gh/ethlo/itu/graph/badge.svg?token=V3H15LKC5V)](https://codecov.io/gh/ethlo/itu)
 
 An extremely fast parser and formatter of ISO-8601 date-times. Handle
- [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) with ease!
+[RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) with ease!
 
 ## Features
-* Very easy to use.
-* [Well-documented API](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
+
+* Low ceremony, high productivity with a very easy to use API.
+* [Well-documented](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
 * Aim for 100% specification compliance.
 * Aware of leap-seconds
 * No dependencies, small jar.
 * Apache 2 licensed, can be used in any project, even commercial.
-* Java 8+ compatible
-
 
 ## Performance
 
@@ -26,15 +25,17 @@ Typically, **10x to 30x faster** than parsing and formatting with Java JDK class
 The details and tests are available in a separate repository, [date-time-wars](https://github.com/ethlo/date-time-wars).
 
 ## Usage
+
 Add dependency
 
 ```xml
+
 <dependency>
-  <groupId>com.ethlo.time</groupId>
-  <artifactId>itu</artifactId>
-  <version>1.10.2</version>
-  <!-- If you want to use minified JAR -->  
-  <classifier>small</classifier>
+    <groupId>com.ethlo.time</groupId>
+    <artifactId>itu</artifactId>
+    <version>1.11.0-SNAPSHOT</version>
+    <!-- If you want to use minified JAR -->
+    <classifier>small</classifier>
 </dependency>
 ```
 
@@ -252,7 +253,8 @@ breeze to do the right thing!
 Some projects use epoch time-stamps for date-time exchange, and from a performance perspective this *may* make sense
 in some cases. With this project one can do-the-right-thing and maintain performance in date-time handling.
 
-Importantly, this project is _not_ a premature optimization. In real-life scenarios there are examples of date-time parsing hindering optimal performance. The samples include data ingestion into databases and search engines, to importing/exporting data on less powerful devices, like cheaper Android devices.  
+Importantly, this project is _not_ a premature optimization. In real-life scenarios there are examples of date-time parsing hindering optimal performance. The samples include data ingestion into
+databases and search engines, to importing/exporting data on less powerful devices, like cheaper Android devices.
 
 ### What is wrong with epoch timestamps?
 
@@ -296,7 +298,8 @@ For the sake of avoiding data integrity issues, this library will not allow offs
 in RFC3339 section 4.3., named "Unknown Local Offset Convention". Such offset is explicitly prohibited in ISO-8601 as
 well.
 
-> If the time in UTC is known, but the offset to local time is unknown, this can be represented with an offset of "-00:00". This differs semantically from an offset of "Z" or "+00:00", which imply that UTC is the preferred reference point for the specified time.
+> If the time in UTC is known, but the offset to local time is unknown, this can be represented with an offset of "-00:00". This differs semantically from an offset of "Z" or "+00:00", which imply
+> that UTC is the preferred reference point for the specified time.
 
 ### Leap second parsing
 
