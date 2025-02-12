@@ -210,39 +210,6 @@ limitations under the License.
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>5.1.8</version>
                 <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Export-Package>
-                            com.ethlo.time;com.ethlo.time.token;
-                        </Export-Package>
-                    </instructions>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.moditect</groupId>
-                <artifactId>moditect-maven-plugin</artifactId>
-                <version>1.2.2.Final</version>
-                <executions>
-                    <execution>
-                        <id>add-module-info</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-module-info</goal>
-                        </goals>
-                        <configuration>
-                            <jvmVersion>9</jvmVersion>
-                            <module>
-                                <moduleInfo>
-                                    <name>com.ethlo.time.itu</name>
-                                    <exports>
-                                        !com.ethlo.time.internal*;
-                                        *;
-                                    </exports>
-                                </moduleInfo>
-                            </module>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>com.github.wvengen</groupId>
@@ -287,27 +254,6 @@ limitations under the License.
                     </libs>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>com.ethlo.documentation</groupId>
-                <artifactId>source-extractor-maven-plugin</artifactId>
-                <version>0.3.0</version>
-                <configuration>
-                    <template>src/site/sample-code.template.md</template>
-                    <sources>
-                        <source>src/test/java/samples/parsing</source>
-                        <source>src/test/java/samples/formatting</source>
-                        <source>src/test/java/samples/leapsecond</source>
-                    </sources>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>extract</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
         <extensions>
             <extension>
@@ -340,11 +286,70 @@ limitations under the License.
     </properties>
     <profiles>
         <profile>
-            <id>readme</id>
+            <id>module-info</id>
             <activation>
-                <activeByDefault>false</activeByDefault> <!-- This profile is not active by default -->
+                <jdk>[9,22)</jdk>
             </activation>
             <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.moditect</groupId>
+                        <artifactId>moditect-maven-plugin</artifactId>
+                        <version>1.2.2.Final</version>
+                        <executions>
+                            <execution>
+                                <id>add-module-info</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>add-module-info</goal>
+                                </goals>
+                                <configuration>
+                                    <jvmVersion>9</jvmVersion>
+                                    <module>
+                                        <moduleInfo>
+                                            <name>com.ethlo.time.itu</name>
+                                            <exports>
+                                                !com.ethlo.time.internal*;
+                                                *;
+                                            </exports>
+                                        </moduleInfo>
+                                    </module>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>readme</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.ethlo.documentation</groupId>
+                        <artifactId>source-extractor-maven-plugin</artifactId>
+                        <version>0.3.0</version>
+                        <configuration>
+                            <template>src/site/sample-code.template.md</template>
+                            <sources>
+                                <source>src/test/java/samples/parsing</source>
+                                <source>src/test/java/samples/formatting</source>
+                                <source>src/test/java/samples/leapsecond</source>
+                            </sources>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>extract</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
                 <resources>
                     <resource>
                         <directory>src/main/resources</directory>
