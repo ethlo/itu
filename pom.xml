@@ -21,9 +21,9 @@ limitations under the License.
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ethlo.time</groupId>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     <artifactId>itu</artifactId>
-    <version>1.11.0</version>
+    <version>1.12.0-SNAPSHOT</version>
     <name>Internet Time Utility</name>
     <description>Extremely fast date-time parser and formatter - RFC 3339 (ISO 8601 profile) and W3C format
     </description>
@@ -85,8 +85,8 @@ limitations under the License.
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
@@ -125,6 +125,11 @@ limitations under the License.
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.3</version>
             </plugin>
@@ -136,7 +141,7 @@ limitations under the License.
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.7.0</version>
+                <version>1.6.13</version>
                 <extensions>true</extensions>
                 <configuration>
                     <serverId>sonatype-nexus-staging</serverId>
@@ -147,7 +152,7 @@ limitations under the License.
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.2.3</version>
+                <version>1.6</version>
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
@@ -201,6 +206,88 @@ limitations under the License.
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>5.1.8</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>
+                            com.ethlo.time;com.ethlo.time.token;
+                        </Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <version>1.2.2.Final</version>
+                <executions>
+                    <execution>
+                        <id>add-module-info</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <jvmVersion>9</jvmVersion>
+                            <module>
+                                <moduleInfo>
+                                    <name>com.ethlo.time.itu</name>
+                                    <exports>
+                                        !com.ethlo.time.internal*;
+                                        *;
+                                    </exports>
+                                </moduleInfo>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <version>2.6.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <obfuscate>true</obfuscate>
+                    <injar>${project.build.finalName}.jar</injar>
+                    <outjar>${project.build.finalName}-small.jar</outjar>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                    <attach>true</attach>
+                    <options>
+                        <option>-keepdirectories META-INF/**</option>
+                        <option>-dontnote</option>
+                        <option>-allowaccessmodification</option>
+                        <option>-repackageclasses</option>
+                        <option>-flattenpackagehierarchy a</option>
+                        <option>-keepattributes Signature</option>
+                        <option>-keep public class com.ethlo.time.ParseConfig { *; }</option>
+                        <option>-keep public class com.ethlo.time.ITU { *; }</option>
+                        <option>-keep public class com.ethlo.time.DateTime { *; }</option>
+                        <option>-keep public class com.ethlo.time.Field { *; }</option>
+                        <option>-keep public class com.ethlo.time.TemporalType { *; }</option>
+                        <option>-keep public class com.ethlo.time.TemporalConsumer { *; }</option>
+                        <option>-keep public class com.ethlo.time.TemporalHandler { *; }</option>
+                        <option>-keep public class com.ethlo.time.TimezoneOffset { *; }</option>
+                        <option>-keep public class com.ethlo.time.DateTimeParsers { *; }</option>
+                        <option>-keep public class com.ethlo.time.DateTimeParser { *; }</option>
+                        <option>-keep public class com.ethlo.time.DateTimeTokens { *; }</option>
+                        <option>-keep public class com.ethlo.time.token.DateTimeToken { *; }</option>
+                    </options>
+                    <libs>
+                        <lib>${java.home}/jmods/java.base.jmod</lib>
+                    </libs>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>com.ethlo.documentation</groupId>
                 <artifactId>source-extractor-maven-plugin</artifactId>
                 <version>0.3.0</version>
@@ -226,22 +313,9 @@ limitations under the License.
             <extension>
                 <groupId>org.apache.maven.wagon</groupId>
                 <artifactId>wagon-ssh</artifactId>
-                <version>3.5.3</version>
+                <version>3.4.3</version>
             </extension>
         </extensions>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-            <resource>
-                <filtering>true</filtering>
-                <directory>${project.basedir}/src/site</directory>
-                <includes>
-                    <include>README.md</include>
-                </includes>
-                <targetPath>${project.basedir}</targetPath>
-            </resource>
-        </resources>
     </build>
     <distributionManagement>
         <repository>
@@ -264,6 +338,55 @@ limitations under the License.
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <gpg.skip>true</gpg.skip>
     </properties>
+    <profiles>
+        <profile>
+            <id>readme</id>
+            <activation>
+                <activeByDefault>false</activeByDefault> <!-- This profile is not active by default -->
+            </activation>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                    </resource>
+                    <resource>
+                        <filtering>true</filtering>
+                        <directory>${project.basedir}/src/site</directory>
+                        <includes>
+                            <include>README.md</include>
+                        </includes>
+                        <targetPath>/</targetPath>
+                    </resource>
+                </resources>
+            </build>
+        </profile>
+        <profile>
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.8.12</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>generate-code-coverage-report</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
     <repositories>
         <repository>
             <snapshots>
