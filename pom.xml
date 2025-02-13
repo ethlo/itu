@@ -23,7 +23,7 @@ limitations under the License.
     <groupId>com.ethlo.time</groupId>
     <packaging>bundle</packaging>
     <artifactId>itu</artifactId>
-    <version>1.12.0-SNAPSHOT</version>
+    <version>1.12.0</version>
     <name>Internet Time Utility</name>
     <description>Extremely fast date-time parser and formatter - RFC 3339 (ISO 8601 profile) and W3C format
     </description>
@@ -265,7 +265,7 @@ limitations under the License.
                         <includes>
                             <include>README.md</include>
                         </includes>
-                        <targetPath>/</targetPath>
+                        <targetPath>${project.basedir}</targetPath>
                     </resource>
                 </resources>
             </build>
