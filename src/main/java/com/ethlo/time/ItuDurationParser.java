@@ -80,10 +80,11 @@ public class ItuDurationParser
 
     private static int readUntilNonDigit(final String chars, final int offset, final DurationPartsConsumer consumer)
     {
-        Character unit = null;
+        int unit = 0;
         int idx = offset;
         int value = 0;
-        while (idx < chars.length())
+        final int len = chars.length();
+        while (idx < len)
         {
             final char c = chars.charAt(idx);
             if (c < ZERO || c > DIGIT_9)
@@ -98,12 +99,12 @@ public class ItuDurationParser
             }
         }
 
-        if (unit == null)
+        if (unit == 0)
         {
             throw new DateTimeParseException("No unit defined for value " + value, chars, idx);
         }
 
-        consumer.accept(chars, idx, idx - offset, unit, value);
+        consumer.accept(chars, idx, idx - offset, (char) unit, value);
 
         return idx + 1;
     }
