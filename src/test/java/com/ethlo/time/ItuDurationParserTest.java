@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,14 +34,14 @@ class ItuDurationParserTest
     @Test
     void testMissingP()
     {
-        assertThat(assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("1D", 0)))
+        assertThat(assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("1D")))
                 .hasMessage("Duration must start with 'P'");
     }
 
     @Test
     void testValidMinimal()
     {
-        final ItuDurationParser.DurationData result = ItuDurationParser.parse("PT1S", 0);
+        final ItuDurationParser.DurationData result = ItuDurationParser.parse("PT1S");
         assertThat(result.getSeconds()).isOne();
         assertThat(result.getNano()).isZero();
         assertThat(result.toNormalized()).isEqualTo("PT1S");
@@ -50,7 +50,7 @@ class ItuDurationParserTest
     @Test
     void testValidFullNotNormalizedToNormalized()
     {
-        assertThat(ItuDurationParser.parse("P4W10DT28H122M1.123456S", 0).toNormalized()).isEqualTo("P5W4DT6H2M1.123456S");
+        assertThat(ItuDurationParser.parse("P4W10DT28H122M1.123456S").toNormalized()).isEqualTo("P5W4DT6H2M1.123456S");
     }
 
     @Test
