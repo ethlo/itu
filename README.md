@@ -14,9 +14,10 @@ An extremely fast parser and formatter of ISO-8601 date-times. Handle
 * Low ceremony, high productivity with a very easy to use API.
 * [Well-documented](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
 * Aim for 100% specification compliance.
-* Aware of leap-seconds
-* No dependencies, small jar.
-* Apache 2 licensed, can be used in any project, even commercial.
+* Handling leap-seconds.
+* Zero dependencies.
+* Java 8 compatible.
+* Apache 2 licensed.
 
 ## Performance
 
@@ -33,7 +34,7 @@ Add dependency
 <dependency>
     <groupId>com.ethlo.time</groupId>
     <artifactId>itu</artifactId>
-    <version>1.12.0</version>
+    <version>1.13.0</version>
 </dependency>
 ```
 
