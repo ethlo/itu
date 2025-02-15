@@ -68,7 +68,6 @@ public class ExternalParameterizedTest
             }
             else
             {
-                logger.info("Evaluating test: {}", param.getNote());
                 result = ITU.parseDateTime(param.getInput());
             }
 
@@ -78,32 +77,22 @@ public class ExternalParameterizedTest
             }
 
             // Compare to Java's parser result
-            final Instant expected = param.getExpected();
+            final Instant expected = getExpected(param);
             if (result instanceof DateTime)
             {
-                assertEqualInstant(param.getNote(), ((DateTime) result).toInstant(), expected);
+                assertEqualInstant(((DateTime) result).toInstant(), expected);
             }
             else
             {
-                assertEqualInstant(param.getNote(), ((OffsetDateTime) result).toInstant(), expected);
+                assertEqualInstant(((OffsetDateTime) result).toInstant(), expected);
             }
         }
         catch (DateTimeException exc)
         {
-            String errorMessage = exc.getMessage();
-            if (exc instanceof LeapSecondException)
-            {
-                final boolean isValid = ((LeapSecondException) exc).isVerifiedValidLeapYearMonth();
-                if (!isValid)
-                {
-                    errorMessage = "Invalid leap second";
-                }
-            }
-
             if (param.getError() != null)
             {
                 // expected an error, check if matching
-                assertThat(errorMessage).isEqualTo(param.getError());
+                assertThat(exc).hasMessage(param.getError());
 
                 if (param.getErrorIndex() != -1)
                 {
@@ -120,15 +109,32 @@ public class ExternalParameterizedTest
 
     }
 
-    private void assertEqualInstant(final String name, Instant result, Instant expected)
+    private void assertEqualInstant(Instant result, Instant expected)
     {
         assertThat(result)
-                .overridingErrorMessage("Expected %s (%s), was %s (%s) in test '%s'", expected, asTs(expected), result, asTs(result), name)
+                .overridingErrorMessage("Expected %s (%s), was %s (%s)", expected, asTs(expected), result, asTs(result))
                 .isEqualTo(expected);
     }
 
     private String asTs(Instant instant)
     {
         return instant.getEpochSecond() + "," + instant.getNano();
+    }
+
+    private Instant getExpected(TestParam testParam)
+    {
+        if (testParam.getExpected() != null)
+        {
+            return testParam.getExpected();
+        }
+
+        try
+        {
+            return Instant.parse(testParam.getInput());
+        }
+        catch (DateTimeException exc)
+        {
+            throw new IllegalArgumentException("Cannot parse using Instant: " + testParam.getInput() + ": " + exc.getMessage(), exc);
+        }
     }
 }
