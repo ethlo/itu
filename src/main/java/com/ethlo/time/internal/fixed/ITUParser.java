@@ -166,22 +166,7 @@ public class ITUParser implements DateTimeParser
 
     public static DateTime parseLenient(final String chars, final ParseConfig parseConfig, int offset)
     {
-        if (chars == null)
-        {
-            throw new NullPointerException("text cannot be null");
-        }
-
-        final int availableLength = chars.length() - offset;
-
-        if (availableLength < 0)
-        {
-            throw new IndexOutOfBoundsException(String.format("offset is %d which is equal to or larger than the input length of %d", offset, chars.length()));
-        }
-
-        if (offset < 0)
-        {
-            throw new IndexOutOfBoundsException(String.format("offset cannot be negative, was %d", offset));
-        }
+        final int availableLength = sanityCheckInputParams(chars, offset);
 
         // Date portion
 
@@ -223,6 +208,27 @@ public class ITUParser implements DateTimeParser
 
         // SECONDS or TIMEZONE
         return handleTime(offset, parseConfig, chars, years, month, days, hours, minutes);
+    }
+
+    public static int sanityCheckInputParams(String chars, int offset)
+    {
+        if (chars == null)
+        {
+            throw new NullPointerException("text cannot be null");
+        }
+
+        final int availableLength = chars.length() - offset;
+
+        if (availableLength < 0)
+        {
+            throw new IndexOutOfBoundsException(String.format("offset is %d which is equal to or larger than the input length of %d", offset, chars.length()));
+        }
+
+        if (offset < 0)
+        {
+            throw new IndexOutOfBoundsException(String.format("offset cannot be negative, was %d", offset));
+        }
+        return availableLength;
     }
 
     private static int parseSeconds(int offset, String chars)
