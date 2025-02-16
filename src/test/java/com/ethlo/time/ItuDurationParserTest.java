@@ -56,7 +56,6 @@ class ItuDurationParserTest
     @Test
     void shouldParseZeroDuration()
     {
-        // Input: P0D (zero duration)
         Duration duration = ItuDurationParser.parse("P0D").toDuration();
         assertThat(duration).isEqualTo(Duration.ZERO);
     }
@@ -75,6 +74,15 @@ class ItuDurationParserTest
         // Input: P1Y2M3D (no time section)
         Duration duration = ItuDurationParser.parse("P30D").toDuration();
         assertThat(duration).isEqualTo(Duration.ofDays(30));
+    }
+
+    @Test
+    void shouldThrowDateTimeParseExceptionForOverflow()
+    {
+        final String input = "P999999999999D";
+        assertThatThrownBy(() -> ItuDurationParser.parse(input))
+                .isInstanceOf(DateTimeParseException.class)
+                .hasMessageContaining("Numeric overflow while parsing value");
     }
 
     @Test

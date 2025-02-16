@@ -94,7 +94,15 @@ public class ItuDurationParser
             }
             else
             {
-                value = value * RADIX + (c - ZERO);
+                int digit = c - ZERO;
+
+                // Correct overflow check
+                if (value > 214748364 || (value == 214748364 && digit > 7))
+                {
+                    throw new DateTimeParseException("Numeric overflow while parsing value", chars, idx);
+                }
+
+                value = value * RADIX + digit;
                 idx++;
             }
         }
@@ -198,6 +206,12 @@ public class ItuDurationParser
                 throw new DateTimeParseException("Duration must start with 'P'", chars, 0);
             }
 
+            /*
+             * An int can never overflow a long when used for seconds, minutes, hours, days, and weeks,
+             * even at their maximum values, because the total number of seconds remains within the
+             * 64-bit long's limits.
+             */
+
             switch (unit)
             {
                 case 'T':
@@ -248,7 +262,7 @@ public class ItuDurationParser
                         int remainingDigits = DIGITS_IN_NANO - length;
                         if (remainingDigits > 0)
                         {
-                            nano *= POW10_TABLE[remainingDigits]; // Use lookup instead of loop
+                            nano *= POW10_TABLE[remainingDigits];
                         }
                         readingFractionalPart = false;
                     }
