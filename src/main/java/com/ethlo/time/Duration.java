@@ -28,12 +28,12 @@ import com.ethlo.time.internal.util.DurationNormalizer;
 public class Duration
 {
     public static final int NANOS_PER_SECOND = 1_000_000_000;
-    private static final long SECONDS_PER_MINUTE = 60;
-    private static final long SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
-    private static final long SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
-    private static final long SECONDS_PER_WEEK = 7 * SECONDS_PER_DAY;
-    private static final long NANOS_PER_MICROSECOND = 1_000;
-    private static final long NANOS_PER_MILLISECOND = 1_000 * NANOS_PER_MICROSECOND;
+    public static final long SECONDS_PER_MINUTE = 60;
+    public static final long SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
+    public static final long SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
+    public static final long SECONDS_PER_WEEK = 7 * SECONDS_PER_DAY;
+    public static final long NANOS_PER_MICROSECOND = 1_000;
+    public static final long NANOS_PER_MILLISECOND = 1_000 * NANOS_PER_MICROSECOND;
     private final long seconds;
     private final int nano;
 
