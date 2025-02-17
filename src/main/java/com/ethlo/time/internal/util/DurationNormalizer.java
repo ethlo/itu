@@ -9,9 +9,9 @@ package com.ethlo.time.internal.util;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,8 @@ package com.ethlo.time.internal.util;
  * limitations under the License.
  * #L%
  */
+
+import static com.ethlo.time.ItuDurationParser.NANOS_IN_SECOND;
 
 public class DurationNormalizer
 {
@@ -30,14 +32,16 @@ public class DurationNormalizer
     public static String normalizeDuration(long seconds, int nano)
     {
         // Normalize nanoseconds into seconds if necessary
-        if (nano >= 1_000_000_000)
+        if (nano >= NANOS_IN_SECOND)
         {
-            throw new IllegalArgumentException("nano value has to be less than 1000,000,000");
+            throw new IllegalArgumentException("nano value has to be less than " + NANOS_IN_SECOND);
         }
 
         final StringBuilder duration = new StringBuilder();
 
-        if (seconds < 0)
+        final boolean negative = seconds < 0;
+
+        if (negative)
         {
             duration.append('-');
             seconds = (seconds * -1) - 1;
@@ -62,7 +66,7 @@ public class DurationNormalizer
         }
 
         // Time section starts after 'T'
-        if (seconds > 0)
+        if (seconds > 0 || nano > 0)
         {
             duration.append("T");
         }
@@ -90,7 +94,7 @@ public class DurationNormalizer
             if (nano > 0)
             {
                 // Efficiently append fractional part without trailing zeros
-                String fractionalPart = String.format("%09d", nano);
+                String fractionalPart = String.format("%09d", negative ? NANOS_IN_SECOND - nano : nano);
                 int endIndex = fractionalPart.length();
                 while (endIndex > 0 && fractionalPart.charAt(endIndex - 1) == '0')
                 {

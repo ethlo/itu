@@ -26,11 +26,7 @@ import static com.ethlo.time.internal.fixed.ITUParser.sanityCheckInputParams;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.DIGIT_9;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
 
-import java.time.Duration;
 import java.time.format.DateTimeParseException;
-import java.util.Objects;
-
-import com.ethlo.time.internal.util.DurationNormalizer;
 
 /**
  * <b>Rationale Against Supporting Years and Months</b>
@@ -47,14 +43,15 @@ import com.ethlo.time.internal.util.DurationNormalizer;
  */
 public class ItuDurationParser
 {
+    public static final int NANOS_IN_SECOND = 1_000_000_000;
     private static final int[] POW10_TABLE = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
 
-    public static DurationData parse(final String chars)
+    public static Duration parse(final String chars)
     {
         return parse(chars, 0);
     }
 
-    public static DurationData parse(final String chars, final int offset)
+    public static Duration parse(final String chars, final int offset)
     {
         sanityCheckInputParams(chars, offset);
 
@@ -115,59 +112,6 @@ public class ItuDurationParser
         consumer.accept(chars, idx, idx - offset, (char) unit, value);
 
         return idx + 1;
-    }
-
-    public static class DurationData
-    {
-        private final long seconds;
-        private final int nano;
-
-        DurationData(long seconds, int nano)
-        {
-            this.seconds = seconds;
-            this.nano = nano;
-        }
-
-        public long getSeconds()
-        {
-            return seconds;
-        }
-
-        public int getNano()
-        {
-            return nano;
-        }
-
-        public String toNormalized()
-        {
-            return DurationNormalizer.normalizeDuration(seconds, nano);
-        }
-
-        public Duration toDuration()
-        {
-            return Duration.ofSeconds(seconds, nano);
-        }
-
-        @Override
-        public boolean equals(final Object object)
-        {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
-            DurationData that = (DurationData) object;
-            return seconds == that.seconds && nano == that.nano;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hash(seconds, nano);
-        }
-
-        @Override
-        public String toString()
-        {
-            return toNormalized();
-        }
     }
 
     private static class DurationPartsConsumer
@@ -264,6 +208,13 @@ public class ItuDurationParser
                         {
                             nano *= POW10_TABLE[remainingDigits];
                         }
+
+                        if (negative)
+                        {
+                            seconds += 1;
+                            nano = NANOS_IN_SECOND - nano;
+                        }
+
                         readingFractionalPart = false;
                     }
                     else
@@ -286,11 +237,11 @@ public class ItuDurationParser
             }
         }
 
-        public DurationData getResult()
+        public Duration getResult()
         {
             // IMPORTANT: ISO 8601 does not allow negative fractional values separately from the seconds.
             // Instead, nanoseconds should always be positive, and seconds should absorb the negative sign.
-            return new DurationData(negative ? (-seconds - 1) : seconds, nano);
+            return new Duration(negative ? -seconds : seconds, nano);
         }
     }
 }
