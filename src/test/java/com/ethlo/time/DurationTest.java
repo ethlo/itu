@@ -20,12 +20,14 @@ package com.ethlo.time;
  * #L%
  */
 
+import static com.ethlo.time.Duration.NANOS_PER_SECOND;
 import static com.ethlo.time.Duration.SECONDS_PER_DAY;
 import static com.ethlo.time.Duration.SECONDS_PER_HOUR;
 import static com.ethlo.time.Duration.SECONDS_PER_MINUTE;
 import static com.ethlo.time.Duration.SECONDS_PER_WEEK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Instant;
 
@@ -433,5 +435,19 @@ class DurationTest
         final Duration d3 = Duration.ofMillis(-2_200);
         assertThat(d1).hasSameHashCodeAs(d2)
                 .doesNotHaveSameHashCodeAs(d3);
+    }
+
+    @Test
+    void testNegativeNanos()
+    {
+        final IllegalArgumentException exc = assertThrows(IllegalArgumentException.class, () -> new Duration(0, -1));
+        assertThat(exc).hasMessageContaining("nano cannot be negative");
+    }
+
+    @Test
+    void testNanoAt1Billion()
+    {
+        final IllegalArgumentException exc = assertThrows(IllegalArgumentException.class, () -> new Duration(0, NANOS_PER_SECOND));
+        assertThat(exc).hasMessageContaining("nano cannot be larger than 999,999,999");
     }
 }
