@@ -8,10 +8,11 @@
 
 An extremely fast parser and formatter of ISO-8601 date-times. Handle
 [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) with ease!
+Now also supports a subset of duration strings!
 
 ## Features
 
-* Low ceremony, high productivity with a very easy to use API.
+ Low ceremony, high productivity with a very easy to use API.
 * [Well-documented](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
 * Aim for 100% specification compliance.
 * Handling leap-seconds.
@@ -34,7 +35,7 @@ Add dependency
 <dependency>
     <groupId>com.ethlo.time</groupId>
     <artifactId>itu</artifactId>
-    <version>1.13.0</version>
+    <version>1.14.0-SNAPSHOT</version>
 </dependency>
 ```
 

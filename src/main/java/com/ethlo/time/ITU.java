@@ -72,14 +72,16 @@ public class ITU
      * and an {@code int} for nanosecond precision. The nanosecond component is always positive,
      * with the sign absorbed by the seconds field, following Java and ISO 8601 conventions.
      * </p>
-     * <h3>Examples of Valid Input</h3>
+     *
+     * <b>Examples of Valid Input</b>
      * <ul>
      *     <li>{@code P2DT3H4M5.678901234S} → 2 days, 3 hours, 4 minutes, 5.678901234 seconds</li>
      *     <li>{@code PT5M30S} → 5 minutes, 30 seconds</li>
      *     <li>{@code -PT2.5S} → Negative 2.5 seconds</li>
      *     <li>{@code -P1D} → Negative 1 day</li>
      * </ul>
-     * <h3>Examples of Invalid Input</h3>
+     *
+     * <b>Examples of Invalid Input</b>
      * <ul>
      *     <li>{@code P1Y2M3DT4H} → Contains `Y` and `M`</li>
      *     <li>{@code PT} → Missing time values after `T`</li>
