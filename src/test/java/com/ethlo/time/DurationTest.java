@@ -9,9 +9,9 @@ package com.ethlo.time;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -272,9 +272,9 @@ class DurationTest
     {
         final Instant now = Instant.ofEpochSecond(0, 0);
         final Duration d1 = new Duration(7, 800_000_000);
-        final Instant future = d1.future(now);
-        assertThat(future.getEpochSecond()).isEqualTo(7);
-        assertThat(future.getNano()).isEqualTo(800_000_000);
+        final Instant result = d1.future(now);
+        assertThat(result.getEpochSecond()).isEqualTo(7);
+        assertThat(result.getNano()).isEqualTo(800_000_000);
     }
 
     @Test
@@ -282,9 +282,9 @@ class DurationTest
     {
         final Instant now = Instant.ofEpochSecond(0, 0);
         final Duration d1 = ItuDurationParser.parse("-PT7.8S");
-        final Instant future = d1.future(now);
-        assertThat(future.getEpochSecond()).isEqualTo(-8);
-        assertThat(future.getNano()).isEqualTo(200_000_000);
+        final Instant result = d1.future(now);
+        assertThat(result.getEpochSecond()).isEqualTo(-8);
+        assertThat(result.getNano()).isEqualTo(200_000_000);
     }
 
     @Test
@@ -310,12 +310,10 @@ class DurationTest
     @Test
     void testSubtractWithBorrow()
     {
-        Duration d1 = new Duration(5, 200_000_000);
-        Duration d2 = new Duration(3, 500_000_000);
-        Duration result = d1.subtract(d2);
-
-        assertThat(result.getSeconds()).isEqualTo(1);
-        assertThat(result.getNano()).isEqualTo(700_000_000);
+        final Duration d1 = ItuDurationParser.parse("PT5.2S");
+        final Duration d2 = ItuDurationParser.parse("PT3.5S");
+        final Duration result = d1.subtract(d2);
+        assertThat(result.normalized()).isEqualTo("PT1.7S");
     }
 
     @Test
@@ -323,17 +321,15 @@ class DurationTest
     {
         final Duration d1 = ItuDurationParser.parse("-PT5.4S");
         final Duration d2 = ItuDurationParser.parse("-PT5.8S");
-        Duration result = d1.subtract(d2);
-
+        final Duration result = d1.subtract(d2);
         assertThat(result.normalized()).isEqualTo("PT0.4S");
     }
 
     @Test
     void testSubtractWithUnderflow()
     {
-        Duration d1 = new Duration(Long.MIN_VALUE, 0);
-        Duration d2 = new Duration(1, 0);
-
+        final Duration d1 = new Duration(Long.MIN_VALUE, 0);
+        final Duration d2 = new Duration(1, 0);
         assertThatThrownBy(() -> d1.subtract(d2))
                 .isInstanceOf(ArithmeticException.class)
                 .hasMessageContaining("long overflow");
