@@ -391,13 +391,13 @@ class DurationTest
     @Test
     void past()
     {
-        Duration.ofNanos(500).past();
+        assertThat(Duration.ofNanos(500).past()).isInstanceOf(Instant.class);
     }
 
     @Test
     void future()
     {
-        Duration.ofNanos(500).future();
+        assertThat(Duration.ofNanos(500).future()).isInstanceOf(Instant.class);
     }
 
     @Test
@@ -411,5 +411,27 @@ class DurationTest
     @Test
     void testToString()
     {
+        assertThat(Duration.ofSeconds(1000)).hasToString("PT16M40S");
+    }
+
+    @Test
+    void testEquals()
+    {
+        final Duration d1 = Duration.ofMillis(2_200);
+        final Duration d2 = Duration.ofMillis(2_200);
+        final Duration d3 = Duration.ofMillis(-2_200);
+        assertThat(d1).isEqualTo(d2)
+                .isNotEqualTo(d3);
+        assertThat(d2).isNotEqualTo(d3);
+    }
+
+    @Test
+    void testHashcode()
+    {
+        final Duration d1 = Duration.ofMillis(2_200);
+        final Duration d2 = Duration.ofMillis(2_200);
+        final Duration d3 = Duration.ofMillis(-2_200);
+        assertThat(d1).hasSameHashCodeAs(d2)
+                .doesNotHaveSameHashCodeAs(d3);
     }
 }

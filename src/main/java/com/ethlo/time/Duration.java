@@ -152,13 +152,6 @@ public class Duration
         long overflowSeconds = totalNanos / NANOS_PER_SECOND;
         int remainderNanos = (int) (totalNanos % NANOS_PER_SECOND);
 
-        // Ensure remainder is non-negative
-        if (remainderNanos < 0)
-        {
-            remainderNanos += NANOS_PER_SECOND;
-            overflowSeconds -= 1; // Adjust overflow seconds due to remainder correction
-        }
-
         // Safely add overflow seconds to total seconds
         final long adjustedTotalSeconds = Math.addExact(totalSeconds, overflowSeconds);
 
