@@ -441,13 +441,13 @@ class DurationTest
     void testNegativeNanos()
     {
         final IllegalArgumentException exc = assertThrows(IllegalArgumentException.class, () -> new Duration(0, -1));
-        assertThat(exc).hasMessageContaining("nano cannot be negative");
+        assertThat(exc).hasMessageContaining("nanos cannot be negative");
     }
 
     @Test
     void testNanoAt1Billion()
     {
         final IllegalArgumentException exc = assertThrows(IllegalArgumentException.class, () -> new Duration(0, NANOS_PER_SECOND));
-        assertThat(exc).hasMessageContaining("nano cannot be larger than 999,999,999");
+        assertThat(exc).hasMessageContaining("nanos cannot be larger than 999,999,999");
     }
 }

@@ -37,18 +37,18 @@ public class Duration
     private final long seconds;
     private final int nano;
 
-    Duration(long seconds, int nano)
+    Duration(long seconds, int nanos)
     {
         this.seconds = seconds;
-        if (nano < 0)
+        if (nanos < 0)
         {
-            throw new IllegalArgumentException("nano cannot be negative");
+            throw new IllegalArgumentException("nanos cannot be negative");
         }
-        else if (nano >= 1000_000_000)
+        else if (nanos >= 1_000_000_000)
         {
-            throw new IllegalArgumentException("nano cannot be larger than 999,999,999");
+            throw new IllegalArgumentException("nanos cannot be larger than 999,999,999");
         }
-        this.nano = nano;
+        this.nano = nanos;
     }
 
     public static Duration ofMillis(long millis)
