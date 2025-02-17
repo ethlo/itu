@@ -343,4 +343,11 @@ public class ITUTest
         final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ITU.parseLenient("2020-02-22t12:00:00Z", ParseConfig.STRICT));
         assertThat(exc).hasMessage("Expected character T at position 11, found t: 2020-02-22t12:00:00Z");
     }
+
+    @Test
+    void parseDuration()
+    {
+        final Duration result = ITU.parseDuration("PT2.5S");
+        assertThat(result).isEqualTo(Duration.ofMillis(2_500));
+    }
 }

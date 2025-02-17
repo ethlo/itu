@@ -51,6 +51,51 @@ public class ITU
         return ITUParser.parseDateTime(text, 0);
     }
 
+    /**
+     * Parses a duration string in the Modern Duration Profile format, a strict subset of ISO 8601 durations.
+     * <p>
+     * This method supports time-based durations with the following units:
+     * <ul>
+     *     <li>Days (`D`)</li>
+     *     <li>Hours (`H`)</li>
+     *     <li>Minutes (`M`)</li>
+     *     <li>Seconds (`S`), including fractional seconds up to nanosecond precision</li>
+     * </ul>
+     * The following units are explicitly <b>not allowed</b> to avoid ambiguity:
+     * <ul>
+     *     <li>Years (`Y`)</li>
+     *     <li>Months (`M` in the date section)</li>
+     * </ul>
+     * <p>
+     * Negative durations are supported and must be prefixed with `-P`, as specified in ISO 8601.
+     * The parsed duration will be represented using a {@code long} for total seconds
+     * and an {@code int} for nanosecond precision. The nanosecond component is always positive,
+     * with the sign absorbed by the seconds field, following Java and ISO 8601 conventions.
+     * </p>
+     * <h3>Examples of Valid Input</h3>
+     * <ul>
+     *     <li>{@code P2DT3H4M5.678901234S} → 2 days, 3 hours, 4 minutes, 5.678901234 seconds</li>
+     *     <li>{@code PT5M30S} → 5 minutes, 30 seconds</li>
+     *     <li>{@code -PT2.5S} → Negative 2.5 seconds</li>
+     *     <li>{@code -P1D} → Negative 1 day</li>
+     * </ul>
+     * <h3>Examples of Invalid Input</h3>
+     * <ul>
+     *     <li>{@code P1Y2M3DT4H} → Contains `Y` and `M`</li>
+     *     <li>{@code PT} → Missing time values after `T`</li>
+     *     <li>{@code P-1D} → Incorrect negative placement</li>
+     * </ul>
+     * <p>
+     *
+     * @param text the duration string to parse
+     * @return a {@link Duration} instance representing the parsed duration
+     * @throws java.time.format.DateTimeParseException if the input does not conform to the expected format
+     */
+    public static Duration parseDuration(String text)
+    {
+        return ItuDurationParser.parse(text, 0);
+    }
+
     public static OffsetDateTime parseDateTime(String text, ParsePosition position)
     {
         return parseLenient(text, ParseConfig.DEFAULT, position).toOffsetDatetime();

@@ -8,6 +8,7 @@
 
 An extremely fast parser and formatter of ISO-8601 date-times. Handle
 [RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) with ease!
+Now also supports a subset of duration strings!
 
 ## Features
 
