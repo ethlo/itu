@@ -28,10 +28,16 @@ import com.ethlo.time.internal.util.DurationNormalizer;
 public class Duration
 {
     public static final int NANOS_PER_SECOND = 1_000_000_000;
+    private static final long SECONDS_PER_MINUTE = 60;
+    private static final long SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
+    private static final long SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
+    private static final long SECONDS_PER_WEEK = 7 * SECONDS_PER_DAY;
+    private static final long NANOS_PER_MICROSECOND = 1_000;
+    private static final long NANOS_PER_MILLISECOND = 1_000 * NANOS_PER_MICROSECOND;
     private final long seconds;
     private final int nano;
 
-    public Duration(long seconds, int nano)
+    Duration(long seconds, int nano)
     {
         this.seconds = seconds;
         if (nano < 0)
@@ -43,6 +49,55 @@ public class Duration
             throw new IllegalArgumentException("nano cannot be larger than 999,999,999");
         }
         this.nano = nano;
+    }
+
+    public static Duration ofMillis(long millis)
+    {
+        return ofNanos(Math.multiplyExact(NANOS_PER_MILLISECOND, millis));
+    }
+
+    public static Duration ofMicros(long millis)
+    {
+        return ofNanos(Math.multiplyExact(NANOS_PER_MICROSECOND, millis));
+    }
+
+
+    public static Duration ofNanos(long nanos)
+    {
+        long seconds = nanos / NANOS_PER_SECOND;
+        final int remainderNanos = (int) (nanos % NANOS_PER_SECOND);
+        int nano = remainderNanos;
+        if (seconds < 0 || nano < 0)
+        {
+            seconds -= 1;
+            nano = NANOS_PER_SECOND + remainderNanos;
+        }
+        return new Duration(seconds, nano);
+    }
+
+    public static Duration ofWeeks(long weeks)
+    {
+        return new Duration(Math.multiplyExact(SECONDS_PER_WEEK, weeks), 0);
+    }
+
+    public static Duration ofDays(long days)
+    {
+        return new Duration(Math.multiplyExact(SECONDS_PER_DAY, days), 0);
+    }
+
+    public static Duration ofHours(long hours)
+    {
+        return new Duration(Math.multiplyExact(SECONDS_PER_HOUR, hours), 0);
+    }
+
+    public static Duration ofMinutes(long minutes)
+    {
+        return new Duration(Math.multiplyExact(SECONDS_PER_MINUTE, minutes), 0);
+    }
+
+    public static Duration ofSeconds(long seconds)
+    {
+        return new Duration(seconds, 0);
     }
 
     public long getSeconds()

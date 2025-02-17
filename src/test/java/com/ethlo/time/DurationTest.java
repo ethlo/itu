@@ -109,14 +109,30 @@ class DurationTest
     @Test
     void testSubtractPositiveValues()
     {
-        Duration d1 = new Duration(5, 500_000_000); // 5 seconds, 500 ms
-        Duration d2 = new Duration(3, 800_000_000); // 3 seconds, 800 ms
+        Duration d1 = Duration.ofMillis(5_500);
+        Duration d2 = Duration.ofMillis(3_800);
 
         Duration result = d1.subtract(d2);
 
         // Expecting 1 second, -300 ms
         assertThat(result.getSeconds()).isEqualTo(1);
         assertThat(result.getNano()).isEqualTo(700_000_000);
+    }
+
+    @Test
+    void testOfNanosPositiveMax()
+    {
+        final Duration result = Duration.ofNanos(Long.MAX_VALUE);
+        assertThat(result.getSeconds()).isEqualTo(9_223_372_036L);
+        assertThat(result.getNano()).isEqualTo(854_775_807);
+    }
+
+    @Test
+    void testOfNanosNegativeMax()
+    {
+        final Duration result = Duration.ofNanos(Long.MIN_VALUE);
+        assertThat(result.getSeconds()).isEqualTo(-9_223_372_037L);
+        assertThat(result.getNano()).isEqualTo(145_224_192);
     }
 
     @Test
