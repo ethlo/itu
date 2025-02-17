@@ -422,7 +422,8 @@ class DurationTest
         final Duration d1 = Duration.ofMillis(2_200);
         final Duration d2 = Duration.ofMillis(2_200);
         final Duration d3 = Duration.ofMillis(-2_200);
-        assertThat(d1).isEqualTo(d2)
+        assertThat(d1).isEqualTo(d1)
+                .isEqualTo(d2)
                 .isNotEqualTo(d3);
         assertThat(d2).isNotEqualTo(d3);
     }
@@ -433,7 +434,8 @@ class DurationTest
         final Duration d1 = Duration.ofMillis(2_200);
         final Duration d2 = Duration.ofMillis(2_200);
         final Duration d3 = Duration.ofMillis(-2_200);
-        assertThat(d1).hasSameHashCodeAs(d2)
+        assertThat(d1).hasSameHashCodeAs(d1)
+                .hasSameHashCodeAs(d2)
                 .doesNotHaveSameHashCodeAs(d3);
     }
 
