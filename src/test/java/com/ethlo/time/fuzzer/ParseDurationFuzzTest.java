@@ -21,32 +21,54 @@ package com.ethlo.time.fuzzer;
  */
 
 import java.time.DateTimeException;
+import java.time.format.DateTimeParseException;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
-import com.ethlo.time.DateTime;
+import com.ethlo.time.Duration;
 import com.ethlo.time.ITU;
 
-public class ParseLenientFuzzTest
+public class ParseDurationFuzzTest
 {
     @FuzzTest(maxDuration = "30m")
     void parse(FuzzedDataProvider data)
     {
-        DateTime d = null;
+        final String input = data.consumeString(70);
+        Duration d = null;
         try
         {
-            d = ITU.parseLenient(data.consumeString(70));
+            d = ITU.parseDuration(input);
         }
-        catch (DateTimeException ignored)
+        catch (DateTimeException exc)
         {
-
+            //System.out.println(input + "=" + exc.getMessage());
         }
 
         if (d != null)
         {
-            d.toInstant();
-            System.out.println(d);
-            d.toString();
+            if (testJavaDuration(input))
+            {
+                System.out.println("Input: " + input);
+                System.out.println("Parsed: " + d);
+            }
         }
+    }
+
+    private boolean testJavaDuration(String input)
+    {
+        try
+        {
+            java.time.Duration.parse(input);
+        }
+        catch (DateTimeParseException exc)
+        {
+            // Not Java parsable
+            if (input.length() > 3 && !input.contains("W"))
+            {
+                System.err.println("Java not happy with " + input + ": " + exc.getMessage());
+                return true;
+            }
+        }
+        return false;
     }
 }

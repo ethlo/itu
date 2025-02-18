@@ -22,38 +22,37 @@ package com.ethlo.time.internal.util;
 
 import static com.ethlo.time.ItuDurationParser.NANOS_IN_SECOND;
 
-public class DurationNormalizer
+import com.ethlo.time.Duration;
+
+public class DurationFormatter
 {
     private static final long SECONDS_IN_MINUTE = 60;
     private static final long SECONDS_IN_HOUR = 3600;
     private static final long SECONDS_IN_DAY = 86400;
     private static final long SECONDS_IN_WEEK = 604800;
 
-    public static String normalizeDuration(long seconds, int nano)
+    public static String normalizeDuration(Duration duration)
     {
-        // Normalize nanoseconds into seconds if necessary
-        if (nano >= NANOS_IN_SECOND)
-        {
-            throw new IllegalArgumentException("nano value has to be less than " + NANOS_IN_SECOND);
-        }
-
-        final StringBuilder duration = new StringBuilder();
+        long seconds = duration.getSeconds();
+        int nanos = duration.getNanos();
+        ;
+        final StringBuilder s = new StringBuilder();
 
         final boolean negative = seconds < 0;
 
         if (negative)
         {
-            duration.append('-');
-            seconds = (seconds * -1) - 1;
+            s.append('-');
+            seconds = nanos > 0 ? (seconds * -1) - 1 : seconds * -1;
         }
 
-        duration.append('P');
+        s.append('P');
 
         // Weeks calculation
         long weeks = seconds / SECONDS_IN_WEEK;
         if (weeks > 0)
         {
-            duration.append(weeks).append("W");
+            s.append(weeks).append("W");
             seconds %= SECONDS_IN_WEEK;
         }
 
@@ -61,20 +60,20 @@ public class DurationNormalizer
         long days = seconds / SECONDS_IN_DAY;
         if (days > 0)
         {
-            duration.append(days).append("D");
+            s.append(days).append("D");
             seconds %= SECONDS_IN_DAY;
         }
 
         // Time section starts after 'T'
-        if (seconds > 0 || nano > 0)
+        if (seconds > 0 || nanos > 0)
         {
-            duration.append("T");
+            s.append("T");
         }
 
         long hours = seconds / SECONDS_IN_HOUR;
         if (hours > 0)
         {
-            duration.append(hours).append("H");
+            s.append(hours).append("H");
             seconds %= SECONDS_IN_HOUR;
         }
 
@@ -82,19 +81,19 @@ public class DurationNormalizer
         long minutes = seconds / SECONDS_IN_MINUTE;
         if (minutes > 0)
         {
-            duration.append(minutes).append("M");
+            s.append(minutes).append("M");
             seconds %= SECONDS_IN_MINUTE;
         }
 
         // Seconds and fractional seconds
-        if (seconds > 0 || nano > 0)
+        if (seconds > 0 || nanos > 0)
         {
-            duration.append(seconds);
+            s.append(seconds);
 
-            if (nano > 0)
+            if (nanos > 0)
             {
                 // Efficiently append fractional part without trailing zeros
-                String fractionalPart = String.format("%09d", negative ? NANOS_IN_SECOND - nano : nano);
+                String fractionalPart = String.format("%09d", negative ? NANOS_IN_SECOND - nanos : nanos);
                 int endIndex = fractionalPart.length();
                 while (endIndex > 0 && fractionalPart.charAt(endIndex - 1) == '0')
                 {
@@ -103,13 +102,13 @@ public class DurationNormalizer
 
                 if (endIndex > 0)
                 {
-                    duration.append(".").append(fractionalPart, 0, endIndex);
+                    s.append(".").append(fractionalPart, 0, endIndex);
                 }
             }
 
-            duration.append("S");
+            s.append("S");
         }
 
-        return duration.toString();
+        return s.toString();
     }
 }

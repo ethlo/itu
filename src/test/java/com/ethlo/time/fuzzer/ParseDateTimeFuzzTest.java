@@ -20,15 +20,15 @@ package com.ethlo.time.fuzzer;
  * #L%
  */
 
-/*
 import java.time.DateTimeException;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.ethlo.time.ITU;
 
 public class ParseDateTimeFuzzTest
 {
-    @com.code_intelligence.jazzer.junit.FuzzTest(maxDuration = "2m")
+    @FuzzTest(maxDuration = "30m")
     void parse(FuzzedDataProvider data)
     {
         try
@@ -41,4 +41,3 @@ public class ParseDateTimeFuzzTest
         }
     }
 }
-*/

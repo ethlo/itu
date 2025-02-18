@@ -53,6 +53,12 @@ class ItuDurationParserTest
     }
 
     @Test
+    void testValidFullNotNormalizedToNormalizedNegative()
+    {
+        assertThat(ItuDurationParser.parse("-P4W10DT28H122M1.123456S").normalized()).isEqualTo("-P5W4DT6H2M1.123456S");
+    }
+
+    @Test
     void shouldParseZeroDuration()
     {
         java.time.Duration duration = ItuDurationParser.parse("P0D").toDuration();
@@ -116,6 +122,15 @@ class ItuDurationParserTest
         assertThat(result.getSeconds()).isEqualTo(-878707L);
         assertThat(result.getNanos()).isEqualTo(500_000_000);
         assertThat(result.normalized()).isEqualTo("-P1W3DT4H5M6.5S");
+    }
+
+    @Test
+    void testSimpleNegativeDuration()
+    {
+        final Duration d = ItuDurationParser.parse("-PT7.0S");
+        assertThat(d.getSeconds()).isEqualTo(-7);
+        assertThat(d.getNanos()).isZero();
+        assertThat(d.normalized()).isEqualTo("-PT7S");
     }
 
     @Test

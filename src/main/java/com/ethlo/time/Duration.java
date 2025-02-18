@@ -24,7 +24,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.Objects;
 
-import com.ethlo.time.internal.util.DurationNormalizer;
+import com.ethlo.time.internal.util.DurationFormatter;
 
 /**
  * Represents a precise duration in seconds and nanoseconds.
@@ -188,7 +188,7 @@ public class Duration implements Comparable<Duration>
      */
     public String normalized()
     {
-        return DurationNormalizer.normalizeDuration(seconds, nanos);
+        return DurationFormatter.normalizeDuration(this);
     }
 
     /**
