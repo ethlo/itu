@@ -21,18 +21,16 @@ package com.ethlo.time;
  */
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Objects;
 
 import com.ethlo.time.internal.util.DurationNormalizer;
-
-import java.time.Instant;
-import java.util.Objects;
 
 /**
  * Represents a precise duration in seconds and nanoseconds.
  * The nanoseconds field is always positive, with the sign absorbed by the seconds field.
  */
-public class Duration
+public class Duration implements Comparable<Duration>
 {
     public static final int NANOS_PER_SECOND = 1_000_000_000;
     public static final long SECONDS_PER_MINUTE = 60;
@@ -43,7 +41,7 @@ public class Duration
     public static final long NANOS_PER_MILLISECOND = 1_000 * NANOS_PER_MICROSECOND;
 
     private final long seconds;
-    private final int nano;
+    private final int nanos;
 
     /**
      * Constructs a duration with the specified seconds and nanoseconds.
@@ -63,7 +61,7 @@ public class Duration
         {
             throw new IllegalArgumentException("nanos cannot be larger than 999,999,999");
         }
-        this.nano = nanos;
+        this.nanos = nanos;
     }
 
     /**
@@ -162,6 +160,7 @@ public class Duration
         return new Duration(seconds, 0);
     }
 
+
     /**
      * Returns the number of seconds in this duration.
      *
@@ -177,9 +176,9 @@ public class Duration
      *
      * @return The nanosecond value.
      */
-    public int getNano()
+    public int getNanos()
     {
-        return nano;
+        return nanos;
     }
 
     /**
@@ -189,49 +188,28 @@ public class Duration
      */
     public String normalized()
     {
-        return DurationNormalizer.normalizeDuration(seconds, nano);
+        return DurationNormalizer.normalizeDuration(seconds, nanos);
     }
 
     /**
-     * Returns an {@link Instant} representing the past moment from now.
+     * Computes an {@link Instant} that represents this duration on the timeline from now
      *
-     * @return The past instant.
+     * @return The computed instant representing the point on the timeline
      */
-    public Instant past()
+    public Instant timeline()
     {
-        return past(Instant.now());
+        return timeline(Instant.now());
     }
 
     /**
-     * Returns an {@link Instant} representing the future moment from now.
+     * Computes an {@link Instant} that represents this duration on the timeline from a given instant.
      *
-     * @return The future instant.
+     * @param instant The reference instant.
+     * @return The computed instant representing the point on the timeline
      */
-    public Instant future()
+    public Instant timeline(Instant instant)
     {
-        return future(Instant.now());
-    }
-
-    /**
-     * Computes an {@link Instant} that represents this duration in the past from a given instant.
-     *
-     * @param now The reference instant.
-     * @return The computed past instant.
-     */
-    public Instant past(Instant now)
-    {
-        return now.minusSeconds(this.seconds).minusNanos(this.nano);
-    }
-
-    /**
-     * Computes an {@link Instant} that represents this duration in the future from a given instant.
-     *
-     * @param now The reference instant.
-     * @return The computed future instant.
-     */
-    public Instant future(Instant now)
-    {
-        return now.plusSeconds(this.seconds).plusNanos(this.nano);
+        return instant.plusSeconds(this.seconds).plusNanos(this.nanos);
     }
 
     /**
@@ -241,7 +219,7 @@ public class Duration
      */
     java.time.Duration toDuration()
     {
-        return java.time.Duration.ofSeconds(seconds, nano);
+        return java.time.Duration.ofSeconds(seconds, nanos);
     }
 
     /**
@@ -253,7 +231,7 @@ public class Duration
     public Duration add(Duration other)
     {
         final long totalSeconds = Math.addExact(this.seconds, other.seconds);
-        final long totalNanos = (long) this.nano + (long) other.nano;
+        final long totalNanos = (long) this.nanos + (long) other.nanos;
         long overflowSeconds = totalNanos / NANOS_PER_SECOND;
         int remainderNanos = (int) (totalNanos % NANOS_PER_SECOND);
         final long adjustedTotalSeconds = Math.addExact(totalSeconds, overflowSeconds);
@@ -279,7 +257,7 @@ public class Duration
     public Duration negate()
     {
         long negatedSeconds = Math.negateExact(this.seconds);
-        int negatedNano = -this.nano;
+        int negatedNano = -this.nanos;
         if (negatedNano < 0)
         {
             negatedSeconds -= 1;
@@ -288,24 +266,51 @@ public class Duration
         return new Duration(negatedSeconds, negatedNano);
     }
 
+    /**
+     * Returns the absolute duration
+     *
+     * @return the absolute duration
+     */
+    public Duration abs()
+    {
+        if (isNegative())
+        {
+            return negate();
+        }
+        return this;
+    }
+
+    private boolean isNegative()
+    {
+        return seconds < 0;
+    }
+
     @Override
     public boolean equals(final Object object)
     {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         Duration that = (Duration) object;
-        return seconds == that.seconds && nano == that.nano;
+        return seconds == that.seconds && nanos == that.nanos;
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(seconds, nano);
+        return Objects.hash(seconds, nanos);
     }
 
     @Override
     public String toString()
     {
         return normalized();
+    }
+
+    @Override
+    public int compareTo(final Duration o)
+    {
+        return Comparator.comparingLong(Duration::getSeconds)
+                .thenComparingInt(Duration::getNanos)
+                .compare(this, o);
     }
 }

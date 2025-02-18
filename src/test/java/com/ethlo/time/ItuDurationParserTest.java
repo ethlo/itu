@@ -42,7 +42,7 @@ class ItuDurationParserTest
     {
         final Duration result = ItuDurationParser.parse("PT1S");
         assertThat(result.getSeconds()).isOne();
-        assertThat(result.getNano()).isZero();
+        assertThat(result.getNanos()).isZero();
         assertThat(result.normalized()).isEqualTo("PT1S");
     }
 
@@ -114,7 +114,7 @@ class ItuDurationParserTest
     {
         final Duration result = ItuDurationParser.parse("-P1W3DT4H5M6.50S");
         assertThat(result.getSeconds()).isEqualTo(-878707L);
-        assertThat(result.getNano()).isEqualTo(500_000_000);
+        assertThat(result.getNanos()).isEqualTo(500_000_000);
         assertThat(result.normalized()).isEqualTo("-P1W3DT4H5M6.5S");
     }
 

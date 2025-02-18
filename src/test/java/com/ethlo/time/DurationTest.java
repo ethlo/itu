@@ -46,7 +46,7 @@ class DurationTest
 
         // Expecting 8 seconds, 300 ms
         assertThat(result.getSeconds()).isEqualTo(9);
-        assertThat(result.getNano()).isEqualTo(300_000_000);
+        assertThat(result.getNanos()).isEqualTo(300_000_000);
     }
 
     @Test
@@ -54,7 +54,7 @@ class DurationTest
     {
         final Duration d1 = Duration.ofMillis(4_900);
         assertThat(d1.getSeconds()).isEqualTo(4);
-        assertThat(d1.getNano()).isEqualTo(900_000_000);
+        assertThat(d1.getNanos()).isEqualTo(900_000_000);
 
         final Duration d2 = new Duration(4, 900_000_000);
         assertThat(d1).isEqualTo(d2);
@@ -67,7 +67,7 @@ class DurationTest
     {
         final Duration d1 = Duration.ofMillis(-4_900);
         assertThat(d1.getSeconds()).isEqualTo(-5);
-        assertThat(d1.getNano()).isEqualTo(100_000_000);
+        assertThat(d1.getNanos()).isEqualTo(100_000_000);
 
         // Represents -4.9 seconds (correctly normalized)
         final Duration d2 = new Duration(-5, 100_000_000);
@@ -82,7 +82,7 @@ class DurationTest
         final Duration d2 = Duration.ofMillis(-4_900);
         final Duration result = d1.add(d2);
         assertThat(result.getSeconds()).isEqualTo(1); // 5.9 -4.9 = 1.0 seconds
-        assertThat(result.getNano()).isEqualTo(0);
+        assertThat(result.getNanos()).isEqualTo(0);
     }
 
     @Test
@@ -118,7 +118,7 @@ class DurationTest
 
         // Expecting 1 second, -300 ms
         assertThat(result.getSeconds()).isEqualTo(1);
-        assertThat(result.getNano()).isEqualTo(700_000_000);
+        assertThat(result.getNanos()).isEqualTo(700_000_000);
     }
 
     @Test
@@ -126,7 +126,7 @@ class DurationTest
     {
         final Duration result = Duration.ofNanos(Long.MAX_VALUE);
         assertThat(result.getSeconds()).isEqualTo(9_223_372_036L);
-        assertThat(result.getNano()).isEqualTo(854_775_807);
+        assertThat(result.getNanos()).isEqualTo(854_775_807);
     }
 
     @Test
@@ -134,7 +134,7 @@ class DurationTest
     {
         final Duration result = Duration.ofNanos(Long.MIN_VALUE);
         assertThat(result.getSeconds()).isEqualTo(-9_223_372_037L);
-        assertThat(result.getNano()).isEqualTo(145_224_192);
+        assertThat(result.getNanos()).isEqualTo(145_224_192);
     }
 
     @Test
@@ -175,7 +175,7 @@ class DurationTest
         final Duration result = d.negate();
         // Negation of 5.5 sec is -5.5 sec, represented as (-6, 500_000_000)
         assertThat(result.getSeconds()).isEqualTo(-6);
-        assertThat(result.getNano()).isEqualTo(500_000_000);
+        assertThat(result.getNanos()).isEqualTo(500_000_000);
     }
 
     @Test
@@ -184,7 +184,7 @@ class DurationTest
         final Duration d = Duration.ofMillis(-5_400);
         final Duration result = d.negate();
         assertThat(result.getSeconds()).isEqualTo(5);
-        assertThat(result.getNano()).isEqualTo(400_000_000);
+        assertThat(result.getNanos()).isEqualTo(400_000_000);
     }
 
     @Test
@@ -193,7 +193,7 @@ class DurationTest
         Duration d = new Duration(0, 0);
         Duration neg = d.negate();
         assertThat(neg.getSeconds()).isEqualTo(0);
-        assertThat(neg.getNano()).isEqualTo(0);
+        assertThat(neg.getNanos()).isEqualTo(0);
     }
 
     @Test
@@ -202,7 +202,7 @@ class DurationTest
         final Duration d = new Duration(5, 0);
         final Duration result = d.negate();
         assertThat(result.getSeconds()).isEqualTo(-5);
-        assertThat(result.getNano()).isEqualTo(0);
+        assertThat(result.getNanos()).isEqualTo(0);
     }
 
     @Test
@@ -211,7 +211,7 @@ class DurationTest
         final Duration d = new Duration(-5, 0);
         final Duration result = d.negate();
         assertThat(result.getSeconds()).isEqualTo(5);
-        assertThat(result.getNano()).isEqualTo(0);
+        assertThat(result.getNanos()).isEqualTo(0);
     }
 
     @Test
@@ -231,7 +231,7 @@ class DurationTest
         final Duration d2 = Duration.ofMillis(3_500);
         final Duration result = d1.add(d2);
         assertThat(result.getSeconds()).isEqualTo(9);
-        assertThat(result.getNano()).isEqualTo(100_000_000);
+        assertThat(result.getNanos()).isEqualTo(100_000_000);
     }
 
     @Test
@@ -241,7 +241,7 @@ class DurationTest
         final Duration d2 = Duration.ofMillis(3_400);
         final Duration result = d1.add(d2);
         assertThat(result.getSeconds()).isEqualTo(6);
-        assertThat(result.getNano()).isEqualTo(200_000_000);
+        assertThat(result.getNanos()).isEqualTo(200_000_000);
     }
 
     @Test
@@ -271,7 +271,7 @@ class DurationTest
         Duration result = d1.subtract(d2);
 
         assertThat(result.getSeconds()).isEqualTo(4);
-        assertThat(result.getNano()).isEqualTo(300_000_000);
+        assertThat(result.getNanos()).isEqualTo(300_000_000);
     }
 
     @Test
@@ -279,7 +279,7 @@ class DurationTest
     {
         final Instant now = Instant.ofEpochSecond(0, 0);
         final Duration d1 = new Duration(7, 800_000_000);
-        final Instant result = d1.future(now);
+        final Instant result = d1.timeline(now);
         assertThat(result.getEpochSecond()).isEqualTo(7);
         assertThat(result.getNano()).isEqualTo(800_000_000);
     }
@@ -289,29 +289,29 @@ class DurationTest
     {
         final Instant now = Instant.ofEpochSecond(0, 0);
         final Duration d1 = Duration.ofMillis(-7_800);
-        final Instant result = d1.future(now);
+        final Instant result = d1.timeline(now);
         assertThat(result.getEpochSecond()).isEqualTo(-8);
         assertThat(result.getNano()).isEqualTo(200_000_000);
     }
 
     @Test
-    void pastPositive()
+    void timelinePositive()
     {
         final Instant now = Instant.ofEpochSecond(0, 0);
         final Duration d1 = Duration.ofMillis(7_800);
-        final Instant result = d1.past(now);
-        assertThat(result.getEpochSecond()).isEqualTo(-8);
-        assertThat(result.getNano()).isEqualTo(200_000_000);
+        final Instant result = d1.timeline(now);
+        assertThat(result.getEpochSecond()).isEqualTo(7);
+        assertThat(result.getNano()).isEqualTo(800_000_000);
     }
 
     @Test
-    void pastNegative()
+    void timelineNegative()
     {
         final Instant now = Instant.ofEpochSecond(0, 0);
         final Duration d1 = Duration.ofMillis(-7_800);
-        final Instant result = d1.past(now);
-        assertThat(result.getEpochSecond()).isEqualTo(7);
-        assertThat(result.getNano()).isEqualTo(800_000_000);
+        final Instant result = d1.timeline(now);
+        assertThat(result.getEpochSecond()).isEqualTo(-8);
+        assertThat(result.getNano()).isEqualTo(200_000_000);
     }
 
     @Test
@@ -391,15 +391,15 @@ class DurationTest
     }
 
     @Test
-    void past()
+    void timeline()
     {
-        assertThat(Duration.ofNanos(500).past()).isInstanceOf(Instant.class);
+        assertThat(Duration.ofNanos(500).timeline()).isInstanceOf(Instant.class);
     }
 
     @Test
     void future()
     {
-        assertThat(Duration.ofNanos(500).future()).isInstanceOf(Instant.class);
+        assertThat(Duration.ofNanos(500).timeline()).isInstanceOf(Instant.class);
     }
 
     @Test
@@ -451,5 +451,19 @@ class DurationTest
     {
         final IllegalArgumentException exc = assertThrows(IllegalArgumentException.class, () -> new Duration(0, NANOS_PER_SECOND));
         assertThat(exc).hasMessageContaining("nanos cannot be larger than 999,999,999");
+    }
+
+    @Test
+    void absPositive()
+    {
+        final Duration d1 = Duration.ofMillis(2_200);
+        assertThat(d1).isSameAs(d1.abs());
+    }
+
+    @Test
+    void absNegative()
+    {
+        final Duration d1 = Duration.ofMillis(-2_200);
+        assertThat(d1.abs()).isEqualTo(Duration.ofMillis(2_200));
     }
 }
