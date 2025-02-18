@@ -21,9 +21,7 @@ package com.ethlo.time;
  */
 
 import static com.ethlo.time.internal.fixed.ITUParser.DIGITS_IN_NANO;
-import static com.ethlo.time.internal.fixed.ITUParser.RADIX;
 import static com.ethlo.time.internal.fixed.ITUParser.sanityCheckInputParams;
-import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.DIGIT_9;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
 
 import java.time.format.DateTimeParseException;
@@ -90,7 +88,8 @@ public class ItuDurationParser
         while (idx < len)
         {
             final char c = chars.charAt(idx);
-            if (c < ZERO || c > DIGIT_9)
+            int isDigit = (c - '0') >>> 31 | ('9' - c) >>> 31;
+            if (isDigit != 0)
             {
                 unit = c;
                 break;
@@ -105,7 +104,8 @@ public class ItuDurationParser
                     throw new DateTimeParseException("Numeric overflow while parsing value", chars, idx);
                 }
 
-                value = value * RADIX + digit;
+                value = (value << 3) + (value << 1) + (c - '0');
+                //value = value * RADIX + digit;
                 idx++;
             }
         }
@@ -135,11 +135,11 @@ public class ItuDurationParser
         private boolean readingFractionalPart;
         private boolean afterT;
         private boolean pFound;
-        private boolean wFound;
-        private boolean dFound;
-        private boolean hFound;
-        private boolean mFound;
-        private boolean sFound;
+        private int wFound;
+        private int dFound;
+        private int hFound;
+        private int mFound;
+        private int sFound;
         private boolean dotFound;
         private boolean fractionsFound;
 
@@ -147,6 +147,11 @@ public class ItuDurationParser
         {
             this.startOffset = startOffset;
             this.negative = negative;
+        }
+
+        private static DateTimeParseException error(String chars, int index)
+        {
+            return new DateTimeParseException("Units must be in order from largest to smallest", chars, index);
         }
 
         public final void accept(final String chars, final int index, final int length, final char unit, final int value)
@@ -195,7 +200,7 @@ public class ItuDurationParser
 
                 case 'W':
                     assertNonFractional('W', chars, index);
-                    if (wFound)
+                    if (wFound > 0)
                     {
                         throw new DateTimeParseException("'W' (week) can only appear once", chars, index);
                     }
@@ -205,12 +210,12 @@ public class ItuDurationParser
                         throw new DateTimeParseException("'W' (week) must appear before 'T' in the duration", chars, index);
                     }
                     seconds += value * 604800L; // 7 * 86400
-                    wFound = true;
+                    wFound = index;
                     break;
 
                 case 'D':
                     assertNonFractional('D', chars, index);
-                    if (dFound)
+                    if (dFound > 0)
                     {
                         throw new DateTimeParseException("'D' (days) can only appear once", chars, index);
                     }
@@ -219,12 +224,12 @@ public class ItuDurationParser
                         throw new DateTimeParseException("'D' (days) must appear before 'T' in the duration", chars, index);
                     }
                     seconds += value * 86400L;
-                    dFound = true;
+                    dFound = index;
                     break;
 
                 case 'H':
                     assertNonFractional('H', chars, index);
-                    if (hFound)
+                    if (hFound > 0)
                     {
                         throw new DateTimeParseException("'H' (hours) can only appear once", chars, index);
                     }
@@ -233,12 +238,12 @@ public class ItuDurationParser
                         throw new DateTimeParseException("'H' (hours) must appear after 'T' in the duration", chars, index);
                     }
                     seconds += value * 3600L;
-                    hFound = true;
+                    hFound = index;
                     break;
 
                 case 'M':
                     assertNonFractional('M', chars, index);
-                    if (mFound)
+                    if (mFound > 0)
                     {
                         throw new DateTimeParseException("'M' (minutes) can only appear once", chars, index);
                     }
@@ -247,11 +252,11 @@ public class ItuDurationParser
                         throw new DateTimeParseException("'M' (minutes) must appear after 'T' in the duration", chars, index);
                     }
                     seconds += value * 60L;
-                    mFound = true;
+                    mFound = index;
                     break;
 
                 case 'S':
-                    if (sFound)
+                    if (sFound > 0)
                     {
                         throw new DateTimeParseException("'S' (seconds) can only appear once", chars, index);
                     }
@@ -259,7 +264,7 @@ public class ItuDurationParser
                     {
                         throw new DateTimeParseException("'S' (seconds) must appear after 'T' in the duration", chars, index);
                     }
-                    sFound = true;
+                    sFound = index;
 
                     if (readingFractionalPart)
                     {
@@ -323,7 +328,7 @@ public class ItuDurationParser
 
         public void validate(String chars, int index)
         {
-            if (afterT && !hFound && !mFound && !sFound)
+            if (afterT && hFound == 0 && mFound == 0 && sFound == 0)
             {
                 throw new DateTimeParseException("Expected at least value and unit after the 'T'", chars, index);
             }
@@ -333,14 +338,51 @@ public class ItuDurationParser
                 throw new DateTimeParseException("Expected at least one fractional digit after the dot", chars, index);
             }
 
-            if (fractionsFound && !sFound)
+            if (fractionsFound && sFound == 0)
             {
                 throw new DateTimeParseException("Expected 'S' after fractional number", chars, index);
             }
 
-            if (!wFound && !dFound && !hFound && !mFound && !sFound)
+            if (wFound == 0 && dFound == 0 && hFound == 0 && mFound == 0 && sFound == 0)
             {
                 throw new DateTimeParseException("Expected at least one value and unit", chars, index);
+            }
+
+            valdateUnitOrder(chars);
+        }
+
+        private void valdateUnitOrder(String chars)
+        {
+            int lastIndex = -1;
+
+            if (wFound > 0)
+            {
+                if (wFound < lastIndex) throw error(chars, wFound);
+                lastIndex = wFound;
+            }
+
+            if (dFound > 0)
+            {
+                if (dFound < lastIndex) throw error(chars, dFound);
+                lastIndex = dFound;
+            }
+
+            if (hFound > 0)
+            {
+                if (hFound < lastIndex) throw error(chars, hFound);
+                lastIndex = hFound;
+            }
+
+            if (mFound > 0)
+            {
+                if (mFound < lastIndex) throw error(chars, mFound);
+                lastIndex = mFound;
+            }
+
+            if (sFound > 0)
+            {
+                if (sFound < lastIndex) throw error(chars, sFound);
+                lastIndex = sFound;
             }
         }
 

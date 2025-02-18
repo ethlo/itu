@@ -59,6 +59,31 @@ class ItuDurationParserTest
     }
 
     @Test
+    void testEmpty()
+    {
+        assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse(""));
+    }
+
+    @Test
+    void testNull()
+    {
+        assertThrows(NullPointerException.class, () -> ItuDurationParser.parse(null));
+    }
+
+    @Test
+    void testNothingAfterDot()
+    {
+        assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("PT1."));
+    }
+
+    @Test
+    void testNoUnitAfterFractions()
+    {
+        assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("PT1.5"));
+    }
+
+
+    @Test
     void shouldParseZeroDuration()
     {
         final Duration duration = ItuDurationParser.parse("P0D");
@@ -103,17 +128,15 @@ class ItuDurationParserTest
     @Test
     void shouldParseFractionalSecondsWithoutTrailingZeros()
     {
-        // Input: PT1.123000S (1 second, 123 milliseconds)
-        java.time.Duration duration = ItuDurationParser.parse("PT1.123000S").toDuration();
-        assertThat(duration).isEqualTo(java.time.Duration.ofSeconds(1).plusNanos(123000000));
+        final Duration duration = ItuDurationParser.parse("PT1.123000S");
+        assertThat(duration).isEqualTo(Duration.ofSeconds(1).plusNanos(123000000));
     }
 
     @Test
     void shouldHandleMultipleFractionalDigits()
     {
-        // Input: PT1.123456789S (1 second, 123456789 nanoseconds)
-        java.time.Duration duration = ItuDurationParser.parse("PT1.123456789S").toDuration();
-        assertThat(duration).isEqualTo(java.time.Duration.ofSeconds(1).plusNanos(123456789));
+        final Duration duration = ItuDurationParser.parse("PT1.123456789S");
+        assertThat(duration).isEqualTo(Duration.ofSeconds(1).plusNanos(123456789));
     }
 
     @Test
@@ -146,24 +169,21 @@ class ItuDurationParserTest
     @Test
     void shouldParseDurationWithWeeks()
     {
-        // Input: P1W2D (1 week, 2 days)
-        java.time.Duration duration = ItuDurationParser.parse("P1W2D").toDuration();
-        assertThat(duration).isEqualTo(java.time.Duration.ofDays(7 + 2)); // 7 days + 2 days
+        final Duration duration = ItuDurationParser.parse("P1W2D");
+        assertThat(duration).isEqualTo(Duration.ofDays(7 + 2));
     }
 
     @Test
     void shouldParseDurationWithTimeOnly()
     {
-        // Input: PT10H30M45S (10 hours, 30 minutes, 45 seconds)
-        java.time.Duration duration = ItuDurationParser.parse("PT10H30M45S").toDuration();
-
-        assertThat(duration).isEqualTo(java.time.Duration.ofHours(10).plusMinutes(30).plusSeconds(45));
+        final Duration duration = ItuDurationParser.parse("PT10H30M45S");
+        assertThat(duration).isEqualTo(Duration.ofHours(10).plusMinutes(30).plusSeconds(45));
     }
 
     @Test
     void parse0DDurationAsZero()
     {
-        java.time.Duration duration = ItuDurationParser.parse("P0D").toDuration();
-        assertThat(duration).isEqualTo(java.time.Duration.ZERO);
+        final Duration duration = ItuDurationParser.parse("P0D");
+        assertThat(duration).isEqualTo(Duration.ZERO);
     }
 }

@@ -32,7 +32,7 @@ import com.ethlo.time.internal.util.DurationFormatter;
  */
 public class Duration implements Comparable<Duration>
 {
-    public static final Duration ZERO = new Duration(0,0);
+    public static final Duration ZERO = new Duration(0, 0);
 
     public static final int NANOS_PER_SECOND = 1_000_000_000;
     public static final long SECONDS_PER_MINUTE = 60;
@@ -314,5 +314,28 @@ public class Duration implements Comparable<Duration>
         return Comparator.comparingLong(Duration::getSeconds)
                 .thenComparingInt(Duration::getNanos)
                 .compare(this, o);
+    }
+
+    public Duration plusHours(final long hours)
+    {
+        return plusSeconds(Math.multiplyExact(hours, SECONDS_PER_HOUR));
+    }
+
+    public Duration plusMinutes(final long minutes)
+    {
+        return plusSeconds(Math.multiplyExact(minutes, SECONDS_PER_MINUTE));
+    }
+
+    public Duration plusSeconds(long seconds)
+    {
+        return new Duration(Math.addExact(this.seconds, seconds), nanos);
+    }
+
+    public Duration plusNanos(long nanos)
+    {
+        final long nanosTotal = Math.addExact(this.nanos, nanos);
+        final int nanosRemainder = Math.toIntExact(nanosTotal % NANOS_PER_SECOND);
+        final long extraSecs = nanosTotal / NANOS_PER_SECOND;
+        return new Duration(Math.addExact(seconds, extraSecs), nanosRemainder);
     }
 }
