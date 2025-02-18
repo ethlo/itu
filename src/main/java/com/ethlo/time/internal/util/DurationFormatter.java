@@ -35,7 +35,12 @@ public class DurationFormatter
     {
         long seconds = duration.getSeconds();
         int nanos = duration.getNanos();
-        ;
+
+        if (seconds == 0 && nanos == 0)
+        {
+            return "PT0S";
+        }
+
         final StringBuilder s = new StringBuilder();
 
         final boolean negative = seconds < 0;

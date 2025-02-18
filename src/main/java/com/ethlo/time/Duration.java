@@ -32,6 +32,8 @@ import com.ethlo.time.internal.util.DurationFormatter;
  */
 public class Duration implements Comparable<Duration>
 {
+    public static final Duration ZERO = new Duration(0,0);
+
     public static final int NANOS_PER_SECOND = 1_000_000_000;
     public static final long SECONDS_PER_MINUTE = 60;
     public static final long SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
