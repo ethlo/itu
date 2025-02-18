@@ -160,10 +160,9 @@ class ItuDurationParserTest
     }
 
     @Test
-    void shouldParseEmptyDurationAsZero()
+    void parse0DDurationAsZero()
     {
-        // Input: P (zero duration)
-        java.time.Duration duration = ItuDurationParser.parse("P").toDuration();
+        java.time.Duration duration = ItuDurationParser.parse("P0D").toDuration();
         assertThat(duration).isEqualTo(java.time.Duration.ZERO);
     }
 }
