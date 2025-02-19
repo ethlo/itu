@@ -81,7 +81,19 @@ class ItuDurationParserTest
     @Test
     void testNoUnitAfterFractions()
     {
-        assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("PT1.5"));
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("PT1.5"));
+        assertThat(exc).hasMessage("No unit defined for value 1.5: PT1.5");
+    }
+
+    @Test
+    void testWeirdInputs()
+    {
+        final String[] inputs = {"-PTHHHH6.2S.6S2.62.2S2.0S.", "PT..0.S.", "PT1SP"};
+        for (String input : inputs)
+        {
+            final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ITU.parseDuration(input));
+            System.out.println(exc.getMessage());
+        }
     }
 
     @Test

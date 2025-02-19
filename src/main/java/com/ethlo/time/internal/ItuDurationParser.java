@@ -118,16 +118,7 @@ public class ItuDurationParser
             error("Value too large for unit '" + (char) unit + "'", text, index);
         }
 
-        if (unit == 0)
-        {
-            error("No unit defined for value " + value, text, index);
-        }
-
         final int length = index - offset;
-        if (length == 0 && (unit == UNIT_WEEK || unit == UNIT_DAY || unit == UNIT_HOUR || unit == UNIT_MINUTE || unit == UNIT_SECOND || unit == DOT))
-        {
-            error("Zero-length value prior to unit '" + ((char) unit) + "'", text, index);
-        }
 
         consumer.accept(text, index, length, (char) unit, (int) value);
 
@@ -162,7 +153,7 @@ public class ItuDurationParser
             this.negative = negative;
         }
 
-        public final void accept(final String chars, final int index, final int length, final char unit, final int value)
+        public final void accept(final String text, final int index, final int length, final char unit, final int value)
         {
             final int relIndex = index - startOffset;
 
@@ -171,7 +162,7 @@ public class ItuDurationParser
             {
                 if (unit != 'P')
                 {
-                    error("Duration must start with 'P'", chars, index);
+                    error("Duration must start with 'P'", text, index);
                 }
                 pFound = true;
                 return;
@@ -179,7 +170,7 @@ public class ItuDurationParser
 
             if (!pFound)
             {
-                error("Duration must start with 'P'", chars, index);
+                error("Duration must start with 'P'", text, index);
             }
 
             /*
@@ -188,6 +179,20 @@ public class ItuDurationParser
              * 64-bit long's limits.
              */
 
+            if (unit == 0)
+            {
+                if (!dotFound)
+                {
+                    error("No unit defined for value " + value, text, index);
+                }
+                error("No unit defined for value " + seconds + DOT + value, text, index);
+            }
+
+            if (length == 0 && (unit == UNIT_WEEK || unit == UNIT_DAY || unit == UNIT_HOUR || unit == UNIT_MINUTE || unit == UNIT_SECOND || unit == DOT))
+            {
+                error("Zero-length value prior to unit '" + unit + "'", text, index);
+            }
+
             switch (unit)
             {
                 case SEP_T:
@@ -195,69 +200,69 @@ public class ItuDurationParser
                     if (length != 0)
                     {
                         // We have a number in front of the T
-                        error("There is no unit for the number prior to the 'T'", chars, index);
+                        error("There is no unit for the number prior to the 'T'", text, index);
                     }
 
-                    assertNonFractional('T', chars, index);
+                    assertNonFractional('T', text, index);
                     if (afterT)
                     {
-                        error("Only one 'T' is allowed and must precede time units", chars, index);
+                        error("Only one 'T' is allowed and must precede time units", text, index);
                     }
                     afterT = true;
                     break;
 
                 case UNIT_WEEK:
-                    assertNonFractional(UNIT_WEEK, chars, index);
+                    assertNonFractional(UNIT_WEEK, text, index);
                     if (wFound > 0)
                     {
-                        error("'W' (week) can only appear once", chars, index);
+                        error("'W' (week) can only appear once", text, index);
                     }
 
                     if (afterT)
                     {
-                        error("'W' (week) must appear before 'T' in the duration", chars, index);
+                        error("'W' (week) must appear before 'T' in the duration", text, index);
                     }
                     seconds += value * 604800L; // 7 * 86400
                     wFound = index;
                     break;
 
                 case UNIT_DAY:
-                    assertNonFractional('D', chars, index);
+                    assertNonFractional('D', text, index);
                     if (dFound > 0)
                     {
-                        error("'D' (days) can only appear once", chars, index);
+                        error("'D' (days) can only appear once", text, index);
                     }
                     if (afterT)
                     {
-                        error("'D' (days) must appear before 'T' in the duration", chars, index);
+                        error("'D' (days) must appear before 'T' in the duration", text, index);
                     }
                     seconds += value * 86400L;
                     dFound = index;
                     break;
 
                 case UNIT_HOUR:
-                    assertNonFractional('H', chars, index);
+                    assertNonFractional('H', text, index);
                     if (hFound > 0)
                     {
-                        error("'H' (hours) can only appear once", chars, index);
+                        error("'H' (hours) can only appear once", text, index);
                     }
                     if (!afterT)
                     {
-                        error("'H' (hours) must appear after 'T' in the duration", chars, index);
+                        error("'H' (hours) must appear after 'T' in the duration", text, index);
                     }
                     seconds += value * 3600L;
                     hFound = index;
                     break;
 
                 case UNIT_MINUTE:
-                    assertNonFractional(UNIT_MINUTE, chars, index);
+                    assertNonFractional(UNIT_MINUTE, text, index);
                     if (mFound > 0)
                     {
-                        error("'M' (minutes) can only appear once", chars, index);
+                        error("'M' (minutes) can only appear once", text, index);
                     }
                     if (!afterT)
                     {
-                        error("'M' (minutes) must appear after 'T' in the duration", chars, index);
+                        error("'M' (minutes) must appear after 'T' in the duration", text, index);
                     }
                     seconds += value * 60L;
                     mFound = index;
@@ -266,11 +271,11 @@ public class ItuDurationParser
                 case UNIT_SECOND:
                     if (sFound > 0)
                     {
-                        error("'S' (seconds) can only appear once", chars, index);
+                        error("'S' (seconds) can only appear once", text, index);
                     }
                     if (!afterT)
                     {
-                        error("'S' (seconds) must appear after 'T' in the duration", chars, index);
+                        error("'S' (seconds) must appear after 'T' in the duration", text, index);
                     }
                     sFound = index;
 
@@ -278,12 +283,12 @@ public class ItuDurationParser
                     {
                         if (length > 9)
                         {
-                            error("Maximum allowed is 9 fraction digits", chars, index);
+                            error("Maximum allowed is 9 fraction digits", text, index);
                         }
 
                         if (length == 0)
                         {
-                            error("Must have at least one fraction digit after the '.''", chars, index);
+                            error("Must have at least one fraction digit after the '.''", text, index);
                         }
 
                         nano = value;
@@ -310,11 +315,11 @@ public class ItuDurationParser
                 case DOT:
                     if (dotFound)
                     {
-                        error("'.' can only appear once", chars, index);
+                        error("'.' can only appear once", text, index);
                     }
                     if (!afterT)
                     {
-                        error("Fractional seconds (.) must come after 'T'", chars, index);
+                        error("Fractional seconds (.) must come after 'T'", text, index);
                     }
                     readingFractionalPart = true;
                     seconds += value; // Assume integer part of seconds before fraction
@@ -322,7 +327,7 @@ public class ItuDurationParser
                     break;
 
                 default:
-                    error("Invalid unit: " + unit, chars, index);
+                    error("Invalid unit: " + unit, text, index);
             }
         }
 
