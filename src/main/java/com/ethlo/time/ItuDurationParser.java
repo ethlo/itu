@@ -149,11 +149,6 @@ public class ItuDurationParser
             this.negative = negative;
         }
 
-        private static DateTimeParseException error(String chars, int index)
-        {
-            return new DateTimeParseException("Units must be in order from largest to smallest", chars, index);
-        }
-
         public final void accept(final String chars, final int index, final int length, final char unit, final int value)
         {
             final int relIndex = index - startOffset;
@@ -348,42 +343,30 @@ public class ItuDurationParser
                 throw new DateTimeParseException("Expected at least one value and unit", chars, index);
             }
 
-            valdateUnitOrder(chars);
+            validateUnitOrder(chars);
         }
 
-        private void valdateUnitOrder(String chars)
+        private void validateUnitOrder(String chars)
         {
             int lastIndex = -1;
+            lastIndex = verifyUnitIndex(wFound, lastIndex, chars);
+            lastIndex = verifyUnitIndex(dFound, lastIndex, chars);
+            lastIndex = verifyUnitIndex(hFound, lastIndex, chars);
+            lastIndex = verifyUnitIndex(mFound, lastIndex, chars);
+            lastIndex = verifyUnitIndex(sFound, lastIndex, chars);
+        }
 
-            if (wFound > 0)
+        private int verifyUnitIndex(final int unitIndex, final int lastIndex, final String chars)
+        {
+            if (unitIndex > 0)
             {
-                if (wFound < lastIndex) throw error(chars, wFound);
-                lastIndex = wFound;
+                if (unitIndex < lastIndex)
+                {
+                    throw new DateTimeParseException("Units must be in order from largest to smallest: " + chars, chars, unitIndex);
+                }
+                return unitIndex;
             }
-
-            if (dFound > 0)
-            {
-                if (dFound < lastIndex) throw error(chars, dFound);
-                lastIndex = dFound;
-            }
-
-            if (hFound > 0)
-            {
-                if (hFound < lastIndex) throw error(chars, hFound);
-                lastIndex = hFound;
-            }
-
-            if (mFound > 0)
-            {
-                if (mFound < lastIndex) throw error(chars, mFound);
-                lastIndex = mFound;
-            }
-
-            if (sFound > 0)
-            {
-                if (sFound < lastIndex) throw error(chars, sFound);
-                lastIndex = sFound;
-            }
+            return lastIndex;
         }
 
         public Duration getResult()

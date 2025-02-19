@@ -84,6 +84,13 @@ class ItuDurationParserTest
 
 
     @Test
+    void testWrongOrder()
+    {
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ITU.parseDuration("PT1S1H"));
+        assertThat(exc).hasMessage("Units must be in order from largest to smallest: PT1S1H");
+    }
+
+    @Test
     void shouldParseZeroDuration()
     {
         final Duration duration = ItuDurationParser.parse("P0D");
