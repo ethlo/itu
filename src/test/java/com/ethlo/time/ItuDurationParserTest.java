@@ -20,15 +20,15 @@ package com.ethlo.time;
  * #L%
  */
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.time.format.DateTimeParseException;
+import com.ethlo.time.internal.ItuDurationParser;
 
 import org.junit.jupiter.api.Test;
 
-import com.ethlo.time.internal.ItuDurationParser;
+import java.time.format.DateTimeParseException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ItuDurationParserTest
 {
@@ -37,6 +37,24 @@ class ItuDurationParserTest
     {
         assertThat(assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("1D")))
                 .hasMessage("Duration must start with 'P': 1D");
+    }
+
+    @Test
+    void testHighestValue()
+    {
+        final String input = "PT" + Long.MAX_VALUE + ".999999999S";
+        final Duration result = ITU.parseDuration(input);
+        assertThat(result.getSeconds()).isEqualTo(Long.MAX_VALUE);
+        assertThat(result.getNanos()).isEqualTo(999_999_999);
+    }
+
+    @Test
+    void testLowestValue()
+    {
+        final String input = "-PT9223372036854775807S";
+        final Duration result = ITU.parseDuration(input);
+        assertThat(result.getSeconds()).isEqualTo(-Long.MAX_VALUE);
+        assertThat(result.getNanos()).isEqualTo(0L);
     }
 
     @Test
@@ -137,10 +155,10 @@ class ItuDurationParserTest
     @Test
     void shouldThrowDateTimeParseExceptionForOverflow()
     {
-        final String input = "P20D9999999999999999H";
+        final String input = "P20D999999999999999999999H";
         assertThatThrownBy(() -> ItuDurationParser.parse(input))
                 .isInstanceOf(DateTimeParseException.class)
-                .hasMessageContaining("Value too large for unit 'H': " + input);
+                .hasMessageContaining("Expression is too large: " + input);
     }
 
     @Test

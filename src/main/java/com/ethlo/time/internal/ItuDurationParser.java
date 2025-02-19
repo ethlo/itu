@@ -95,7 +95,6 @@ public class ItuDurationParser
         int unit = 0;
         int index = offset;
         long value = 0;
-        int startIndex = index;
         while (index < text.length())
         {
             final char c = text.charAt(index);
@@ -107,20 +106,22 @@ public class ItuDurationParser
             }
             else
             {
-                int digit = c - DIGIT_ZERO;
+                final int digit = c - DIGIT_ZERO;
+
+                // Check for overflow before updating `value`
+                if (value > (Long.MAX_VALUE - digit) / 10)
+                {
+                    error("Expression is too large", text, index);
+                }
+
                 value = (value << 3) + (value << 1) + digit;
                 index++;
             }
         }
 
-        if (index - startIndex > MAX_DIGITS || value > Integer.MAX_VALUE)
-        {
-            error("Value too large for unit '" + (char) unit + "'", text, index);
-        }
-
         final int length = index - offset;
 
-        consumer.accept(text, index, length, (char) unit, (int) value);
+        consumer.accept(text, index, length, (char) unit, value);
 
         return index + 1;
     }
@@ -153,7 +154,7 @@ public class ItuDurationParser
             this.negative = negative;
         }
 
-        public final void accept(final String text, final int index, final int length, final char unit, final int value)
+        public final void accept(final String text, final int index, final int length, final char unit, final long value)
         {
             final int relIndex = index - startOffset;
 
@@ -172,12 +173,6 @@ public class ItuDurationParser
             {
                 error("Duration must start with 'P'", text, index);
             }
-
-            /*
-             * An int can never overflow a long when used for seconds, minutes, hours, days, and weeks,
-             * even at their maximum values, because the total number of seconds remains within the
-             * 64-bit long's limits.
-             */
 
             if (unit == 0)
             {
@@ -286,12 +281,7 @@ public class ItuDurationParser
                             error("Maximum allowed is 9 fraction digits", text, index);
                         }
 
-                        if (length == 0)
-                        {
-                            error("Must have at least one fraction digit after the '.''", text, index);
-                        }
-
-                        nano = value;
+                        nano = Math.toIntExact(value);
                         int remainingDigits = DIGITS_IN_NANO - length;
                         if (remainingDigits > 0)
                         {
