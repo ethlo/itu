@@ -20,7 +20,7 @@ package com.ethlo.time.internal.util;
  * #L%
  */
 
-import static com.ethlo.time.ItuDurationParser.NANOS_IN_SECOND;
+import static com.ethlo.time.internal.ItuDurationParser.NANOS_IN_SECOND;
 
 import com.ethlo.time.Duration;
 

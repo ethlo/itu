@@ -330,7 +330,7 @@ public class ItuDurationParser
 
         public void validate(String chars, int index)
         {
-            if (afterT && hFound == 0 && mFound == 0 && sFound == 0)
+            if (afterT && hFound + mFound + sFound == 0)
             {
                 error("Expected at least value and unit after the 'T'", chars, index);
             }
@@ -345,7 +345,7 @@ public class ItuDurationParser
                 error("Expected 'S' after fractional number", chars, index);
             }
 
-            if (wFound == 0 && dFound == 0 && hFound == 0 && mFound == 0 && sFound == 0)
+            if (wFound + dFound + hFound + mFound + sFound == 0)
             {
                 error("Expected at least one value and unit", chars, index);
             }
