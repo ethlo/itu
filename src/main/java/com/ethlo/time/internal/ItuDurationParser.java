@@ -1,4 +1,4 @@
-package com.ethlo.time;
+package com.ethlo.time.internal;
 
 /*-
  * #%L
@@ -26,6 +26,8 @@ import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
 
 import java.time.format.DateTimeParseException;
 
+import com.ethlo.time.Duration;
+
 /**
  * <b>Rationale Against Supporting Years and Months</b>
  * <p>
@@ -49,45 +51,45 @@ public class ItuDurationParser
         return parse(chars, 0);
     }
 
-    public static Duration parse(final String chars, final int offset)
+    public static Duration parse(final String text, final int offset)
     {
-        final int availableLength = sanityCheckInputParams(chars, offset);
+        final int availableLength = sanityCheckInputParams(text, offset);
         if (availableLength == 0)
         {
-            throw new DateTimeParseException("Duration cannot be empty", chars, chars.length() - 1);
+            error("Duration cannot be empty", text, text.length() - 1);
         }
 
         boolean negative = false;
         int index = offset;
 
         // Check for a leading negative sign
-        if (chars.charAt(offset) == '-')
+        if (text.charAt(offset) == '-')
         {
             negative = true;
             index++;
         }
 
         final DurationPartsConsumer handler = new DurationPartsConsumer(index, negative);
-        final int length = chars.length();
+        final int length = text.length();
         while (index < length)
         {
-            index = readUntilNonDigit(chars, index, handler);
+            index = readUntilNonDigit(text, index, handler);
         }
 
-        handler.validate(chars, index);
+        handler.validate(text, index);
 
         return handler.getResult();
     }
 
-    private static int readUntilNonDigit(final String chars, final int offset, final DurationPartsConsumer consumer)
+    private static int readUntilNonDigit(final String text, final int offset, final DurationPartsConsumer consumer)
     {
         int unit = 0;
         int idx = offset;
         int value = 0;
-        final int len = chars.length();
+        final int len = text.length();
         while (idx < len)
         {
-            final char c = chars.charAt(idx);
+            final char c = text.charAt(idx);
             int isDigit = (c - '0') >>> 31 | ('9' - c) >>> 31;
             if (isDigit != 0)
             {
@@ -101,7 +103,7 @@ public class ItuDurationParser
                 // Correct overflow check
                 if (value > 214748364 || (value == 214748364 && digit > 7))
                 {
-                    throw new DateTimeParseException("Numeric overflow while parsing value", chars, idx);
+                    error("Numeric overflow while parsing value", text, idx);
                 }
 
                 value = (value << 3) + (value << 1) + (c - '0');
@@ -112,18 +114,23 @@ public class ItuDurationParser
 
         if (unit == 0)
         {
-            throw new DateTimeParseException("No unit defined for value " + value, chars, idx);
+            error("No unit defined for value " + value, text, idx);
         }
 
         final int length = idx - offset;
         if (length == 0 && (unit == 'W' || unit == 'D' || unit == 'H' || unit == 'M' || unit == 'S' || unit == '.'))
         {
-            throw new DateTimeParseException("Zero-length value prior to " + ((char) unit), chars, idx);
+            error("Zero-length value prior to " + ((char) unit), text, idx);
         }
 
-        consumer.accept(chars, idx, length, (char) unit, value);
+        consumer.accept(text, idx, length, (char) unit, value);
 
         return idx + 1;
+    }
+
+    private static void error(final String errorMessage, final String text, int index)
+    {
+        throw new DateTimeParseException(errorMessage + ": " + text, text, index);
     }
 
     private static class DurationPartsConsumer
@@ -158,7 +165,7 @@ public class ItuDurationParser
             {
                 if (unit != 'P')
                 {
-                    throw new DateTimeParseException("Duration must start with 'P'", chars, 0);
+                    error("Duration must start with 'P'", chars, index);
                 }
                 pFound = true;
                 return;
@@ -166,7 +173,7 @@ public class ItuDurationParser
 
             if (!pFound)
             {
-                throw new DateTimeParseException("Duration must start with 'P'", chars, 0);
+                error("Duration must start with 'P'", chars, index);
             }
 
             /*
@@ -182,13 +189,13 @@ public class ItuDurationParser
                     if (length != 0)
                     {
                         // We have a number in front of the T
-                        throw new DateTimeParseException("There is no unit for the number prior to the 'T'", chars, index);
+                        error("There is no unit for the number prior to the 'T'", chars, index);
                     }
 
                     assertNonFractional('T', chars, index);
                     if (afterT)
                     {
-                        throw new DateTimeParseException("Only one 'T' is allowed and must precede time units", chars, index);
+                        error("Only one 'T' is allowed and must precede time units", chars, index);
                     }
                     afterT = true;
                     break;
@@ -197,12 +204,12 @@ public class ItuDurationParser
                     assertNonFractional('W', chars, index);
                     if (wFound > 0)
                     {
-                        throw new DateTimeParseException("'W' (week) can only appear once", chars, index);
+                        error("'W' (week) can only appear once", chars, index);
                     }
 
                     if (afterT)
                     {
-                        throw new DateTimeParseException("'W' (week) must appear before 'T' in the duration", chars, index);
+                        error("'W' (week) must appear before 'T' in the duration", chars, index);
                     }
                     seconds += value * 604800L; // 7 * 86400
                     wFound = index;
@@ -212,11 +219,11 @@ public class ItuDurationParser
                     assertNonFractional('D', chars, index);
                     if (dFound > 0)
                     {
-                        throw new DateTimeParseException("'D' (days) can only appear once", chars, index);
+                        error("'D' (days) can only appear once", chars, index);
                     }
                     if (afterT)
                     {
-                        throw new DateTimeParseException("'D' (days) must appear before 'T' in the duration", chars, index);
+                        error("'D' (days) must appear before 'T' in the duration", chars, index);
                     }
                     seconds += value * 86400L;
                     dFound = index;
@@ -226,11 +233,11 @@ public class ItuDurationParser
                     assertNonFractional('H', chars, index);
                     if (hFound > 0)
                     {
-                        throw new DateTimeParseException("'H' (hours) can only appear once", chars, index);
+                        error("'H' (hours) can only appear once", chars, index);
                     }
                     if (!afterT)
                     {
-                        throw new DateTimeParseException("'H' (hours) must appear after 'T' in the duration", chars, index);
+                        error("'H' (hours) must appear after 'T' in the duration", chars, index);
                     }
                     seconds += value * 3600L;
                     hFound = index;
@@ -240,11 +247,11 @@ public class ItuDurationParser
                     assertNonFractional('M', chars, index);
                     if (mFound > 0)
                     {
-                        throw new DateTimeParseException("'M' (minutes) can only appear once", chars, index);
+                        error("'M' (minutes) can only appear once", chars, index);
                     }
                     if (!afterT)
                     {
-                        throw new DateTimeParseException("'M' (minutes) must appear after 'T' in the duration", chars, index);
+                        error("'M' (minutes) must appear after 'T' in the duration", chars, index);
                     }
                     seconds += value * 60L;
                     mFound = index;
@@ -253,11 +260,11 @@ public class ItuDurationParser
                 case 'S':
                     if (sFound > 0)
                     {
-                        throw new DateTimeParseException("'S' (seconds) can only appear once", chars, index);
+                        error("'S' (seconds) can only appear once", chars, index);
                     }
                     if (!afterT)
                     {
-                        throw new DateTimeParseException("'S' (seconds) must appear after 'T' in the duration", chars, index);
+                        error("'S' (seconds) must appear after 'T' in the duration", chars, index);
                     }
                     sFound = index;
 
@@ -265,12 +272,12 @@ public class ItuDurationParser
                     {
                         if (length > 9)
                         {
-                            throw new DateTimeParseException("Maximum allowed is 9 fraction digits", chars, index);
+                            error("Maximum allowed is 9 fraction digits", chars, index);
                         }
 
                         if (length == 0)
                         {
-                            throw new DateTimeParseException("Must have at least one fraction digit after the dot", chars, index);
+                            error("Must have at least one fraction digit after the '.''", chars, index);
                         }
 
                         nano = value;
@@ -297,11 +304,11 @@ public class ItuDurationParser
                 case '.':
                     if (dotFound)
                     {
-                        throw new DateTimeParseException("'.' can only appear once", chars, index);
+                        error("'.' can only appear once", chars, index);
                     }
                     if (!afterT)
                     {
-                        throw new DateTimeParseException("Fractional seconds (.) must come after 'T'", chars, index);
+                        error("Fractional seconds (.) must come after 'T'", chars, index);
                     }
                     readingFractionalPart = true;
                     seconds += value; // Assume integer part of seconds before fraction
@@ -309,7 +316,7 @@ public class ItuDurationParser
                     break;
 
                 default:
-                    throw new DateTimeParseException("Invalid unit: " + unit, chars, index);
+                    error("Invalid unit: " + unit, chars, index);
             }
         }
 
@@ -317,7 +324,7 @@ public class ItuDurationParser
         {
             if (readingFractionalPart)
             {
-                throw new DateTimeParseException("Cannot have fractional values for unit " + unit, chars, index);
+                error("Cannot have fractional values for unit " + unit, chars, index);
             }
         }
 
@@ -325,22 +332,22 @@ public class ItuDurationParser
         {
             if (afterT && hFound == 0 && mFound == 0 && sFound == 0)
             {
-                throw new DateTimeParseException("Expected at least value and unit after the 'T'", chars, index);
+                error("Expected at least value and unit after the 'T'", chars, index);
             }
 
             if (dotFound && !fractionsFound)
             {
-                throw new DateTimeParseException("Expected at least one fractional digit after the dot", chars, index);
+                error("Expected at least one fractional digit after the dot", chars, index);
             }
 
             if (fractionsFound && sFound == 0)
             {
-                throw new DateTimeParseException("Expected 'S' after fractional number", chars, index);
+                error("Expected 'S' after fractional number", chars, index);
             }
 
             if (wFound == 0 && dFound == 0 && hFound == 0 && mFound == 0 && sFound == 0)
             {
-                throw new DateTimeParseException("Expected at least one value and unit", chars, index);
+                error("Expected at least one value and unit", chars, index);
             }
 
             validateUnitOrder(chars);
@@ -362,7 +369,7 @@ public class ItuDurationParser
             {
                 if (unitIndex < lastIndex)
                 {
-                    throw new DateTimeParseException("Units must be in order from largest to smallest: " + chars, chars, unitIndex);
+                    error("Units must be in order from largest to smallest", chars, unitIndex);
                 }
                 return unitIndex;
             }
@@ -373,7 +380,7 @@ public class ItuDurationParser
         {
             // IMPORTANT: ISO 8601 does not allow negative fractional values separately from the seconds.
             // Instead, nanoseconds should always be positive, and seconds should absorb the negative sign.
-            return new Duration(negative ? -seconds : seconds, nano);
+            return Duration.of(negative ? -seconds : seconds, nano);
         }
     }
 }

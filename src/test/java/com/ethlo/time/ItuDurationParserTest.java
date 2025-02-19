@@ -28,13 +28,15 @@ import java.time.format.DateTimeParseException;
 
 import org.junit.jupiter.api.Test;
 
+import com.ethlo.time.internal.ItuDurationParser;
+
 class ItuDurationParserTest
 {
     @Test
     void testMissingP()
     {
         assertThat(assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("1D")))
-                .hasMessage("Duration must start with 'P'");
+                .hasMessage("Duration must start with 'P': 1D");
     }
 
     @Test
@@ -82,12 +84,18 @@ class ItuDurationParserTest
         assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("PT1.5"));
     }
 
-
     @Test
     void testWrongOrder()
     {
         final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ITU.parseDuration("PT1S1H"));
         assertThat(exc).hasMessage("Units must be in order from largest to smallest: PT1S1H");
+    }
+
+    @Test
+    void testParsingFromOffset()
+    {
+        final Duration duration = ItuDurationParser.parse("some,data,here,PT1.123456S", 15);
+        assertThat(duration).isEqualTo(Duration.ofSeconds(1).plusNanos(123456000));
     }
 
     @Test
@@ -102,16 +110,16 @@ class ItuDurationParserTest
     void shouldParseFractionalSeconds()
     {
         // Input: PT1.123456S (1 second, 123456 microseconds)
-        java.time.Duration duration = ItuDurationParser.parse("PT1.123456S").toDuration();
-        assertThat(duration).isEqualTo(java.time.Duration.ofSeconds(1).plusNanos(123456000));
+        final Duration duration = ItuDurationParser.parse("PT1.123456S");
+        assertThat(duration).isEqualTo(Duration.ofSeconds(1).plusNanos(123456000));
     }
 
     @Test
     void shouldParseDurationWithNoTimeSection()
     {
         // Input: P1Y2M3D (no time section)
-        java.time.Duration duration = ItuDurationParser.parse("P30D").toDuration();
-        assertThat(duration).isEqualTo(java.time.Duration.ofDays(30));
+        final Duration duration = ItuDurationParser.parse("P30D");
+        assertThat(duration).isEqualTo(Duration.ofDays(30));
     }
 
     @Test

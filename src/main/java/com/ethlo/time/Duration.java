@@ -162,6 +162,10 @@ public class Duration implements Comparable<Duration>
         return new Duration(seconds, 0);
     }
 
+    public static Duration of(long seconds, int nanos)
+    {
+        return new Duration(seconds, nanos);
+    }
 
     /**
      * Returns the number of seconds in this duration.

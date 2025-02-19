@@ -20,16 +20,12 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.text.ParsePosition;
-import java.time.DateTimeException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.Year;
-import java.time.YearMonth;
-
+import com.ethlo.time.internal.ItuDurationParser;
 import com.ethlo.time.internal.fixed.ITUFormatter;
 import com.ethlo.time.internal.fixed.ITUParser;
+
+import java.text.ParsePosition;
+import java.time.*;
 
 /**
  * The main access to the parse and formatting functions in this library.
@@ -56,6 +52,7 @@ public class ITU
      * <p>
      * This method supports time-based durations with the following units:
      * <ul>
+     *     <li>Weeks (`W`)</li>
      *     <li>Days (`D`)</li>
      *     <li>Hours (`H`)</li>
      *     <li>Minutes (`M`)</li>
@@ -96,6 +93,19 @@ public class ITU
     public static Duration parseDuration(String text)
     {
         return ItuDurationParser.parse(text, 0);
+    }
+
+    /**
+     * Parses a duration string starting at the specified offset. See {@link #parseDuration(String)} for more information.
+     *
+     * @param text   The text to parse
+     * @param offset the offset in the text to start at
+     * @return a {@link Duration} instance representing the parsed duration
+     * @throws java.time.format.DateTimeParseException if the input does not conform to the expected format
+     */
+    public static Duration parseDuration(String text, int offset)
+    {
+        return ItuDurationParser.parse(text, offset);
     }
 
     public static OffsetDateTime parseDateTime(String text, ParsePosition position)
