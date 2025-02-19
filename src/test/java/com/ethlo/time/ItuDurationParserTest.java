@@ -125,10 +125,10 @@ class ItuDurationParserTest
     @Test
     void shouldThrowDateTimeParseExceptionForOverflow()
     {
-        final String input = "P999999999999D";
+        final String input = "P20D9999999999999999H";
         assertThatThrownBy(() -> ItuDurationParser.parse(input))
                 .isInstanceOf(DateTimeParseException.class)
-                .hasMessageContaining("Numeric overflow while parsing value");
+                .hasMessageContaining("Value too large for unit 'H': " + input);
     }
 
     @Test

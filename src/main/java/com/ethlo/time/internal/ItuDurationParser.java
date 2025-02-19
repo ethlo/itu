@@ -22,7 +22,6 @@ package com.ethlo.time.internal;
 
 import static com.ethlo.time.internal.fixed.ITUParser.DIGITS_IN_NANO;
 import static com.ethlo.time.internal.fixed.ITUParser.sanityCheckInputParams;
-import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
 
 import java.time.format.DateTimeParseException;
 
@@ -44,7 +43,17 @@ import com.ethlo.time.Duration;
 public class ItuDurationParser
 {
     public static final int NANOS_IN_SECOND = 1_000_000_000;
+    public static final char SEP_T = 'T';
+    public static final char UNIT_WEEK = 'W';
+    public static final char UNIT_DAY = 'D';
+    public static final char UNIT_HOUR = 'H';
+    public static final char UNIT_MINUTE = 'M';
+    public static final char UNIT_SECOND = 'S';
+    public static final char DOT = '.';
+    public static final char DIGIT_ZERO = '0';
+    public static final char DIGIT_NINE = '9';
     private static final int[] POW10_TABLE = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
+    private static final int MAX_DIGITS = 19;
 
     public static Duration parse(final String chars)
     {
@@ -84,13 +93,13 @@ public class ItuDurationParser
     private static int readUntilNonDigit(final String text, final int offset, final DurationPartsConsumer consumer)
     {
         int unit = 0;
-        int idx = offset;
-        int value = 0;
-        final int len = text.length();
-        while (idx < len)
+        int index = offset;
+        long value = 0;
+        int startIndex = index;
+        while (index < text.length())
         {
-            final char c = text.charAt(idx);
-            int isDigit = (c - '0') >>> 31 | ('9' - c) >>> 31;
+            final char c = text.charAt(index);
+            int isDigit = (c - DIGIT_ZERO) >>> 31 | (DIGIT_NINE - c) >>> 31;
             if (isDigit != 0)
             {
                 unit = c;
@@ -98,34 +107,31 @@ public class ItuDurationParser
             }
             else
             {
-                int digit = c - ZERO;
-
-                // Correct overflow check
-                if (value > 214748364 || (value == 214748364 && digit > 7))
-                {
-                    error("Numeric overflow while parsing value", text, idx);
-                }
-
-                value = (value << 3) + (value << 1) + (c - '0');
-                //value = value * RADIX + digit;
-                idx++;
+                int digit = c - DIGIT_ZERO;
+                value = (value << 3) + (value << 1) + digit;
+                index++;
             }
+        }
+
+        if (index - startIndex > MAX_DIGITS || value > Integer.MAX_VALUE)
+        {
+            error("Value too large for unit '" + (char) unit + "'", text, index);
         }
 
         if (unit == 0)
         {
-            error("No unit defined for value " + value, text, idx);
+            error("No unit defined for value " + value, text, index);
         }
 
-        final int length = idx - offset;
-        if (length == 0 && (unit == 'W' || unit == 'D' || unit == 'H' || unit == 'M' || unit == 'S' || unit == '.'))
+        final int length = index - offset;
+        if (length == 0 && (unit == UNIT_WEEK || unit == UNIT_DAY || unit == UNIT_HOUR || unit == UNIT_MINUTE || unit == UNIT_SECOND || unit == DOT))
         {
-            error("Zero-length value prior to " + ((char) unit), text, idx);
+            error("Zero-length value prior to unit '" + ((char) unit) + "'", text, index);
         }
 
-        consumer.accept(text, idx, length, (char) unit, value);
+        consumer.accept(text, index, length, (char) unit, (int) value);
 
-        return idx + 1;
+        return index + 1;
     }
 
     private static void error(final String errorMessage, final String text, int index)
@@ -184,7 +190,7 @@ public class ItuDurationParser
 
             switch (unit)
             {
-                case 'T':
+                case SEP_T:
 
                     if (length != 0)
                     {
@@ -200,8 +206,8 @@ public class ItuDurationParser
                     afterT = true;
                     break;
 
-                case 'W':
-                    assertNonFractional('W', chars, index);
+                case UNIT_WEEK:
+                    assertNonFractional(UNIT_WEEK, chars, index);
                     if (wFound > 0)
                     {
                         error("'W' (week) can only appear once", chars, index);
@@ -215,7 +221,7 @@ public class ItuDurationParser
                     wFound = index;
                     break;
 
-                case 'D':
+                case UNIT_DAY:
                     assertNonFractional('D', chars, index);
                     if (dFound > 0)
                     {
@@ -229,7 +235,7 @@ public class ItuDurationParser
                     dFound = index;
                     break;
 
-                case 'H':
+                case UNIT_HOUR:
                     assertNonFractional('H', chars, index);
                     if (hFound > 0)
                     {
@@ -243,8 +249,8 @@ public class ItuDurationParser
                     hFound = index;
                     break;
 
-                case 'M':
-                    assertNonFractional('M', chars, index);
+                case UNIT_MINUTE:
+                    assertNonFractional(UNIT_MINUTE, chars, index);
                     if (mFound > 0)
                     {
                         error("'M' (minutes) can only appear once", chars, index);
@@ -257,7 +263,7 @@ public class ItuDurationParser
                     mFound = index;
                     break;
 
-                case 'S':
+                case UNIT_SECOND:
                     if (sFound > 0)
                     {
                         error("'S' (seconds) can only appear once", chars, index);
@@ -301,7 +307,7 @@ public class ItuDurationParser
                     }
                     break;
 
-                case '.':
+                case DOT:
                     if (dotFound)
                     {
                         error("'.' can only appear once", chars, index);
