@@ -336,6 +336,7 @@ limitations under the License.
                                 <source>src/test/java/samples/parsing</source>
                                 <source>src/test/java/samples/formatting</source>
                                 <source>src/test/java/samples/leapsecond</source>
+                                <source>src/test/java/samples/durationparsing</source>
                             </sources>
                         </configuration>
                         <executions>

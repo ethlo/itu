@@ -241,6 +241,69 @@ try
 ```
 
 
+## Duration Parser
+
+Parses a duration string, a strict subset of ISO 8601 durations.
+
+### Supported Units
+This method supports time-based durations with the following units:
+
+- **Weeks** (`W`)
+- **Days** (`D`)
+- **Hours** (`H`)
+- **Minutes** (`M`)
+- **Seconds** (`S`), including fractional seconds up to nanosecond precision
+
+#### Not Allowed Units
+The following units are **explicitly not allowed** to avoid ambiguity:
+
+- **Years** (`Y`)
+- **Months** (`M` in the date section)
+
+### Negative Durations
+Negative durations are supported and must be prefixed with `-P`, as specified in ISO 8601.  
+The parsed duration will be represented using:
+
+- A **`long`** for total seconds
+- An **`int`** for nanosecond precision
+
+The nanosecond component is always positive, with the sign absorbed by the seconds field,  
+following Java and ISO 8601 conventions.
+
+### Examples
+
+#### Valid Input
+- `P2DT3H4M5.678901234S` → 2 days, 3 hours, 4 minutes, 5.678901234 seconds
+- `PT5M30S` → 5 minutes, 30 seconds
+- `-PT2.5S` → Negative 2.5 seconds
+- `-P1D` → Negative 1 day
+
+#### Invalid Input
+- `P1Y2M3DT4H` → Contains `Y` and `M`
+- `PT` → Missing time values after `T`
+- `P-1D` → Incorrect negative placement
+
+
+
+#### simple
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L32C5-L37C6)</smaller>
+
+
+```java
+final Duration duration = ITU.parseDuration("P4W");
+assertThat(duration.getSeconds()).isEqualTo(2_419_200L);
+```
+
+#### fullNotNormalizedToNormalized
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L39C5-L44C6)</smaller>
+
+
+```java
+final Duration duration = ITU.parseDuration("P4W10DT28H122M1.123456S");
+assertThat(duration.normalized()).isEqualTo("P5W4DT6H2M1.123456S");
+```
+
+
 ## Q & A
 
 ### Why this little project?

@@ -48,7 +48,7 @@ public class ITU
     }
 
     /**
-     * Parses a duration string in the Modern Duration Profile format, a strict subset of ISO 8601 durations.
+     * Parses a duration string, a strict subset of ISO 8601 durations.
      * <p>
      * This method supports time-based durations with the following units:
      * <ul>
