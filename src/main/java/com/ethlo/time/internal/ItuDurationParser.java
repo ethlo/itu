@@ -20,7 +20,12 @@ package com.ethlo.time.internal;
  * #L%
  */
 
+import static com.ethlo.time.Duration.SECONDS_PER_DAY;
+import static com.ethlo.time.Duration.SECONDS_PER_HOUR;
+import static com.ethlo.time.Duration.SECONDS_PER_MINUTE;
+import static com.ethlo.time.Duration.SECONDS_PER_WEEK;
 import static com.ethlo.time.internal.fixed.ITUParser.DIGITS_IN_NANO;
+import static com.ethlo.time.internal.fixed.ITUParser.RADIX;
 import static com.ethlo.time.internal.fixed.ITUParser.sanityCheckInputParams;
 
 import java.time.format.DateTimeParseException;
@@ -52,8 +57,9 @@ public class ItuDurationParser
     public static final char DOT = '.';
     public static final char DIGIT_ZERO = '0';
     public static final char DIGIT_NINE = '9';
+    public static final char MINUS = '-';
     private static final int[] POW10_TABLE = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
-    private static final int MAX_DIGITS = 19;
+    private static final char UNIT_UNDEFINED = '\0';
 
     public static Duration parse(final String chars)
     {
@@ -72,7 +78,7 @@ public class ItuDurationParser
         int index = offset;
 
         // Check for a leading negative sign
-        if (text.charAt(offset) == '-')
+        if (text.charAt(offset) == MINUS)
         {
             negative = true;
             index++;
@@ -92,36 +98,33 @@ public class ItuDurationParser
 
     private static int readUntilNonDigit(final String text, final int offset, final DurationPartsConsumer consumer)
     {
-        int unit = 0;
-        int index = offset;
         long value = 0;
-        while (index < text.length())
+        int index = offset;
+        int startIndex = index;
+        for (; index < text.length(); index++)
         {
             final char c = text.charAt(index);
-            int isDigit = (c - DIGIT_ZERO) >>> 31 | (DIGIT_NINE - c) >>> 31;
-            if (isDigit != 0)
+            if (c >= DIGIT_ZERO && c <= DIGIT_NINE)
             {
-                unit = c;
-                break;
+                final int digit = c - DIGIT_ZERO;
+                value = Math.addExact(Math.multiplyExact(value, RADIX), digit);
             }
             else
             {
-                final int digit = c - DIGIT_ZERO;
-
-                // Check for overflow before updating `value`
-                if (value > (Long.MAX_VALUE - digit) / 10)
-                {
-                    error("Expression is too large", text, index);
-                }
-
-                value = (value << 3) + (value << 1) + digit;
-                index++;
+                final int length = index - startIndex;
+                consumer.accept(text, index, length, c, value);
+                value = 0;
+                startIndex = index + 1;
+                break;
             }
         }
 
-        final int length = index - offset;
-
-        consumer.accept(text, index, length, (char) unit, value);
+        // If we never hit any non-digit
+        final int length = index - startIndex;
+        if (index - startIndex > 0)
+        {
+            consumer.accept(text, index, length, UNIT_UNDEFINED, value);
+        }
 
         return index + 1;
     }
@@ -174,13 +177,13 @@ public class ItuDurationParser
                 error("Duration must start with 'P'", text, index);
             }
 
-            if (unit == 0)
+            if (unit == UNIT_UNDEFINED)
             {
                 if (!dotFound)
                 {
                     error("No unit defined for value " + value, text, index);
                 }
-                error("No unit defined for value " + seconds + DOT + value, text, index);
+                error("No unit defined for value " + (seconds % SECONDS_PER_MINUTE) + DOT + value, text, index);
             }
 
             if (length == 0 && (unit == UNIT_WEEK || unit == UNIT_DAY || unit == UNIT_HOUR || unit == UNIT_MINUTE || unit == UNIT_SECOND || unit == DOT))
@@ -217,7 +220,7 @@ public class ItuDurationParser
                     {
                         error("'W' (week) must appear before 'T' in the duration", text, index);
                     }
-                    seconds += value * 604800L; // 7 * 86400
+                    seconds = Math.addExact(seconds, Math.multiplyExact(value, SECONDS_PER_WEEK));
                     wFound = index;
                     break;
 
@@ -231,7 +234,7 @@ public class ItuDurationParser
                     {
                         error("'D' (days) must appear before 'T' in the duration", text, index);
                     }
-                    seconds += value * 86400L;
+                    seconds = Math.addExact(seconds, Math.multiplyExact(value, SECONDS_PER_DAY));
                     dFound = index;
                     break;
 
@@ -245,7 +248,7 @@ public class ItuDurationParser
                     {
                         error("'H' (hours) must appear after 'T' in the duration", text, index);
                     }
-                    seconds += value * 3600L;
+                    seconds = Math.addExact(seconds, Math.multiplyExact(value, SECONDS_PER_HOUR));
                     hFound = index;
                     break;
 
@@ -259,7 +262,7 @@ public class ItuDurationParser
                     {
                         error("'M' (minutes) must appear after 'T' in the duration", text, index);
                     }
-                    seconds += value * 60L;
+                    seconds = Math.addExact(seconds, Math.multiplyExact(value, SECONDS_PER_MINUTE));
                     mFound = index;
                     break;
 
@@ -333,7 +336,7 @@ public class ItuDurationParser
         {
             if (afterT && hFound + mFound + sFound == 0)
             {
-                error("Expected at least value and unit after the 'T'", chars, index);
+                error("Expected at least one value and unit after the 'T'", chars, index);
             }
 
             if (dotFound && !fractionsFound)

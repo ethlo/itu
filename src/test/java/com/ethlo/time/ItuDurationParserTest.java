@@ -20,15 +20,15 @@ package com.ethlo.time;
  * #L%
  */
 
-import com.ethlo.time.internal.ItuDurationParser;
-
-import org.junit.jupiter.api.Test;
-
-import java.time.format.DateTimeParseException;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.time.format.DateTimeParseException;
+
+import org.junit.jupiter.api.Test;
+
+import com.ethlo.time.internal.ItuDurationParser;
 
 class ItuDurationParserTest
 {
@@ -99,8 +99,22 @@ class ItuDurationParserTest
     @Test
     void testNoUnitAfterFractions()
     {
-        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("PT1.5"));
-        assertThat(exc).hasMessage("No unit defined for value 1.5: PT1.5");
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("PT2H1.5"));
+        assertThat(exc).hasMessage("No unit defined for value 1.5: PT2H1.5");
+    }
+
+    @Test
+    void testOverFlowInSubsequentCalculation()
+    {
+        final ArithmeticException exc = assertThrows(ArithmeticException.class, () -> ITU.parseDuration("PT60000000000000000H"));
+        assertThat(exc).hasMessage("long overflow");
+    }
+
+    @Test
+    void testNoUnitAfterSeconds()
+    {
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ItuDurationParser.parse("PT1"));
+        assertThat(exc).hasMessage("No unit defined for value 1: PT1");
     }
 
     @Test
@@ -157,8 +171,8 @@ class ItuDurationParserTest
     {
         final String input = "P20D999999999999999999999H";
         assertThatThrownBy(() -> ItuDurationParser.parse(input))
-                .isInstanceOf(DateTimeParseException.class)
-                .hasMessageContaining("Expression is too large: " + input);
+                .isInstanceOf(ArithmeticException.class)
+                .hasMessageContaining("long overflow");
     }
 
     @Test
