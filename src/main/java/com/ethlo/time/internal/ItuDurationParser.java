@@ -225,7 +225,7 @@ public class ItuDurationParser
                     break;
 
                 case UNIT_DAY:
-                    assertNonFractional('D', text, index);
+                    assertNonFractional(UNIT_DAY, text, index);
                     if (dFound > 0)
                     {
                         error("'D' (days) can only appear once", text, index);
@@ -239,7 +239,7 @@ public class ItuDurationParser
                     break;
 
                 case UNIT_HOUR:
-                    assertNonFractional('H', text, index);
+                    assertNonFractional(UNIT_HOUR, text, index);
                     if (hFound > 0)
                     {
                         error("'H' (hours) can only appear once", text, index);
