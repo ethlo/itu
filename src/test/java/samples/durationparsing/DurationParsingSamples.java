@@ -1,10 +1,10 @@
-package com.ethlo.time.fuzzer;
+package samples.durationparsing;
 
 /*-
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 - 2024 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 - 2025 Morten Haraldsen @ethlo
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,24 +20,26 @@ package com.ethlo.time.fuzzer;
  * #L%
  */
 
-import java.time.DateTimeException;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.code_intelligence.jazzer.junit.FuzzTest;
+import org.junit.jupiter.api.Test;
+
+import com.ethlo.time.Duration;
 import com.ethlo.time.ITU;
 
-public class ParseDateTimeFuzzTest
+public class DurationParsingSamples
 {
-    @FuzzTest(maxDuration = "30m")
-    void parse(FuzzedDataProvider data)
+    @Test
+    void simple()
     {
-        try
-        {
-            ITU.parseDateTime(data.consumeRemainingAsString());
-        }
-        catch (DateTimeException ignored)
-        {
+        final Duration duration = ITU.parseDuration("P4W");
+        assertThat(duration.getSeconds()).isEqualTo(2_419_200L);
+    }
 
-        }
+    @Test
+    void fullNotNormalizedToNormalized()
+    {
+        final Duration duration = ITU.parseDuration("P4W10DT28H122M1.123456S");
+        assertThat(duration.normalized()).isEqualTo("P5W4DT6H2M1.123456S");
     }
 }

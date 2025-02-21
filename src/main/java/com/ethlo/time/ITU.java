@@ -20,16 +20,12 @@ package com.ethlo.time;
  * #L%
  */
 
-import java.text.ParsePosition;
-import java.time.DateTimeException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.Year;
-import java.time.YearMonth;
-
+import com.ethlo.time.internal.ItuDurationParser;
 import com.ethlo.time.internal.fixed.ITUFormatter;
 import com.ethlo.time.internal.fixed.ITUParser;
+
+import java.text.ParsePosition;
+import java.time.*;
 
 /**
  * The main access to the parse and formatting functions in this library.
@@ -49,6 +45,67 @@ public class ITU
     public static OffsetDateTime parseDateTime(String text)
     {
         return ITUParser.parseDateTime(text, 0);
+    }
+
+    /**
+     * Parses a duration string, a strict subset of ISO 8601 durations.
+     * <p>
+     * This method supports time-based durations with the following units:
+     * <ul>
+     *     <li>Weeks (`W`)</li>
+     *     <li>Days (`D`)</li>
+     *     <li>Hours (`H`)</li>
+     *     <li>Minutes (`M`)</li>
+     *     <li>Seconds (`S`), including fractional seconds up to nanosecond precision</li>
+     * </ul>
+     * The following units are explicitly <b>not allowed</b> to avoid ambiguity:
+     * <ul>
+     *     <li>Years (`Y`)</li>
+     *     <li>Months (`M` in the date section)</li>
+     * </ul>
+     * <p>
+     * Negative durations are supported and must be prefixed with `-P`, as specified in ISO 8601.
+     * The parsed duration will be represented using a {@code long} for total seconds
+     * and an {@code int} for nanosecond precision. The nanosecond component is always positive,
+     * with the sign absorbed by the seconds field, following Java and ISO 8601 conventions.
+     * </p>
+     *
+     * <b>Examples of Valid Input</b>
+     * <ul>
+     *     <li>{@code P2DT3H4M5.678901234S} → 2 days, 3 hours, 4 minutes, 5.678901234 seconds</li>
+     *     <li>{@code PT5M30S} → 5 minutes, 30 seconds</li>
+     *     <li>{@code -PT2.5S} → Negative 2.5 seconds</li>
+     *     <li>{@code -P1D} → Negative 1 day</li>
+     * </ul>
+     *
+     * <b>Examples of Invalid Input</b>
+     * <ul>
+     *     <li>{@code P1Y2M3DT4H} → Contains `Y` and `M`</li>
+     *     <li>{@code PT} → Missing time values after `T`</li>
+     *     <li>{@code P-1D} → Incorrect negative placement</li>
+     * </ul>
+     * <p>
+     *
+     * @param text the duration string to parse
+     * @return a {@link Duration} instance representing the parsed duration
+     * @throws java.time.format.DateTimeParseException if the input does not conform to the expected format
+     */
+    public static Duration parseDuration(String text)
+    {
+        return ItuDurationParser.parse(text, 0);
+    }
+
+    /**
+     * Parses a duration string starting at the specified offset. See {@link #parseDuration(String)} for more information.
+     *
+     * @param text   The text to parse
+     * @param offset the offset in the text to start at
+     * @return a {@link Duration} instance representing the parsed duration
+     * @throws java.time.format.DateTimeParseException if the input does not conform to the expected format
+     */
+    public static Duration parseDuration(String text, int offset)
+    {
+        return ItuDurationParser.parse(text, offset);
     }
 
     public static OffsetDateTime parseDateTime(String text, ParsePosition position)
