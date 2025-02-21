@@ -120,9 +120,53 @@ class ItuDurationParserTest
     @Test
     void testWeirdInputs()
     {
-        final String[] inputs = {"-PTHHHH6.2S.6S2.62.2S2.0S.", "PT..0.S.", "PT1SP"};
+        final String[] inputs = {"-PTHHHH6.2S.6S2.62.2S2.0S.", "PT..0.S.", "PT1SP",
+                "-PTHHH.2.0S.",
+                "PT8.0000000000S",
+                "PT0.8S5",
+                "PT7W",
+                "P7.",
+                "0S",
+                "PT6M6H",
+                "PT4M0HT",
+                "P2T",
+                "P7WT0H0S7M",
+                "-PTH2.0S.",
+                "P27",
+                "P2D8W7.",
+                "D0",
+                "PT-",
+                "PT2D",
+                "PT4S4S",
+                "PT4S5M",
+                "8111111111",
+                "PT0H0",
+                "0000000000000000",
+                "PT7.T",
+                "P7D2WT0H7.0S0MW",
+                "PT0H0H",
+                "P0S",
+                "PT0.8S5M",
+                "PH",
+                "P0H",
+                "-PT8.8S8",
+                "P7WT0H7.0S7MW",
+                "700",
+                "-PTHHH.6S2..2S2.0S.",
+                "PT7.8.",
+                "00000000000000000000000000000004",
+                "PT3.",
+                "S.",
+                "PT6M6M",
+                "PT4S4",
+                "P2D2",
+                "PT..-",
+                "PT4S9.",
+                "ʬ",
+                "-PTHHHH6.2S.6S2..2S2.0S."};
         for (String input : inputs)
         {
+            System.out.println(input);
             final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ITU.parseDuration(input));
             System.out.println(exc.getMessage());
         }
