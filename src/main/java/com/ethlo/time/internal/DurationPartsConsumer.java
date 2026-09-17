@@ -196,7 +196,7 @@ class DurationPartsConsumer
 
                     if (negative && nano > 0)
                     {
-                        seconds += 1;
+                        seconds = Math.addExact(seconds, 1);
                         nano = ItuDurationParser.NANOS_IN_SECOND - nano;
                     }
                     fractionsFound = true;
@@ -204,7 +204,7 @@ class DurationPartsConsumer
                 }
                 else
                 {
-                    seconds += value;
+                    seconds = Math.addExact(seconds, value);
                 }
                 break;
 
@@ -218,7 +218,7 @@ class DurationPartsConsumer
                     error("Fractional seconds (.) must come after 'T'", text, index);
                 }
                 readingFractionalPart = true;
-                seconds += value; // Assume integer part of seconds before fraction
+                seconds = Math.addExact(seconds, value); // Assume integer part of seconds before fraction
                 dotFound = true;
                 break;
 

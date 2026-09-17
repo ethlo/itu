@@ -330,7 +330,8 @@
     },
     {
         "input": "4444-04-23t44:44:60",
-        "error": "Invalid value for SecondOfMinute (valid values 0 - 59): 60",
+        "note": "Hour, minute and second are all out of range. The most significant invalid field is reported first",
+        "error": "Invalid value for HourOfDay (valid values 0 - 23): 44",
         "lenient": true
     },
     {

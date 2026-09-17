@@ -41,7 +41,7 @@ public class DefaultLeapSecondHandler implements LeapSecondHandler
     {
         leapSecondMonths = new TreeSet<>();
 
-        try (final InputStream in = DefaultLeapSecondHandler.class.getClassLoader().getResourceAsStream(LEAP_SECOND_PATH_CSV);
+        try (final InputStream in = openResource();
              final BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(in, LEAP_SECOND_PATH_CSV + " was not found on the classpath"), StandardCharsets.UTF_8)))
         {
             String line;
@@ -59,6 +59,17 @@ public class DefaultLeapSecondHandler implements LeapSecondHandler
         }
 
         lastLeapKnown = leapSecondMonths.last();
+    }
+
+    private static InputStream openResource()
+    {
+        final InputStream in = DefaultLeapSecondHandler.class.getResourceAsStream("/" + LEAP_SECOND_PATH_CSV);
+        if (in != null)
+        {
+            return in;
+        }
+        final ClassLoader classLoader = DefaultLeapSecondHandler.class.getClassLoader();
+        return classLoader != null ? classLoader.getResourceAsStream(LEAP_SECOND_PATH_CSV) : null;
     }
 
     @Override

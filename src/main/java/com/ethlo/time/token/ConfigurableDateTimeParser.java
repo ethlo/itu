@@ -40,7 +40,12 @@ import com.ethlo.time.internal.token.FractionsToken;
  */
 public class ConfigurableDateTimeParser implements DateTimeParser
 {
+    // NOTE: Field.values() clones its backing array on every call, so it is cached here rather than being
+    // called once per parse
+    private static final Field[] FIELDS = Field.values();
+
     private final DateTimeToken[] tokens;
+    private final boolean[] isFractionToken;
 
     private ConfigurableDateTimeParser(DateTimeToken... tokens)
     {
@@ -51,7 +56,13 @@ public class ConfigurableDateTimeParser implements DateTimeParser
                 throw new IllegalArgumentException("Duplicate field " + t.getField() + " in list of tokens: " + Arrays.toString(tokens));
             }
         });
-        this.tokens = tokens;
+        // Snapshot the caller-owned array so the cached classification below cannot diverge from it
+        this.tokens = tokens.clone();
+        this.isFractionToken = new boolean[this.tokens.length];
+        for (int i = 0; i < this.tokens.length; i++)
+        {
+            this.isFractionToken[i] = this.tokens[i] instanceof FractionsToken;
+        }
     }
 
     /**
@@ -86,8 +97,9 @@ public class ConfigurableDateTimeParser implements DateTimeParser
         int highestOrdinal = YEAR.ordinal();
         final int[] values = new int[]{0, 1, 1, 0, 0, 0, 0, -1};
 
-        for (DateTimeToken token : tokens)
+        for (int i = 0; i < tokens.length; i++)
         {
+            final DateTimeToken token = tokens[i];
             final int index = parsePosition.getIndex();
             final int value = token.read(text, parsePosition);
             final Field field = token.getField();
@@ -96,7 +108,7 @@ public class ConfigurableDateTimeParser implements DateTimeParser
                 final int ordinal = field.ordinal();
                 values[ordinal] = value;
                 highestOrdinal = Math.max(ordinal, highestOrdinal);
-                if (token instanceof FractionsToken)
+                if (isFractionToken[i])
                 {
                     fractionsLength = parsePosition.getIndex() - index;
                     values[ordinal] = scale(value, fractionsLength);
@@ -104,7 +116,7 @@ public class ConfigurableDateTimeParser implements DateTimeParser
             }
         }
 
-        return new DateTime(Field.values()[Math.min(highestOrdinal, NANO.ordinal())], values[Field.YEAR.ordinal()], values[Field.MONTH.ordinal()], values[Field.DAY.ordinal()], values[Field.HOUR.ordinal()], values[Field.MINUTE.ordinal()], values[Field.SECOND.ordinal()], values[Field.NANO.ordinal()], values[Field.ZONE_OFFSET.ordinal()] != -1 ? TimezoneOffset.ofTotalSeconds(values[Field.ZONE_OFFSET.ordinal()]) : null, fractionsLength);
+        return new DateTime(FIELDS[Math.min(highestOrdinal, NANO.ordinal())], values[Field.YEAR.ordinal()], values[Field.MONTH.ordinal()], values[Field.DAY.ordinal()], values[Field.HOUR.ordinal()], values[Field.MINUTE.ordinal()], values[Field.SECOND.ordinal()], values[Field.NANO.ordinal()], values[Field.ZONE_OFFSET.ordinal()] != -1 ? TimezoneOffset.ofTotalSeconds(values[Field.ZONE_OFFSET.ordinal()]) : null, fractionsLength);
     }
 
     private int scale(int value, int length)
