@@ -49,7 +49,9 @@ public class DurationFormatter
         if (negative)
         {
             s.append('-');
-            seconds = nanos > 0 ? Math.negateExact(seconds) - 1 : Math.negateExact(seconds);
+            // NOTE: With a fraction the magnitude is |seconds| - 1, which is -(seconds + 1). Computed in that
+            // order so that seconds == Long.MIN_VALUE does not overflow before the subtraction
+            seconds = nanos > 0 ? -(seconds + 1) : Math.negateExact(seconds);
         }
 
         s.append('P');
