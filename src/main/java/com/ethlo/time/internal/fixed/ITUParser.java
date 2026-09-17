@@ -24,9 +24,9 @@ import static com.ethlo.time.internal.util.ErrorUtil.assertFractionDigits;
 import static com.ethlo.time.internal.util.ErrorUtil.assertPositionContains;
 import static com.ethlo.time.internal.util.ErrorUtil.raiseUnexpectedCharacter;
 import static com.ethlo.time.internal.util.ErrorUtil.raiseUnexpectedEndOfText;
-import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.DIGIT_9;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
-import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parsePositiveInt;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parse2;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parse4;
 
 import java.text.ParsePosition;
 import java.time.OffsetDateTime;
@@ -70,6 +70,7 @@ public class ITUParser implements DateTimeParser
     public static final int MAX_FRACTION_DIGITS = 9;
     public static final int RADIX = 10;
     public static final int DIGITS_IN_NANO = 9;
+    private static final int[] NANO_SCALE = {1_000_000_000, 100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
     private static final DateTimeParser instance = new ITUParser();
 
     private ITUParser()
@@ -138,8 +139,8 @@ public class ITUParser implements DateTimeParser
 
         assertPositionContains(Field.ZONE_OFFSET, chars, idx + 3, TIME_SEPARATOR);
 
-        int hours = parsePositiveInt(chars, idx + 1, idx + 3);
-        int minutes = parsePositiveInt(chars, idx + 4, idx + 4 + 2);
+        int hours = parse2(chars, idx + 1);
+        int minutes = parse2(chars, idx + 4);
         if (sign == MINUS)
         {
             hours = -hours;
@@ -235,32 +236,32 @@ public class ITUParser implements DateTimeParser
 
     private static int parseSeconds(int offset, String chars)
     {
-        return parsePositiveInt(chars, offset + 17, offset + 19);
+        return parse2(chars, offset + 17);
     }
 
     private static int parseMinutes(String chars, int offset)
     {
-        return parsePositiveInt(chars, offset + 14, offset + 16);
+        return parse2(chars, offset + 14);
     }
 
     private static int parseHours(String chars, int offset)
     {
-        return parsePositiveInt(chars, offset + 11, offset + 13);
+        return parse2(chars, offset + 11);
     }
 
     private static int parseDays(String chars, int offset)
     {
-        return parsePositiveInt(chars, offset + 8, offset + 10);
+        return parse2(chars, offset + 8);
     }
 
     private static int parseMonth(String chars, int offset)
     {
-        return parsePositiveInt(chars, offset + 5, offset + 7);
+        return parse2(chars, offset + 5);
     }
 
     private static int parseYears(String chars, int offset)
     {
-        return parsePositiveInt(chars, offset, offset + 4);
+        return parse4(chars, offset);
     }
 
     private static DateTime handleTimeResolution(final int offset, ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars)
@@ -275,8 +276,8 @@ public class ITUParser implements DateTimeParser
             }
             else if (c == ZULU_UPPER || c == ZULU_LOWER)
             {
-                final TimezoneOffset timezoneOffset = parseTimezone(offset, parseConfig, chars, offset + 19);
-                return handleSecondResolution(offset, year, month, day, hour, minute, chars, timezoneOffset);
+                assertNoMoreChars(offset, parseConfig, chars, offset + 19);
+                return handleSecondResolution(offset, year, month, day, hour, minute, chars, TimezoneOffset.UTC);
             }
             else if (c == PLUS || c == MINUS)
             {
@@ -306,37 +307,47 @@ public class ITUParser implements DateTimeParser
 
     private static DateTime handleFractionalSeconds(int offset, ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars)
     {
+        final int length = chars.length();
         int idx = offset + 20;
         int fractionDigits = 0;
         int nanos = 0;
-        while (idx < chars.length())
+
+        // Fast path for the common 3/6/9 digit cases: consume digits three at a time in straight-line code
+        while (fractionDigits < MAX_FRACTION_DIGITS && idx + 3 <= length)
         {
-            final char c = chars.charAt(idx);
-            if (c < ZERO || c > DIGIT_9)
+            final int d0 = chars.charAt(idx) - ZERO;
+            final int d1 = chars.charAt(idx + 1) - ZERO;
+            final int d2 = chars.charAt(idx + 2) - ZERO;
+            if ((d0 | d1 | d2) < 0 || d0 > 9 || d1 > 9 || d2 > 9)
             {
                 break;
             }
-            else
+            nanos = nanos * 1000 + d0 * 100 + d1 * 10 + d2;
+            fractionDigits += 3;
+            idx += 3;
+        }
+
+        // Remainder: one digit at a time
+        while (idx < length)
+        {
+            final int d = chars.charAt(idx) - ZERO;
+            if (d < 0 || d > 9)
             {
-                fractionDigits++;
-                if (fractionDigits <= MAX_FRACTION_DIGITS)
-                {
-                    // Beyond the maximum the value is rejected below, so avoid overflowing the accumulator
-                    nanos = nanos * RADIX + (c - ZERO);
-                }
-                idx++;
+                break;
             }
+            fractionDigits++;
+            if (fractionDigits <= MAX_FRACTION_DIGITS)
+            {
+                // Beyond the maximum the value is rejected below, so avoid overflowing the accumulator
+                nanos = nanos * RADIX + d;
+            }
+            idx++;
         }
 
         assertFractionDigits(chars, fractionDigits, idx - 1);
 
         // Scale to nanoseconds
-        int pos = fractionDigits;
-        while (pos < DIGITS_IN_NANO)
-        {
-            nanos *= RADIX;
-            pos++;
-        }
+        nanos *= NANO_SCALE[fractionDigits];
 
         final TimezoneOffset timezoneOffset = parseTimezone(offset, parseConfig, chars, idx);
         final int charLength = (idx + (timezoneOffset != null ? timezoneOffset.getRequiredLength() : 0)) - offset;
