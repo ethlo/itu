@@ -56,11 +56,12 @@ public class ConfigurableDateTimeParser implements DateTimeParser
                 throw new IllegalArgumentException("Duplicate field " + t.getField() + " in list of tokens: " + Arrays.toString(tokens));
             }
         });
-        this.tokens = tokens;
-        this.isFractionToken = new boolean[tokens.length];
-        for (int i = 0; i < tokens.length; i++)
+        // Snapshot the caller-owned array so the cached classification below cannot diverge from it
+        this.tokens = tokens.clone();
+        this.isFractionToken = new boolean[this.tokens.length];
+        for (int i = 0; i < this.tokens.length; i++)
         {
-            this.isFractionToken[i] = tokens[i] instanceof FractionsToken;
+            this.isFractionToken[i] = this.tokens[i] instanceof FractionsToken;
         }
     }
 

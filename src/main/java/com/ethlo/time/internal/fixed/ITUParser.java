@@ -343,7 +343,6 @@ public class ITUParser implements DateTimeParser
             }
             idx++;
         }
-
         assertFractionDigits(chars, fractionDigits, idx - 1);
 
         // Scale to nanoseconds

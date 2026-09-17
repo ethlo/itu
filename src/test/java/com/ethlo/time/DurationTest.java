@@ -76,6 +76,15 @@ class DurationTest
     }
 
     @Test
+    void testNormalizedAtMinimumSecondsWithFraction()
+    {
+        // Magnitude is Long.MAX_VALUE seconds plus a fraction, which is representable, so negating must
+        // not overflow before the fraction borrow is applied
+        final Duration d = new Duration(Long.MIN_VALUE, 1);
+        assertThat(d.normalized()).isEqualTo("-P15250284452471W3DT15H30M7.999999999S");
+    }
+
+    @Test
     void testAddNegativeValues()
     {
         final Duration d1 = Duration.ofMillis(5_900);

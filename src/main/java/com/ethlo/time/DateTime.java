@@ -622,9 +622,10 @@ public class DateTime implements TemporalAccessor
             LocalDate.of(year, month, day);
         }
 
-        if (hour > 23 || minute > 59 || second > 59 || nano > 999_999_999)
+        // NOTE: Validated from the most significant field down, and delegated to ChronoField so the messages
+        // match what java.time would have produced had the value made it as far as OffsetDateTime.of(..)
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59 || nano < 0 || nano > 999_999_999)
         {
-            // Validated from the most significant field down
             ChronoField.HOUR_OF_DAY.checkValidValue(hour);
             ChronoField.MINUTE_OF_HOUR.checkValidValue(minute);
             ChronoField.SECOND_OF_MINUTE.checkValidValue(second);
