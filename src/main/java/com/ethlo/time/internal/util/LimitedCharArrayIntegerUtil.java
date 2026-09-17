@@ -51,6 +51,50 @@ public final class LimitedCharArrayIntegerUtil
     {
     }
 
+    /**
+     * Straight-line parse of exactly two digits. Same error behaviour as {@link #parsePositiveInt(String, int, int)}.
+     */
+    public static int parse2(final String s, final int start)
+    {
+        try
+        {
+            final int d0 = s.charAt(start) - ZERO;
+            final int d1 = s.charAt(start + 1) - ZERO;
+            if ((d0 | d1) < 0 || d0 > 9 || d1 > 9)
+            {
+                return parsePositiveInt(s, start, start + 2);
+            }
+            return d0 * 10 + d1;
+        }
+        catch (StringIndexOutOfBoundsException exc)
+        {
+            return parsePositiveInt(s, start, start + 2);
+        }
+    }
+
+    /**
+     * Straight-line parse of exactly four digits. Same error behaviour as {@link #parsePositiveInt(String, int, int)}.
+     */
+    public static int parse4(final String s, final int start)
+    {
+        try
+        {
+            final int d0 = s.charAt(start) - ZERO;
+            final int d1 = s.charAt(start + 1) - ZERO;
+            final int d2 = s.charAt(start + 2) - ZERO;
+            final int d3 = s.charAt(start + 3) - ZERO;
+            if ((d0 | d1 | d2 | d3) < 0 || d0 > 9 || d1 > 9 || d2 > 9 || d3 > 9)
+            {
+                return parsePositiveInt(s, start, start + 4);
+            }
+            return d0 * 1000 + d1 * 100 + d2 * 10 + d3;
+        }
+        catch (StringIndexOutOfBoundsException exc)
+        {
+            return parsePositiveInt(s, start, start + 4);
+        }
+    }
+
     public static int parsePositiveInt(final String strNum, int startInclusive, int endExclusive)
     {
         int result = 0;

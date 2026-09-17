@@ -614,7 +614,9 @@ public class DateTime implements TemporalAccessor
 
     private void validated()
     {
-        if (field.ordinal() >= Field.DAY.ordinal())
+        // NOTE: Cheap arithmetic fast path. Only when a field is out of range do we defer to java.time,
+        // so that the error messages stay identical to what OffsetDateTime.of(..) would have produced
+        if (field.ordinal() >= Field.DAY.ordinal() && !isValidDate(year, month, day))
         {
             //noinspection ResultOfMethodCallIgnored
             LocalDate.of(year, month, day);
@@ -622,10 +624,33 @@ public class DateTime implements TemporalAccessor
 
         // NOTE: Validated from the most significant field down, and delegated to ChronoField so the messages
         // match what java.time would have produced had the value made it as far as OffsetDateTime.of(..)
-        ChronoField.HOUR_OF_DAY.checkValidValue(hour);
-        ChronoField.MINUTE_OF_HOUR.checkValidValue(minute);
-        ChronoField.SECOND_OF_MINUTE.checkValidValue(second);
-        ChronoField.NANO_OF_SECOND.checkValidValue(nano);
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59 || nano < 0 || nano > 999_999_999)
+        {
+            ChronoField.HOUR_OF_DAY.checkValidValue(hour);
+            ChronoField.MINUTE_OF_HOUR.checkValidValue(minute);
+            ChronoField.SECOND_OF_MINUTE.checkValidValue(second);
+            ChronoField.NANO_OF_SECOND.checkValidValue(nano);
+        }
+    }
+
+    private static boolean isValidDate(final int year, final int month, final int day)
+    {
+        if (month < 1 || month > 12 || day < 1 || year < -999_999_999 || year > 999_999_999)
+        {
+            return false;
+        }
+        switch (month)
+        {
+            case 2:
+                return day <= (((year & 3) == 0 && (year % 100 != 0 || year % 400 == 0)) ? 29 : 28);
+            case 4:
+            case 6:
+            case 9:
+            case 11:
+                return day <= 30;
+            default:
+                return day <= 31;
+        }
     }
 
     public int getParseLength()
