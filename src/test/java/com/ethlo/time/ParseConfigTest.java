@@ -38,6 +38,9 @@ class ParseConfigTest
     void setAllowTrailingJunk()
     {
         assertThat(ParseConfig.DEFAULT.withFailOnTrailingJunk(true).isFailOnTrailingJunk()).isTrue();
+        // NOTE: The false case was previously untested, which is how withFailOnTrailingJunk(..) silently
+        // dropping its argument went unnoticed
+        assertThat(ParseConfig.DEFAULT.withFailOnTrailingJunk(false).isFailOnTrailingJunk()).isFalse();
     }
 
     @Test

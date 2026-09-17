@@ -79,12 +79,21 @@ public class ItuDurationParser
 
         final DurationPartsConsumer handler = new DurationPartsConsumer(index, negative);
         final int length = text.length();
-        while (index < length)
+        try
         {
-            index = readUntilNonDigit(text, index, handler);
-        }
+            while (index < length)
+            {
+                index = readUntilNonDigit(text, index, handler);
+            }
 
-        handler.validate(text, index);
+            handler.validate(text, index);
+        }
+        catch (ArithmeticException exc)
+        {
+            // NOTE: The overflow checks below use Math.addExact/multiplyExact, which signal with an
+            // ArithmeticException. Callers are documented to get a DateTimeParseException, so translate it.
+            error("Duration is too large to be represented", text, Math.min(index, text.length() - 1));
+        }
 
         return handler.getResult();
     }

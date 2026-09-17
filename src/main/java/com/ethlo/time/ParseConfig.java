@@ -36,22 +36,29 @@ public class ParseConfig
 
     private final char[] dateTimeSeparators;
     private final char[] fractionSeparators;
+    private final boolean failOnTrailingJunk;
 
     protected ParseConfig(char[] dateTimeSeparators, char[] allowedFractionSeparators)
     {
-        this.dateTimeSeparators = Optional.ofNullable(dateTimeSeparators).orElse(DEFAULT_DATE_TIME_SEPARATORS);
-        this.fractionSeparators = Optional.ofNullable(allowedFractionSeparators).orElse(RFC_3339_FRACTION_SEPARATOR);
+        this(dateTimeSeparators, allowedFractionSeparators, true);
+    }
+
+    protected ParseConfig(char[] dateTimeSeparators, char[] allowedFractionSeparators, boolean failOnTrailingJunk)
+    {
+        this.dateTimeSeparators = Optional.ofNullable(dateTimeSeparators).orElse(DEFAULT_DATE_TIME_SEPARATORS).clone();
+        this.fractionSeparators = Optional.ofNullable(allowedFractionSeparators).orElse(RFC_3339_FRACTION_SEPARATOR).clone();
+        this.failOnTrailingJunk = failOnTrailingJunk;
     }
 
     public char[] getFractionSeparators()
     {
-        return fractionSeparators;
+        return fractionSeparators.clone();
     }
 
     public ParseConfig withDateTimeSeparators(char... allowed)
     {
         assertChars(allowed);
-        return new ParseConfig(allowed, fractionSeparators);
+        return new ParseConfig(allowed, fractionSeparators, failOnTrailingJunk);
     }
 
     private void assertChars(char[] chars)
@@ -69,22 +76,22 @@ public class ParseConfig
     public ParseConfig withFractionSeparators(char... allowed)
     {
         assertChars(allowed);
-        return new ParseConfig(dateTimeSeparators, allowed);
+        return new ParseConfig(dateTimeSeparators, allowed, failOnTrailingJunk);
     }
 
     public ParseConfig withFailOnTrailingJunk(boolean failOnTrailingJunk)
     {
-        return new ParseConfig(dateTimeSeparators, fractionSeparators);
+        return new ParseConfig(dateTimeSeparators, fractionSeparators, failOnTrailingJunk);
     }
 
     public boolean isFailOnTrailingJunk()
     {
-        return true;
+        return failOnTrailingJunk;
     }
 
     public char[] getDateTimeSeparators()
     {
-        return dateTimeSeparators;
+        return dateTimeSeparators.clone();
     }
 
     public boolean isDateTimeSeparator(char needle)
@@ -117,6 +124,7 @@ public class ParseConfig
         return "ParseConfig{" +
                 "dateTimeSeparators=" + Arrays.toString(dateTimeSeparators) +
                 ", fractionSeparators=" + Arrays.toString(fractionSeparators) +
+                ", failOnTrailingJunk=" + failOnTrailingJunk +
                 '}';
     }
 }

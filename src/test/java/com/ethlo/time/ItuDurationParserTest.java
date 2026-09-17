@@ -106,8 +106,8 @@ class ItuDurationParserTest
     @Test
     void testOverFlowInSubsequentCalculation()
     {
-        final ArithmeticException exc = assertThrows(ArithmeticException.class, () -> ITU.parseDuration("PT60000000000000000H"));
-        assertThat(exc).hasMessage("long overflow");
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ITU.parseDuration("PT60000000000000000H"));
+        assertThat(exc).hasMessageContaining("Duration is too large to be represented");
     }
 
     @Test
@@ -215,8 +215,8 @@ class ItuDurationParserTest
     {
         final String input = "P20D999999999999999999999H";
         assertThatThrownBy(() -> ItuDurationParser.parse(input))
-                .isInstanceOf(ArithmeticException.class)
-                .hasMessageContaining("long overflow");
+                .isInstanceOf(DateTimeParseException.class)
+                .hasMessageContaining("Duration is too large to be represented");
     }
 
     @Test

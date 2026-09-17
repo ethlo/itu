@@ -26,7 +26,6 @@ import static com.ethlo.time.internal.fixed.ITUParser.SEPARATOR_UPPER;
 import static com.ethlo.time.internal.fixed.ITUParser.TIME_SEPARATOR;
 import static com.ethlo.time.internal.util.LeapSecondHandler.LEAP_SECOND_SECONDS;
 
-import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,6 +43,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.ethlo.time.internal.DateTimeFormatException;
+import com.ethlo.time.internal.fixed.ITUFormatter;
 import com.ethlo.time.internal.util.DateTimeMath;
 import com.ethlo.time.internal.util.DefaultLeapSecondHandler;
 import com.ethlo.time.internal.util.LeapSecondHandler;
@@ -378,6 +378,9 @@ public class DateTime implements TemporalAccessor
         {
             throw new DateTimeFormatException(String.format("Requested granularity was %s, but contains only granularity %s", lastIncluded.name(), date.getMostGranularField().name()));
         }
+        ITUFormatter.assertFractionDigits(fractionDigits);
+        ITUFormatter.assertYearRange(date.getYear());
+
         final TimezoneOffset tz = date.getOffset().orElse(null);
         final char[] buffer = new char[35];
 
@@ -447,7 +450,7 @@ public class DateTime implements TemporalAccessor
         if (fractionDigits > 0 && lastIncluded.ordinal() >= Field.NANO.ordinal())
         {
             buffer[19] = '.';
-            LimitedCharArrayIntegerUtil.toString(date.getNano(), buffer, 20, fractionDigits);
+            LimitedCharArrayIntegerUtil.toString(LimitedCharArrayIntegerUtil.scaleNanos(date.getNano(), fractionDigits), buffer, 20, fractionDigits);
         }
         return finish(buffer, 19 + (fractionDigits > 0 ? 1 : 0) + fractionDigits, tz);
     }
@@ -503,15 +506,47 @@ public class DateTime implements TemporalAccessor
         return Objects.hash(field.ordinal(), year, month, day, hour, minute, second, nano, offset, fractionDigits);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * NOTE: Per the {@link TemporalAccessor} contract this returns <code>false</code> for unsupported fields
+     * rather than throwing, so that generic <code>java.time</code> code can safely probe this instance.
+     */
     @Override
-    public boolean isSupported(final TemporalField field)
+    public boolean isSupported(final TemporalField temporalField)
     {
-        if (field == ChronoField.NANO_OF_DAY)
+        if (temporalField == null)
+        {
+            return false;
+        }
+
+        if (!(temporalField instanceof ChronoField))
+        {
+            return temporalField.isSupportedBy(this);
+        }
+
+        if (temporalField.equals(ChronoField.INSTANT_SECONDS))
         {
             return true;
         }
-        final Field f = Field.of(field);
-        return f.ordinal() <= this.field.ordinal();
+
+        if (temporalField.equals(ChronoField.NANO_OF_DAY))
+        {
+            return includesGranularity(Field.MINUTE);
+        }
+
+        if (temporalField.equals(ChronoField.YEAR)
+                || temporalField.equals(ChronoField.MONTH_OF_YEAR)
+                || temporalField.equals(ChronoField.DAY_OF_MONTH)
+                || temporalField.equals(ChronoField.HOUR_OF_DAY)
+                || temporalField.equals(ChronoField.MINUTE_OF_HOUR)
+                || temporalField.equals(ChronoField.SECOND_OF_MINUTE)
+                || temporalField.equals(ChronoField.NANO_OF_SECOND))
+        {
+            return Field.of(temporalField).ordinal() <= this.field.ordinal();
+        }
+
+        return false;
     }
 
     @Override
@@ -585,10 +620,12 @@ public class DateTime implements TemporalAccessor
             LocalDate.of(year, month, day);
         }
 
-        if (second > 59)
-        {
-            throw new DateTimeException(String.format("Invalid value for SecondOfMinute (valid values 0 - 59): %d", second));
-        }
+        // NOTE: Validated from the most significant field down, and delegated to ChronoField so the messages
+        // match what java.time would have produced had the value made it as far as OffsetDateTime.of(..)
+        ChronoField.HOUR_OF_DAY.checkValidValue(hour);
+        ChronoField.MINUTE_OF_HOUR.checkValidValue(minute);
+        ChronoField.SECOND_OF_MINUTE.checkValidValue(second);
+        ChronoField.NANO_OF_SECOND.checkValidValue(nano);
     }
 
     public int getParseLength()

@@ -82,7 +82,7 @@ public class ITUTest
     @Test
     void formatDateTimeWithFullGranularity()
     {
-        assertThat(DateTime.of(2012, 11, 30, 22, 50, 46, 1234567, TimezoneOffset.UTC, 7).toString()).isEqualTo("2012-11-30T22:50:46.1234567Z");
+        assertThat(DateTime.of(2012, 11, 30, 22, 50, 46, 123456789, TimezoneOffset.UTC, 9).toString()).isEqualTo("2012-11-30T22:50:46.123456789Z");
     }
 
     @Test

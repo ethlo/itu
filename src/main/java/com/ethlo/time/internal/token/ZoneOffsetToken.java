@@ -22,8 +22,10 @@ package com.ethlo.time.internal.token;
 
 import static com.ethlo.time.internal.fixed.ITUParser.MINUS;
 import static com.ethlo.time.internal.fixed.ITUParser.PLUS;
+import static com.ethlo.time.internal.fixed.ITUParser.TIME_SEPARATOR;
 import static com.ethlo.time.internal.fixed.ITUParser.ZULU_LOWER;
 import static com.ethlo.time.internal.fixed.ITUParser.ZULU_UPPER;
+import static com.ethlo.time.internal.util.ErrorUtil.assertPositionContains;
 import static com.ethlo.time.internal.util.ErrorUtil.raiseUnexpectedCharacter;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parsePositiveInt;
 
@@ -57,13 +59,15 @@ public class ZoneOffsetToken implements DateTimeToken
         final char sign = text.charAt(idx);
         if (sign != '+' && sign != '-')
         {
-            raiseUnexpectedCharacter(text, idx, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
+            throw raiseUnexpectedCharacter(text, idx, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
         }
 
         if (left < 6)
         {
             throw new DateTimeParseException(String.format("Invalid timezone offset: %s", text), text, idx);
         }
+
+        assertPositionContains(Field.ZONE_OFFSET, text, idx + 3, TIME_SEPARATOR);
 
         int hours = parsePositiveInt(text, idx + 1, idx + 3);
         int minutes = parsePositiveInt(text, idx + 4, idx + 4 + 2);

@@ -20,6 +20,7 @@ package com.ethlo.time;
  * #L%
  */
 
+import java.time.DateTimeException;
 import java.time.ZoneOffset;
 import java.util.Objects;
 
@@ -32,6 +33,8 @@ public class TimezoneOffset
     private static final int SECONDS_PER_HOUR = 3600;
     private static final int SECONDS_PER_MINUTE = 60;
     private static final int MINUTES_PER_HOUR = 60;
+    private static final int MAX_OFFSET_HOURS = 18;
+    private static final int MAX_OFFSET_SECONDS = MAX_OFFSET_HOURS * SECONDS_PER_HOUR;
     private final int hours;
     private final int minutes;
 
@@ -41,25 +44,68 @@ public class TimezoneOffset
         this.minutes = minutes;
     }
 
+    /**
+     * Creates an offset from hours and minutes. The two must carry the same sign, and the resulting offset
+     * must be within the range -18:00 to +18:00, matching the constraints of {@link ZoneOffset}.
+     *
+     * @param hours   The hour part of the offset
+     * @param minutes The minute part of the offset, carrying the same sign as the hour part
+     * @return The offset
+     * @throws DateTimeException if the offset is not in the valid range
+     */
     public static TimezoneOffset ofHoursMinutes(int hours, int minutes)
     {
+        validate(hours, minutes);
         return new TimezoneOffset(hours, minutes);
     }
 
+    private static void validate(final int hours, final int minutes)
+    {
+        // NOTE: The messages below intentionally mirror those of java.time.ZoneOffset
+        if (hours < -MAX_OFFSET_HOURS || hours > MAX_OFFSET_HOURS)
+        {
+            throw new DateTimeException("Zone offset hours not in valid range: value " + hours + " is not in the range -" + MAX_OFFSET_HOURS + " to " + MAX_OFFSET_HOURS);
+        }
+        if (hours > 0 && minutes < 0)
+        {
+            throw new DateTimeException("Zone offset minutes and seconds must be positive because hours is positive");
+        }
+        if (hours < 0 && minutes > 0)
+        {
+            throw new DateTimeException("Zone offset minutes and seconds must be negative because hours is negative");
+        }
+        if (minutes < -59 || minutes > 59)
+        {
+            throw new DateTimeException("Zone offset minutes not in valid range: value " + minutes + " is not in the range -59 to 59");
+        }
+        if (Math.abs(hours * SECONDS_PER_HOUR + minutes * SECONDS_PER_MINUTE) > MAX_OFFSET_SECONDS)
+        {
+            throw new DateTimeException("Zone offset not in valid range: -18:00 to +18:00");
+        }
+    }
+
+    /**
+     * Creates an offset from a total number of seconds. The offset must be a whole number of minutes,
+     * as sub-minute offsets cannot be represented in RFC-3339.
+     *
+     * @param seconds The total number of seconds of the offset
+     * @return The offset
+     * @throws DateTimeException if the offset is not a whole number of minutes, or is out of range
+     */
     public static TimezoneOffset ofTotalSeconds(int seconds)
     {
+        if (seconds % SECONDS_PER_MINUTE != 0)
+        {
+            throw new DateTimeException("Zone offset must be a whole number of minutes to be representable: " + seconds + " seconds");
+        }
         final int absHours = seconds / SECONDS_PER_HOUR;
-        int absMinutes = (seconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR;
+        final int absMinutes = (seconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR;
         return ofHoursMinutes(absHours, absMinutes);
     }
 
     public static TimezoneOffset of(ZoneOffset offset)
     {
-        final int seconds = offset.getTotalSeconds();
-        final int hours = seconds / 3600;
-        final int remainder = seconds % 3600;
-        final int minutes = remainder / 60;
-        return TimezoneOffset.ofHoursMinutes(hours, minutes);
+        return ofTotalSeconds(offset.getTotalSeconds());
     }
 
     public int getHours()
@@ -113,6 +159,17 @@ public class TimezoneOffset
         return "TimezoneOffset{" + "hours=" + hours + ", minutes=" + minutes + '}';
     }
 
+    /**
+     * The number of characters this offset occupies in its textual form.
+     * <p>
+     * NOTE: The identity comparison against {@link #UTC} is deliberate. The parser hands back this exact
+     * constant only for the single-character <code>Z</code>/<code>z</code> form, while an explicit
+     * <code>+00:00</code> yields an equal-but-distinct instance that occupies six characters. Using
+     * {@link #equals(Object)} here would under-report the consumed length for <code>+00:00</code> and
+     * corrupt {@link DateTime#getParseLength()}.
+     *
+     * @return 1 for the <code>Z</code> form, otherwise 6
+     */
     public int getRequiredLength()
     {
         return this == UTC ? 1 : 6;

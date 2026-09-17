@@ -128,13 +128,15 @@ public class ITUParser implements DateTimeParser
         final char sign = chars.charAt(idx);
         if (sign != PLUS && sign != MINUS)
         {
-            raiseUnexpectedCharacter(chars, idx, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
+            throw raiseUnexpectedCharacter(chars, idx, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
         }
 
         if (left < 6)
         {
             throw new DateTimeParseException(String.format("Invalid timezone offset: %s", chars), chars, idx);
         }
+
+        assertPositionContains(Field.ZONE_OFFSET, chars, idx + 3, TIME_SEPARATOR);
 
         int hours = parsePositiveInt(chars, idx + 1, idx + 3);
         int minutes = parsePositiveInt(chars, idx + 4, idx + 4 + 2);
@@ -273,7 +275,7 @@ public class ITUParser implements DateTimeParser
             }
             else if (c == ZULU_UPPER || c == ZULU_LOWER)
             {
-                final TimezoneOffset timezoneOffset = TimezoneOffset.UTC;
+                final TimezoneOffset timezoneOffset = parseTimezone(offset, parseConfig, chars, offset + 19);
                 return handleSecondResolution(offset, year, month, day, hour, minute, chars, timezoneOffset);
             }
             else if (c == PLUS || c == MINUS)
@@ -317,12 +319,16 @@ public class ITUParser implements DateTimeParser
             else
             {
                 fractionDigits++;
-                nanos = nanos * RADIX + (c - ZERO);
+                if (fractionDigits <= MAX_FRACTION_DIGITS)
+                {
+                    // Beyond the maximum the value is rejected below, so avoid overflowing the accumulator
+                    nanos = nanos * RADIX + (c - ZERO);
+                }
                 idx++;
             }
         }
 
-        assertFractionDigits(chars, fractionDigits, offset + (idx - 1));
+        assertFractionDigits(chars, fractionDigits, idx - 1);
 
         // Scale to nanoseconds
         int pos = fractionDigits;

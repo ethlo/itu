@@ -39,7 +39,8 @@ import com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil;
 
 public class ITUFormatter
 {
-    private static final int[] widths = new int[]{100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
+    public static final int MIN_YEAR = 0;
+    public static final int MAX_YEAR = 9999;
 
     public static String finish(final char[] buf, final int length, final TimezoneOffset tz)
     {
@@ -85,10 +86,7 @@ public class ITUFormatter
 
     private static String doFormat(OffsetDateTime date, ZoneOffset adjustTo, Field lastIncluded, int fractionDigits)
     {
-        if (fractionDigits > MAX_FRACTION_DIGITS)
-        {
-            throw new DateTimeFormatException("Maximum supported number of fraction digits in second is 9, got " + fractionDigits);
-        }
+        assertFractionDigits(fractionDigits);
 
         OffsetDateTime adjusted = date;
         if (!date.getOffset().equals(adjustTo))
@@ -98,6 +96,8 @@ public class ITUFormatter
         final TimezoneOffset tz = TimezoneOffset.of(adjustTo);
 
         final char[] buffer = new char[26 + fractionDigits];
+
+        assertYearRange(adjusted.getYear());
 
         if (handleDatePart(lastIncluded, buffer, adjusted.getYear(), 0, 4, Field.YEAR))
         {
@@ -148,7 +148,28 @@ public class ITUFormatter
 
     private static void addFractions(char[] buf, int fractionDigits, int nano)
     {
-        final double d = widths[fractionDigits - 1];
-        LimitedCharArrayIntegerUtil.toString((int) (nano / d), buf, 20, fractionDigits);
+        LimitedCharArrayIntegerUtil.toString(LimitedCharArrayIntegerUtil.scaleNanos(nano, fractionDigits), buf, 20, fractionDigits);
+    }
+
+    /**
+     * RFC-3339 has a fixed four-digit year, so anything outside 0000-9999 cannot be represented.
+     *
+     * @param year The year to check
+     * @throws DateTimeFormatException if the year cannot be represented
+     */
+    public static void assertYearRange(final int year)
+    {
+        if (year < MIN_YEAR || year > MAX_YEAR)
+        {
+            throw new DateTimeFormatException("The year must be in the range " + MIN_YEAR + " to " + MAX_YEAR + " to be representable, got " + year);
+        }
+    }
+
+    public static void assertFractionDigits(final int fractionDigits)
+    {
+        if (fractionDigits < 0 || fractionDigits > MAX_FRACTION_DIGITS)
+        {
+            throw new DateTimeFormatException("Maximum supported number of fraction digits in second is 9, got " + fractionDigits);
+        }
     }
 }

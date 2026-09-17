@@ -21,7 +21,7 @@ package com.ethlo.time;
  */
 
 import java.time.Instant;
-import java.util.Comparator;
+
 import java.util.Objects;
 
 import com.ethlo.time.internal.util.DurationFormatter;
@@ -96,14 +96,8 @@ public class Duration implements Comparable<Duration>
      */
     public static Duration ofNanos(long nanos)
     {
-        long seconds = nanos / NANOS_PER_SECOND;
-        final int remainderNanos = (int) (nanos % NANOS_PER_SECOND);
-        int nano = remainderNanos;
-        if (seconds < 0 || nano < 0)
-        {
-            seconds -= 1;
-            nano = NANOS_PER_SECOND + remainderNanos;
-        }
+        final long seconds = Math.floorDiv(nanos, (long) NANOS_PER_SECOND);
+        final int nano = (int) Math.floorMod(nanos, (long) NANOS_PER_SECOND);
         return new Duration(seconds, nano);
     }
 
@@ -315,9 +309,8 @@ public class Duration implements Comparable<Duration>
     @Override
     public int compareTo(final Duration o)
     {
-        return Comparator.comparingLong(Duration::getSeconds)
-                .thenComparingInt(Duration::getNanos)
-                .compare(this, o);
+        final int result = Long.compare(this.seconds, o.seconds);
+        return result != 0 ? result : Integer.compare(this.nanos, o.nanos);
     }
 
     public Duration plusHours(final long hours)
@@ -338,8 +331,10 @@ public class Duration implements Comparable<Duration>
     public Duration plusNanos(long nanos)
     {
         final long nanosTotal = Math.addExact(this.nanos, nanos);
-        final int nanosRemainder = Math.toIntExact(nanosTotal % NANOS_PER_SECOND);
-        final long extraSecs = nanosTotal / NANOS_PER_SECOND;
+        // NOTE: Floor semantics, so that a negative argument borrows from the seconds rather than
+        // producing a negative nano part that the constructor rejects
+        final long extraSecs = Math.floorDiv(nanosTotal, (long) NANOS_PER_SECOND);
+        final int nanosRemainder = (int) Math.floorMod(nanosTotal, (long) NANOS_PER_SECOND);
         return new Duration(Math.addExact(seconds, extraSecs), nanosRemainder);
     }
 }

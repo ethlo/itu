@@ -20,6 +20,8 @@ package com.ethlo.time.internal.token;
  * #L%
  */
 
+import static com.ethlo.time.internal.fixed.ITUParser.MAX_FRACTION_DIGITS;
+import static com.ethlo.time.internal.util.ErrorUtil.assertFractionDigits;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.DIGIT_9;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
 
@@ -33,7 +35,8 @@ public class FractionsToken implements DateTimeToken
     @Override
     public int read(final String text, final ParsePosition parsePosition)
     {
-        int idx = parsePosition.getIndex();
+        final int startIndex = parsePosition.getIndex();
+        int idx = startIndex;
         final int length = text.length();
         int value = 0;
         while (idx < length)
@@ -45,10 +48,19 @@ public class FractionsToken implements DateTimeToken
             }
             else
             {
-                value = value * 10 + (c - ZERO);
+                if (idx - startIndex < MAX_FRACTION_DIGITS)
+                {
+                    // Beyond the maximum the value is rejected below, so avoid overflowing the accumulator
+                    value = value * 10 + (c - ZERO);
+                }
                 idx++;
             }
         }
+
+        // NOTE: The fixed-format parser has always enforced this. Without it here the accumulator silently
+        // overflowed and the resulting nano value exceeded a second.
+        assertFractionDigits(text, idx - startIndex, Math.max(startIndex, idx - 1));
+
         parsePosition.setIndex(idx);
         return value;
     }

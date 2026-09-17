@@ -20,12 +20,17 @@ package com.ethlo.time;
  * #L%
  */
 
+import java.text.ParsePosition;
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.Year;
+import java.time.YearMonth;
+
 import com.ethlo.time.internal.ItuDurationParser;
 import com.ethlo.time.internal.fixed.ITUFormatter;
 import com.ethlo.time.internal.fixed.ITUParser;
-
-import java.text.ParsePosition;
-import java.time.*;
 
 /**
  * The main access to the parse and formatting functions in this library.
@@ -340,37 +345,38 @@ public class ITU
         try
         {
             return ITU.parse(text, new TemporalHandler<Boolean>()
-            {
-                @Override
-                public Boolean handle(final LocalDate localDate)
-                {
-                    return isAllowed(TemporalType.LOCAL_DATE, types);
-                }
+                    {
+                        @Override
+                        public Boolean handle(final LocalDate localDate)
+                        {
+                            return isAllowed(TemporalType.LOCAL_DATE, types);
+                        }
 
-                @Override
-                public Boolean handle(final OffsetDateTime offsetDateTime)
-                {
-                    return isAllowed(TemporalType.OFFSET_DATE_TIME, types);
-                }
+                        @Override
+                        public Boolean handle(final OffsetDateTime offsetDateTime)
+                        {
+                            return isAllowed(TemporalType.OFFSET_DATE_TIME, types);
+                        }
 
-                @Override
-                public Boolean handle(final LocalDateTime localDateTime)
-                {
-                    return isAllowed(TemporalType.LOCAL_DATE_TIME, types);
-                }
+                        @Override
+                        public Boolean handle(final LocalDateTime localDateTime)
+                        {
+                            return isAllowed(TemporalType.LOCAL_DATE_TIME, types);
+                        }
 
-                @Override
-                public Boolean handle(final YearMonth yearMonth)
-                {
-                    return isAllowed(TemporalType.YEAR_MONTH, types);
-                }
+                        @Override
+                        public Boolean handle(final YearMonth yearMonth)
+                        {
+                            return isAllowed(TemporalType.YEAR_MONTH, types);
+                        }
 
-                @Override
-                public Boolean handle(final Year year)
-                {
-                    return isAllowed(TemporalType.YEAR, types);
-                }
-            });
+                        @Override
+                        public Boolean handle(final Year year)
+                        {
+                            return isAllowed(TemporalType.YEAR, types);
+                        }
+                    }
+            );
         }
         catch (DateTimeException exc)
         {

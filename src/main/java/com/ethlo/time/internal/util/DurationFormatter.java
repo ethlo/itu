@@ -26,6 +26,7 @@ import com.ethlo.time.Duration;
 
 public class DurationFormatter
 {
+    private static final int NANO_DIGITS = 9;
     private static final long SECONDS_IN_MINUTE = 60;
     private static final long SECONDS_IN_HOUR = 3600;
     private static final long SECONDS_IN_DAY = 86400;
@@ -48,7 +49,7 @@ public class DurationFormatter
         if (negative)
         {
             s.append('-');
-            seconds = nanos > 0 ? (seconds * -1) - 1 : seconds * -1;
+            seconds = nanos > 0 ? Math.negateExact(seconds) - 1 : Math.negateExact(seconds);
         }
 
         s.append('P');
@@ -97,23 +98,44 @@ public class DurationFormatter
 
             if (nanos > 0)
             {
-                // Efficiently append fractional part without trailing zeros
-                String fractionalPart = String.format("%09d", negative ? NANOS_IN_SECOND - nanos : nanos);
-                int endIndex = fractionalPart.length();
-                while (endIndex > 0 && fractionalPart.charAt(endIndex - 1) == '0')
-                {
-                    endIndex--;
-                }
-
-                if (endIndex > 0)
-                {
-                    s.append(".").append(fractionalPart, 0, endIndex);
-                }
+                appendFraction(s, negative ? NANOS_IN_SECOND - nanos : nanos);
             }
 
             s.append("S");
         }
 
         return s.toString();
+    }
+
+    /**
+     * Appends the nanosecond value as a fractional part, without trailing zeros.
+     * <p>
+     * NOTE: Written out by hand rather than via <code>String.format("%09d", ..)</code>, which formats using
+     * the default locale. Under a locale with a non-Latin default numbering system that produced digits this
+     * library's own parser cannot read back.
+     *
+     * @param s    The builder to append to
+     * @param nano The nanosecond value, 1 - 999,999,999
+     */
+    private static void appendFraction(final StringBuilder s, final int nano)
+    {
+        final char[] digits = new char[NANO_DIGITS];
+        int value = nano;
+        for (int i = NANO_DIGITS - 1; i >= 0; i--)
+        {
+            digits[i] = (char) ('0' + (value % 10));
+            value /= 10;
+        }
+
+        int endIndex = NANO_DIGITS;
+        while (endIndex > 0 && digits[endIndex - 1] == '0')
+        {
+            endIndex--;
+        }
+
+        if (endIndex > 0)
+        {
+            s.append('.').append(digits, 0, endIndex);
+        }
     }
 }

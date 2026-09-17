@@ -20,25 +20,29 @@ package com.ethlo.time.internal.util;
  * #L%
  */
 
-import java.util.Arrays;
+import com.ethlo.time.internal.DateTimeFormatException;
 
 public final class LimitedCharArrayIntegerUtil
 {
     public static final char DIGIT_9 = '9';
     public static final char ZERO = '0';
+    /**
+     * The widest field this class is asked to render (nanosecond fractions)
+     */
+    public static final int MAX_WIDTH = 9;
     private static final char[] DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     private static final int TABLE_WIDTH = 4;
     private static final int RADIX = 10;
-    private static final int MAX_INT_WIDTH = 10;
-    private static final int TABLE_SIZE = (int) Math.pow(RADIX, TABLE_WIDTH);
-    private static final char[] INT_CONVERSION_CACHE = new char[(TABLE_SIZE * TABLE_WIDTH) + MAX_INT_WIDTH];
+    private static final int TABLE_SIZE = 10_000;
+    private static final int[] POW10 = {1, 10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000, 1_000_000_000};
+    private static final char[] INT_CONVERSION_CACHE = new char[TABLE_SIZE * TABLE_WIDTH];
 
     static
     {
         int offset = 0;
         for (int i = 0; i < TABLE_SIZE; i++)
         {
-            createBufferEntry(INT_CONVERSION_CACHE, offset, TABLE_WIDTH, i);
+            writeDigits(INT_CONVERSION_CACHE, offset, TABLE_WIDTH, i);
             offset += TABLE_WIDTH;
         }
     }
@@ -70,64 +74,59 @@ public final class LimitedCharArrayIntegerUtil
         return result;
     }
 
+    /**
+     * Writes <code>value</code> into <code>buf</code> as exactly <code>charLength</code> zero-padded digits.
+     * <p>
+     * The value must fit in the requested number of characters. Silently truncating here was the cause of
+     * malformed output for out-of-range years and for fractional seconds, so it is now rejected outright.
+     *
+     * @param value      The non-negative value to write
+     * @param buf        The buffer to write into
+     * @param offset     The offset in the buffer to start writing at
+     * @param charLength The exact number of characters to write
+     * @throws DateTimeFormatException if the value cannot be represented in the given number of characters
+     */
     public static void toString(final int value, final char[] buf, final int offset, final int charLength)
     {
-        if (value < TABLE_SIZE)
+        if (charLength < 1 || charLength > MAX_WIDTH || value < 0 || value >= POW10[charLength])
         {
-            final int length = Math.min(TABLE_WIDTH, charLength);
-            final int padPrefixLen = charLength - length;
-            final int start = charLength > TABLE_WIDTH ? TABLE_WIDTH : TABLE_WIDTH - charLength;
-            final int targetOffset = offset + padPrefixLen;
-            final int srcPos = (value * TABLE_WIDTH) + (charLength < TABLE_WIDTH ? start : 0);
-            copy(INT_CONVERSION_CACHE, srcPos, buf, targetOffset, length);
-            if (padPrefixLen > 0)
-            {
-                zeroFill(buf, offset, padPrefixLen);
-            }
+            throw new DateTimeFormatException("Value " + value + " cannot be represented in " + charLength + " character(s)");
         }
-        else
+
+        if (charLength <= TABLE_WIDTH)
         {
-            createBufferEntry(buf, offset, charLength, value);
+            // value < 10^charLength <= 10^4, so it is always within the cached range
+            final int srcPos = (value * TABLE_WIDTH) + (TABLE_WIDTH - charLength);
+            System.arraycopy(INT_CONVERSION_CACHE, srcPos, buf, offset, charLength);
+            return;
+        }
+
+        writeDigits(buf, offset, charLength, value);
+    }
+
+    /**
+     * Writes the value right-aligned and zero-padded into <code>[offset, offset + charLength)</code>, touching
+     * no other part of the buffer. The caller has already verified that the value fits.
+     */
+    private static void writeDigits(final char[] buf, final int offset, final int charLength, int value)
+    {
+        int pos = offset + charLength - 1;
+        while (pos >= offset)
+        {
+            buf[pos--] = DIGITS[value % RADIX];
+            value /= RADIX;
         }
     }
 
-    private static void createBufferEntry(char[] buf, int offset, int charLength, int value)
+    /**
+     * Scales a nanosecond value down to the given number of fraction digits, truncating the remainder.
+     *
+     * @param nano           The nanosecond value, 0 - 999,999,999
+     * @param fractionDigits The number of fraction digits to keep, 1 - 9
+     * @return The scaled value, which is guaranteed to fit in <code>fractionDigits</code> digits
+     */
+    public static int scaleNanos(final int nano, final int fractionDigits)
     {
-        int charPos = offset + MAX_INT_WIDTH;
-        value = -value;
-        int div;
-        int rem;
-        while (value <= -10)
-        {
-            div = value / 10;
-            rem = -(value - 10 * div);
-            buf[charPos--] = DIGITS[rem];
-            value = div;
-        }
-        buf[charPos] = DIGITS[-value];
-
-        int l = ((MAX_INT_WIDTH + offset) - charPos) + 1;
-        while (l < charLength)
-        {
-            buf[--charPos] = ZERO;
-            l++;
-        }
-        final int srcPos = charPos;
-        copy(buf, srcPos, offset, charLength);
-    }
-
-    private static void zeroFill(char[] buf, int offset, int padPrefixLen)
-    {
-        Arrays.fill(buf, offset, offset + padPrefixLen, ZERO);
-    }
-
-    private static void copy(char[] buf, int srcPos, int offset, int length)
-    {
-        copy(buf, srcPos, buf, offset, length);
-    }
-
-    private static void copy(char[] buf, int srcPos, char[] target, int offset, int length)
-    {
-        System.arraycopy(buf, srcPos, target, offset, length);
+        return nano / POW10[MAX_WIDTH - fractionDigits];
     }
 }
