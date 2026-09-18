@@ -27,7 +27,7 @@ import static com.ethlo.time.internal.fixed.ITUParser.ZULU_LOWER;
 import static com.ethlo.time.internal.fixed.ITUParser.ZULU_UPPER;
 import static com.ethlo.time.internal.util.ErrorUtil.assertPositionContains;
 import static com.ethlo.time.internal.util.ErrorUtil.raiseUnexpectedCharacter;
-import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parsePositiveInt;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parse2;
 
 import java.text.ParsePosition;
 import java.time.format.DateTimeParseException;
@@ -69,8 +69,8 @@ public class ZoneOffsetToken implements DateTimeToken
 
         assertPositionContains(Field.ZONE_OFFSET, text, idx + 3, TIME_SEPARATOR);
 
-        int hours = parsePositiveInt(text, idx + 1, idx + 3);
-        int minutes = parsePositiveInt(text, idx + 4, idx + 4 + 2);
+        int hours = parse2(text, idx + 1);
+        int minutes = parse2(text, idx + 4);
         if (sign == '-')
         {
             hours = -hours;
