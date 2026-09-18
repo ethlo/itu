@@ -270,6 +270,26 @@ The parsed duration will be represented using:
 The nanosecond component is always positive, with the sign absorbed by the seconds field,  
 following Java and ISO 8601 conventions.
 
+### Normalized Output
+
+`Duration.normalized()` renders using the largest units possible, so a duration of 3,000,000 seconds and
+117,392,763 nanoseconds becomes `P4W6DT17H20M0.117392763S`. Negative durations carry a single leading `-P`,
+as ISO 8601 specifies, rather than signing each component.
+
+`normalized(DurationUnit)` caps the largest unit emitted; anything above the cap stays folded into it:
+
+| Cap | Output |
+|-----|--------|
+| `DurationUnit.WEEKS` (default) | `P4W6DT17H20M0.117392763S` |
+| `DurationUnit.DAYS` | `P34DT17H20M0.117392763S` |
+| `DurationUnit.HOURS` | `PT833H20M0.117392763S` |
+| `DurationUnit.MINUTES` | `PT50000M0.117392763S` |
+| `DurationUnit.SECONDS` | `PT3000000.117392763S` |
+
+Note that `java.time.Duration.parse` does not accept the week designator, so it cannot read back the default
+rendering once a duration reaches a full week. Days and every smaller unit are accepted, including the
+leading `-P` form, so a cap of `DurationUnit.DAYS` or lower keeps the output readable by the Java Time API.
+
 ### Examples
 
 #### Valid Input
