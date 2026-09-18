@@ -33,7 +33,11 @@ import com.ethlo.time.DateTime;
 import com.ethlo.time.DateTimeParser;
 import com.ethlo.time.Field;
 import com.ethlo.time.TimezoneOffset;
+import com.ethlo.time.internal.token.DigitsToken;
 import com.ethlo.time.internal.token.FractionsToken;
+import com.ethlo.time.internal.token.SeparatorToken;
+import com.ethlo.time.internal.token.SeparatorsToken;
+import com.ethlo.time.internal.token.ZoneOffsetToken;
 
 /**
  * A configurable format `DateTimeParser`.
@@ -44,8 +48,19 @@ public class ConfigurableDateTimeParser implements DateTimeParser
     // called once per parse
     private static final Field[] FIELDS = Field.values();
 
+    // Token kinds resolved at construction time. The built-in tokens are invoked through their concrete classes so
+    // the JIT can inline them, instead of going through an interface call that has too many receiver types to
+    // ever be inlined. Anything else falls back to the interface.
+    private static final byte KIND_OTHER = 0;
+    private static final byte KIND_DIGITS = 1;
+    private static final byte KIND_SEPARATOR = 2;
+    private static final byte KIND_SEPARATORS = 3;
+    private static final byte KIND_FRACTIONS = 4;
+    private static final byte KIND_ZONE_OFFSET = 5;
+
     private final DateTimeToken[] tokens;
-    private final boolean[] isFractionToken;
+    private final byte[] kinds;
+    private final int[] ordinals;
 
     private ConfigurableDateTimeParser(DateTimeToken... tokens)
     {
@@ -58,11 +73,41 @@ public class ConfigurableDateTimeParser implements DateTimeParser
         });
         // Snapshot the caller-owned array so the cached classification below cannot diverge from it
         this.tokens = tokens.clone();
-        this.isFractionToken = new boolean[this.tokens.length];
+        this.kinds = new byte[this.tokens.length];
+        this.ordinals = new int[this.tokens.length];
         for (int i = 0; i < this.tokens.length; i++)
         {
-            this.isFractionToken[i] = this.tokens[i] instanceof FractionsToken;
+            this.kinds[i] = kindOf(this.tokens[i]);
+            final Field field = this.tokens[i].getField();
+            this.ordinals[i] = field != null ? field.ordinal() : -1;
         }
+    }
+
+    private static byte kindOf(final DateTimeToken token)
+    {
+        // Exact class matches only, so a subclass overriding read() is never bypassed
+        final Class<?> type = token.getClass();
+        if (type == DigitsToken.class)
+        {
+            return KIND_DIGITS;
+        }
+        if (type == SeparatorToken.class)
+        {
+            return KIND_SEPARATOR;
+        }
+        if (type == SeparatorsToken.class)
+        {
+            return KIND_SEPARATORS;
+        }
+        if (type == FractionsToken.class)
+        {
+            return KIND_FRACTIONS;
+        }
+        if (type == ZoneOffsetToken.class)
+        {
+            return KIND_ZONE_OFFSET;
+        }
+        return KIND_OTHER;
     }
 
     /**
@@ -97,24 +142,61 @@ public class ConfigurableDateTimeParser implements DateTimeParser
         int highestOrdinal = YEAR.ordinal();
         final int[] values = new int[]{0, 1, 1, 0, 0, 0, 0, -1};
 
+        // The position is tracked in a local and only synced with the ParsePosition for tokens that need it, so
+        // the fixed-width built-ins do not pay for a memory round-trip per token
+        int pos = parsePosition.getIndex();
         for (int i = 0; i < tokens.length; i++)
         {
             final DateTimeToken token = tokens[i];
-            final int index = parsePosition.getIndex();
-            final int value = token.read(text, parsePosition);
-            final Field field = token.getField();
-            if (field != null)
+            final byte kind = kinds[i];
+            final int index = pos;
+            final int value;
+            switch (kind)
             {
-                final int ordinal = field.ordinal();
+                case KIND_DIGITS:
+                    final DigitsToken digits = (DigitsToken) token;
+                    value = digits.read(text, pos);
+                    pos += digits.getLength();
+                    break;
+                case KIND_SEPARATOR:
+                    ((SeparatorToken) token).read(text, pos);
+                    pos++;
+                    value = 1;
+                    break;
+                case KIND_SEPARATORS:
+                    ((SeparatorsToken) token).read(text, pos);
+                    pos++;
+                    value = 1;
+                    break;
+                case KIND_FRACTIONS:
+                    parsePosition.setIndex(pos);
+                    value = ((FractionsToken) token).read(text, parsePosition);
+                    pos = parsePosition.getIndex();
+                    break;
+                case KIND_ZONE_OFFSET:
+                    parsePosition.setIndex(pos);
+                    value = ((ZoneOffsetToken) token).read(text, parsePosition);
+                    pos = parsePosition.getIndex();
+                    break;
+                default:
+                    parsePosition.setIndex(pos);
+                    value = token.read(text, parsePosition);
+                    pos = parsePosition.getIndex();
+            }
+
+            final int ordinal = ordinals[i];
+            if (ordinal != -1)
+            {
                 values[ordinal] = value;
                 highestOrdinal = Math.max(ordinal, highestOrdinal);
-                if (isFractionToken[i])
+                if (kind == KIND_FRACTIONS)
                 {
-                    fractionsLength = parsePosition.getIndex() - index;
+                    fractionsLength = pos - index;
                     values[ordinal] = scale(value, fractionsLength);
                 }
             }
         }
+        parsePosition.setIndex(pos);
 
         return new DateTime(FIELDS[Math.min(highestOrdinal, NANO.ordinal())], values[Field.YEAR.ordinal()], values[Field.MONTH.ordinal()], values[Field.DAY.ordinal()], values[Field.HOUR.ordinal()], values[Field.MINUTE.ordinal()], values[Field.SECOND.ordinal()], values[Field.NANO.ordinal()], values[Field.ZONE_OFFSET.ordinal()] != -1 ? TimezoneOffset.ofTotalSeconds(values[Field.ZONE_OFFSET.ordinal()]) : null, fractionsLength);
     }

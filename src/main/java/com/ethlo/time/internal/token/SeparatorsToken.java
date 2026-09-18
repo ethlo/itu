@@ -40,6 +40,16 @@ public class SeparatorsToken implements DateTimeToken
     public int read(final String text, final ParsePosition parsePosition)
     {
         final int index = parsePosition.getIndex();
+        read(text, index);
+        parsePosition.setIndex(index + 1);
+        return 1;
+    }
+
+    /**
+     * Asserts that one of the separators is at the given index. The token always consumes exactly one character.
+     */
+    public void read(final String text, final int index)
+    {
         if (text.length() <= index)
         {
             ErrorUtil.raiseUnexpectedEndOfText(text, text.length());
@@ -50,8 +60,7 @@ public class SeparatorsToken implements DateTimeToken
         {
             if (c == sep)
             {
-                parsePosition.setIndex(index + 1);
-                return 1;
+                return;
             }
         }
         throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", Arrays.toString(separators), index + 1, text.charAt(index), text), text, index);

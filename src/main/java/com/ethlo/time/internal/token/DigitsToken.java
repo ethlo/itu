@@ -41,10 +41,32 @@ public class DigitsToken implements DateTimeToken
     public int read(String text, ParsePosition parsePosition)
     {
         final int offset = parsePosition.getIndex();
-        final int end = offset + length;
-        final int value = LimitedCharArrayIntegerUtil.parsePositiveInt(text, offset, end);
-        parsePosition.setIndex(end);
+        final int value = read(text, offset);
+        parsePosition.setIndex(offset + length);
         return value;
+    }
+
+    /**
+     * Reads the digits at the given index. The token always consumes exactly {@link #getLength()} characters,
+     * so the caller can advance the position without a round-trip through a {@link ParsePosition}.
+     */
+    public int read(final String text, final int offset)
+    {
+        switch (length)
+        {
+            // The common widths (year and every two-digit field) take the unrolled paths used by the fixed-format parser
+            case 2:
+                return LimitedCharArrayIntegerUtil.parse2(text, offset);
+            case 4:
+                return LimitedCharArrayIntegerUtil.parse4(text, offset);
+            default:
+                return LimitedCharArrayIntegerUtil.parsePositiveInt(text, offset, offset + length);
+        }
+    }
+
+    public int getLength()
+    {
+        return length;
     }
 
     public Field getField()

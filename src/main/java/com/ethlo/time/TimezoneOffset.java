@@ -94,6 +94,10 @@ public class TimezoneOffset
      */
     public static TimezoneOffset ofTotalSeconds(int seconds)
     {
+        if (seconds == 0)
+        {
+            return UTC;
+        }
         if (seconds % SECONDS_PER_MINUTE != 0)
         {
             throw new DateTimeException("Zone offset must be a whole number of minutes to be representable: " + seconds + " seconds");
