@@ -1,0 +1,62 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - 'v*.*.*'
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: 'Existing tag to release, e.g. v1.15.0'
+                required: true
+
+permissions:
+    contents: read
+
+concurrency:
+    group: release
+    cancel-in-progress: false
+
+jobs:
+    publish:
+        name: Publish to Maven Central
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v4
+                with:
+                    ref: ${{ github.event.inputs.tag || github.ref }}
+
+            -   name: Resolve version from tag
+                run: |
+                    TAG="${{ github.event.inputs.tag || github.ref_name }}"
+                    VERSION="${TAG#v}"
+                    if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]]; then
+                        echo "::error::Cannot derive a release version from tag '$TAG'"
+                        exit 1
+                    fi
+                    echo "RELEASE_VERSION=$VERSION" >> "$GITHUB_ENV"
+                    echo "Releasing $VERSION (tag $TAG)"
+
+                # JDK 21: the proguard profile is active on [9,22), which produces the
+                # -small jar published alongside every release since 1.10.x.
+            -   name: Setup JDK
+                uses: actions/setup-java@v4
+                with:
+                    distribution: temurin
+                    java-version: 21
+                    cache: maven
+                    server-id: central
+                    server-username: MAVEN_USERNAME
+                    server-password: MAVEN_PASSWORD
+                    gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+                    gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+            -   name: Set release version
+                run: mvn -ntp -B versions:set -DnewVersion=${{ env.RELEASE_VERSION }} -DgenerateBackupPoms=false
+
+            -   name: Build, sign and publish
+                env:
+                    MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+                    MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+                    MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+                run: mvn -ntp -B -Dgpg.skip=false clean deploy
