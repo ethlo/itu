@@ -182,13 +182,31 @@ public class Duration implements Comparable<Duration>
     }
 
     /**
-     * Returns a normalized string representation of this duration.
+     * Returns a normalized string representation of this duration, using the largest units possible.
      *
      * @return The normalized duration string.
      */
     public String normalized()
     {
         return DurationFormatter.normalizeDuration(this);
+    }
+
+    /**
+     * Returns a normalized string representation of this duration, emitting no unit larger than the one
+     * given. Anything above the cap stays folded into it, so the same duration renders as
+     * <code>P4W6DT17H20M0.117392763S</code> with {@link DurationUnit#WEEKS} and as
+     * <code>PT833H20M0.117392763S</code> with {@link DurationUnit#HOURS}.
+     * <p>
+     * NOTE: A cap of {@link DurationUnit#DAYS} or smaller keeps the output readable by
+     * <code>java.time.Duration.parse</code>, which rejects the week designator emitted by default.
+     *
+     * @param maxUnit The largest unit to emit.
+     * @return The normalized duration string.
+     * @throws NullPointerException if maxUnit is null.
+     */
+    public String normalized(final DurationUnit maxUnit)
+    {
+        return DurationFormatter.normalizeDuration(this, maxUnit);
     }
 
     /**
