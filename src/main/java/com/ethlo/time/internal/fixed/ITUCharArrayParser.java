@@ -325,7 +325,7 @@ public final class ITUCharArrayParser
 
     /**
      * @return The value of the three digits at {@code idx}, or -1 if any of them is not a digit. The caller guarantees
-     * {@code idx + 3 <= end}. See {@code LimitedCharArrayIntegerUtil.parse2In} for the {@code c ^ '0'} digit test
+     * {@code idx + 3 <= end}. See {@code LimitedCharArrayIntegerUtil.parse2} for the {@code c ^ '0'} digit test
      */
     private static int digits3(final char[] chars, final int idx)
     {
