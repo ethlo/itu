@@ -111,7 +111,9 @@ gate for individual changes; elapsed time confirms the accumulated result at the
 - Things learned this way that a source-level reading would not show: C2 only removes the per-character
   bounds checks when no other `if` sits between the `chars[offset + k]` loads (range-check smearing); it does
   not emit unsigned compares for `x + MIN_VALUE` or `Integer.compareUnsigned`; a reference store into the
-  buffer costs a GC barrier. See the S4 findings in `doc/perf-log.md`.
+  buffer costs a GC barrier; a local that only an inlined callee's slow path needs is still materialised when
+  that path is an uncommon trap, so pass `(base, constant)` positions, never a precomputed `offset + k`.
+  See the S4 and S6 findings in `doc/perf-log.md`.
 
 ### Error reporting
 
