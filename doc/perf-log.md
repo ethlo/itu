@@ -107,7 +107,8 @@ H3 from S2 is answered: PrintInlining shows the whole parser as one C2 compilati
 |------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
 | S4.0 | 2026-09-20 | —   | BASELINE buffer path @ `e431b8f`                                          | 562 / 106 | 465 / 99 | 325 / 70 | 20.3 / 17.5 / 12.0 | — | `e431b8f` |
 | S4.1 | 2026-09-20 | H6  | `length >= 19` fast path: prefix parsed without per-field window checks or the `length ==` chain; short inputs keep the old code | 535 / 96 | 451 / 90 | 289 / 59 | 19.7 / 16.2 / 10.8 | KEPT | `5620e0d` |
-| S4.2 | 2026-09-20 | H7  | Digit test in the fast-path helpers: `(c ^ '0') <= 9` — one signed compare per digit, no subtract, no negative test | 504 / 91 | 404 / 85 | 273 / 55 | 19.9 / 15.5 / 10.0 | KEPT | |
+| S4.2 | 2026-09-20 | H7  | Digit test in the fast-path helpers: `(c ^ '0') <= 9` — one signed compare per digit, no subtract, no negative test | 504 / 91 | 404 / 85 | 273 / 55 | 19.9 / 15.5 / 10.0 | KEPT | `20910dc` |
+| S4.3 | 2026-09-20 | H8  | `ParseConfig`: check the first configured separator before looping over the array (`'T'` / `'.'` for DEFAULT) | 486 / 89 | 394 / 82 | 264 / 55 | 19.7 / 15.1 / 9.1 | KEPT | |
 
 H6: for a full date-time the ten "is the window long enough" checks and four `length ==` branches are dead weight;
 removing them is −14 branches and their index arithmetic. Errors for short inputs are unchanged because they take the
@@ -119,6 +120,10 @@ H7: `(d0 | d1) >= 0 && d0 <= 9 && d1 <= 9` is 3 branches per pair. Neither `x + 
 `Integer.compareUnsigned(x, 9) <= 0` made C2 emit an unsigned compare (both: `lea 0x7fffffd0(..)`, `cmp $0x80000009`,
 signed jump — same instruction count, fewer branches). `c ^ '0'` is the digit value and ≥ 10 for any non-digit char, so
 one signed compare does the whole test and the subtract goes away: −1 instruction and −½ branch per digit.
+
+H8: `isDateTimeSeparator` / `isFractionSeparator` loop over a `char[]` field (array load, length load, loop control)
+to accept what is almost always `'T'` / `'.'`. Comparing against the first configured separator first is one load and
+one compare on the common path; the loop still runs for the alternatives, so behaviour is unchanged.
 
 ## Dead ends — do not retry without a new reason
 

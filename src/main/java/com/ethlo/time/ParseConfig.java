@@ -37,6 +37,12 @@ public class ParseConfig
     private final char[] dateTimeSeparators;
     private final char[] fractionSeparators;
     private final boolean failOnTrailingJunk;
+    /**
+     * The first allowed separator of each kind, or -1 if there is none. Checked before the array is consulted: for the
+     * default configuration that is 'T' and '.', so RFC-3339 input never pays for the loop over the alternatives
+     */
+    private final int primaryDateTimeSeparator;
+    private final int primaryFractionSeparator;
 
     protected ParseConfig(char[] dateTimeSeparators, char[] allowedFractionSeparators)
     {
@@ -48,6 +54,8 @@ public class ParseConfig
         this.dateTimeSeparators = Optional.ofNullable(dateTimeSeparators).orElse(DEFAULT_DATE_TIME_SEPARATORS).clone();
         this.fractionSeparators = Optional.ofNullable(allowedFractionSeparators).orElse(RFC_3339_FRACTION_SEPARATOR).clone();
         this.failOnTrailingJunk = failOnTrailingJunk;
+        this.primaryDateTimeSeparator = this.dateTimeSeparators.length > 0 ? this.dateTimeSeparators[0] : -1;
+        this.primaryFractionSeparator = this.fractionSeparators.length > 0 ? this.fractionSeparators[0] : -1;
     }
 
     public char[] getFractionSeparators()
@@ -96,19 +104,17 @@ public class ParseConfig
 
     public boolean isDateTimeSeparator(char needle)
     {
-        for (char c : dateTimeSeparators)
-        {
-            if (c == needle)
-            {
-                return true;
-            }
-        }
-        return false;
+        return needle == primaryDateTimeSeparator || contains(dateTimeSeparators, needle);
     }
 
     public boolean isFractionSeparator(char needle)
     {
-        for (char c : fractionSeparators)
+        return needle == primaryFractionSeparator || contains(fractionSeparators, needle);
+    }
+
+    private static boolean contains(final char[] haystack, final char needle)
+    {
+        for (char c : haystack)
         {
             if (c == needle)
             {
