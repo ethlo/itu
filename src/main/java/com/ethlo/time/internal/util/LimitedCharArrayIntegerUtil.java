@@ -166,34 +166,42 @@ public final class LimitedCharArrayIntegerUtil
     }
 
     /**
-     * {@link #parse2(char[], int, int, int)} when the caller has already established that {@code start + 2 <= windowEnd},
-     * so the fast path is the digit test alone. The slow path is the same, for the same message.
+     * {@link #parse2(char[], int, int, int)} when the caller has already established that the two characters at
+     * {@code base + rel} are inside the window, so the fast path is the digit test alone. The slow path is the same,
+     * for the same message.
+     * <p>
+     * The position is taken as {@code base + rel} rather than as one {@code start} argument on purpose: the slow path
+     * is an uncommon trap once C2 has inlined this, and every local the interpreter would need there has to be
+     * materialised in a register or stack slot before the branch. A {@code start = offset + 5} local is one such value
+     * per call; {@code base} is the caller's window start, already live, and {@code rel} a constant that costs nothing
+     * (perf-log S6.6).
      */
-    public static int parse2In(final char[] s, final int start, final int windowStart, final int windowEnd)
+    public static int parse2In(final char[] s, final int base, final int rel, final int windowStart, final int windowEnd)
     {
-        final int d0 = s[start] ^ ZERO;
-        final int d1 = s[start + 1] ^ ZERO;
+        final int d0 = s[base + rel] ^ ZERO;
+        final int d1 = s[base + rel + 1] ^ ZERO;
         if (d0 <= 9 && d1 <= 9)
         {
             return d0 * 10 + d1;
         }
-        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart), start - windowStart, start - windowStart + 2);
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart), base + rel - windowStart, base + rel - windowStart + 2);
     }
 
     /**
-     * {@link #parse4(char[], int, int, int)} when the caller has already established that {@code start + 4 <= windowEnd}.
+     * {@link #parse4(char[], int, int, int)} when the caller has already established that the four characters at
+     * {@code base + rel} are inside the window. See {@link #parse2In} for why the position is two arguments.
      */
-    public static int parse4In(final char[] s, final int start, final int windowStart, final int windowEnd)
+    public static int parse4In(final char[] s, final int base, final int rel, final int windowStart, final int windowEnd)
     {
-        final int d0 = s[start] ^ ZERO;
-        final int d1 = s[start + 1] ^ ZERO;
-        final int d2 = s[start + 2] ^ ZERO;
-        final int d3 = s[start + 3] ^ ZERO;
+        final int d0 = s[base + rel] ^ ZERO;
+        final int d1 = s[base + rel + 1] ^ ZERO;
+        final int d2 = s[base + rel + 2] ^ ZERO;
+        final int d3 = s[base + rel + 3] ^ ZERO;
         if (d0 <= 9 && d1 <= 9 && d2 <= 9 && d3 <= 9)
         {
             return d0 * 1000 + d1 * 100 + d2 * 10 + d3;
         }
-        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart), start - windowStart, start - windowStart + 4);
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart), base + rel - windowStart, base + rel - windowStart + 4);
     }
 
     public static int parsePositiveInt(final String strNum, int startInclusive, int endExclusive)

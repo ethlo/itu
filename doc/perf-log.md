@@ -244,6 +244,9 @@ sign-extended copy of `offset` for addressing, and bounds checks that fold again
 | S6.1 | 2026-09-20 | H18 | DIAGNOSTIC, not a candidate: `offset` replaced by the constant 0 inside the parser — the cost of a variable window start | 354 / 76 | 241 / 56 | 194 / 45 | 13.2 / 8.7 / 6.4 | (−95 / −63 / −48 instr) | — |
 | S6.2 | 2026-09-20 | H18 | DIAGNOSTIC: S6.0 code with `-XX:-UseCompressedOops` (frees `r12` as a 14th GPR), input A only | 423 / 83 | — | — | 16.3 (one run: 18.4) | (−27 instr) | — |
 | S6.3 | 2026-09-20 | H19 | `ParseConfig.isDateTimeSeparator` / `isFractionSeparator`: `needle == primary \|\| set test`, the first configured separator compared before the 128-bit set. String path: 421 / 78 · 305 / 57 · 271 / 51 (14.9 / 11.4 / 10.0 ns); strict `parse`: 702 / 110 · 521 / 84 · 465 / 72 → 685 / 103 · 500 / 76 · 451 / 70 | 395 / 73 | 269 / 52 | 238 / 47 | 15.6 / 9.5 / 8.7 | KEPT | |
+| S6.4 | 2026-09-20 | H20 | Year/month/day and hour/minute packed into two ints (7 bits per field) after the prefix, unpacked in `finish`: fewer values live across the fraction | 410 / 73 | 284 / 52 | 246 / 47 | 15.8 / 10.1 / 8.7 | REGRESSION | — |
+| S6.5 | 2026-09-20 | H21 | Fraction block guards as `length >= 23 / 26 / 29` instead of `idx + 3 <= end`, so `end` is not live in the blocks | 404 / 73 | 273 / 52 | 239 / 47 | 15.3 / 9.8 / 8.9 | NO-GAIN | — |
+| S6.6 | 2026-09-20 | H22 | Positions passed as `(base, constant)` pairs, never as a precomputed `offset + k`: `parse2In`/`parse4In`/`assertCharAt`/`assertNoMoreChars` take `base, rel`; the fraction blocks index `offset + 20/23/26` directly and derive `idx` afterwards | 363 / 73 | 261 / 52 | 224 / 47 | 13.1 / 9.0 / 8.1 | KEPT | |
 
 H18 (diagnostics): the S5 lead is not A-specific in cause, only in size. With `offset` a compile-time constant the
 buffer path is 95 / 63 / 48 instructions and 6.5 / 3.2 / 2.0 ns cheaper on A / B / C and ends up *ahead* of the String
@@ -260,6 +263,22 @@ of the method. A plain compare against the first configured separator in front o
 S4.5 had replaced — makes the common case a single `cmp/jcc`, and the smearing then folds every remaining check into
 the prefix's: the A listing goes from 8 bounds checks to 0, hot-path instructions 338 → 302, xmm↔gpr share 32% → 16%.
 The String path uses the same `ParseConfig` and gains the same way (A −40, B −39), as does strict `parse`.
+
+H20 (regression), H21 (no gain): both tried to give registers back by shortening live ranges at source level, and
+C2 undid both. The packed fields are computed where they are used — global code motion schedules a pure expression
+late, next to its consumer in `finish` — so the five inputs stay live exactly as before and the pack/unpack is pure
+cost (+8–15 instructions). `length >= 23` in place of `idx + 3 <= end` only moved the arithmetic around. The same
+lesson as S4.10: what is live is decided by the graph, not by where a local is declared.
+
+H22: the S6.3 listing still had ~12 `mov 0x28(%rsp),%r10d; add $0x1d,%r10d; vmovd %r10d,%xmm3` sequences — `offset`
+reloaded from its stack slot, a constant added, the sum parked in an xmm register — and none of those sums fed a
+load (the loads already carry the constant in their displacement, `movzwl 0x4c(%r10,%rcx,2)`). They are the
+`start` / `index` / `lastUsed` / `idx` locals of the inlined helpers: each helper's slow path is an uncommon trap once
+inlined, and every local the interpreter would need there must be materialised before the branch, because debug
+info can name a register, a stack slot or a constant but cannot recompute `offset + 5`. Passing `(base, 5)` makes the
+interpreter-visible locals `base` (already live) and a constant. Buffer path A −32 / B −8 / C −14 instructions, and A
+is now within 9 of the constant-offset diagnostic (S6.1). The String path is unaffected in the benchmark (its
+`offset` is the constant 0 there, so those sums were constants already) and keeps its shape.
 
 ## Dead ends — do not retry without a new reason
 
