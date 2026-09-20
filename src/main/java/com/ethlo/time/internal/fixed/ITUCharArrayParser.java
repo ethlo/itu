@@ -35,7 +35,9 @@ import static com.ethlo.time.internal.util.ErrorUtil.raiseUnexpectedCharacter;
 import static com.ethlo.time.internal.util.ErrorUtil.raiseUnexpectedEndOfText;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parse2;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parse2In;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parse4;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parse4In;
 
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
@@ -62,6 +64,10 @@ import com.ethlo.time.internal.util.DateTimeValidator;
 public final class ITUCharArrayParser
 {
     private static final int[] NANO_SCALE = {1_000_000_000, 100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
+    /**
+     * The length of {@code YYYY-MM-DDTHH:MM:SS}: at or beyond it, every field position of the prefix is inside the window
+     */
+    private static final int FIXED_PREFIX_LENGTH = 19;
     private static final int ZULU_LENGTH = 1;
     private static final int OFFSET_LENGTH = 6;
     private static final int MAX_OFFSET_HOURS = 18;
@@ -75,6 +81,43 @@ public final class ITUCharArrayParser
     {
         sanityCheckInputParams(chars, offset, length, out);
         final int end = offset + length;
+        if (length < FIXED_PREFIX_LENGTH)
+        {
+            return parseShort(chars, offset, end, parseConfig, out);
+        }
+
+        // NOTE: The whole fixed-width prefix YYYY-MM-DDTHH:MM:SS is present, so nothing below needs to ask whether the
+        // window is long enough: only the characters themselves can be wrong. Every error raised here is raised by the
+        // same helper the short path uses, so the messages and indices are identical (the differential tests hold this)
+        final int year = parse4In(chars, offset, offset, end);
+        assertCharAt(chars, offset, end, offset + 4, DATE_SEPARATOR);
+        final int month = parse2In(chars, offset + 5, offset, end);
+        assertCharAt(chars, offset, end, offset + 7, DATE_SEPARATOR);
+        final int day = parse2In(chars, offset + 8, offset, end);
+        assertAllowedDateTimeSeparator(chars, offset, end, parseConfig);
+        final int hour = parse2In(chars, offset + 11, offset, end);
+        assertCharAt(chars, offset, end, offset + 13, TIME_SEPARATOR);
+        final int minute = parse2In(chars, offset + 14, offset, end);
+        if (chars[offset + 16] != TIME_SEPARATOR)
+        {
+            // Minute resolution with a timezone, or an error: handleTime raises the same exception as always
+            return handleTime(chars, offset, end, parseConfig, out, year, month, day, hour, minute);
+        }
+        if (length == FIXED_PREFIX_LENGTH)
+        {
+            final int second = parse2In(chars, offset + 17, offset, end);
+            return finish(out, Field.SECOND, year, month, day, hour, minute, second, 0, 0, NO_OFFSET, length);
+        }
+        return handleTimeResolution(chars, offset, end, parseConfig, out, year, month, day, hour, minute);
+    }
+
+    /**
+     * Inputs shorter than the fixed-width prefix: date-only granularities, minute resolution, and every truncation
+     * error. Checks the window length before each field, exactly as the String path does.
+     */
+    private static int parseShort(final char[] chars, final int offset, final int end, final ParseConfig parseConfig, final MutableDateTimeBuffer out)
+    {
+        final int length = end - offset;
 
         // YEAR
         final int year = parse4(chars, offset, offset, end);
@@ -350,6 +393,19 @@ public final class ITUCharArrayParser
             final String text = text(chars, offset, end);
             final String allowedCharStr = config.getDateTimeSeparators().length > 1 ? Arrays.toString(config.getDateTimeSeparators()) : Character.toString(config.getDateTimeSeparators()[0]);
             throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", allowedCharStr, 11, needle, text), text, 10);
+        }
+    }
+
+    /**
+     * {@link #assertPositionContains} for an index the caller knows is inside the window
+     */
+    private static void assertCharAt(final char[] chars, final int offset, final int end, final int index, final char expected)
+    {
+        if (chars[index] != expected)
+        {
+            final String text = text(chars, offset, end);
+            final int relative = index - offset;
+            throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", expected, relative + 1, chars[index], text), text, relative);
         }
     }
 

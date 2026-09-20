@@ -89,6 +89,29 @@ rise (char[] + buffer); that is accepted if the time is flat, since the gate app
   per access, ≈35 accesses). If someone wants the unification badly enough, that is the next row (H5), with the same
   gate: String path flat, buffer path 0 B/op.
 
+## Session S4 — 2026-09-20 · i9-13900H (20 threads) · JDK 25.0.4 (OpenJDK, Ubuntu 26.04) · governor: powersave
+
+**Method for this session.** Time on this machine is ±3% (normal) / ±2% (thorough), which is the size of the
+effects being chased, so the rows below are gated on **P-core instructions and branches per op** from
+`-prof perfnorm` (`-f 1 -wi 3 -w 1s -i 3 -r 1s`, ±1–2% run-to-run from JIT decisions, no time noise), with ns/op
+from the same quick run for orientation only. The cumulative result is confirmed with `--thorough` at the end of the
+session. Inputs are the buffer path (`candidates.itu_buffer`) only: `ITU.parseLenient(char[], off, len, buffer)`.
+
+How the counts were obtained: `perf record` attached to the forked JMH JVM plus `-XX:CompileCommand=print` and
+`objdump` on the raw nmethod bytes (no hsdis installed) — see `scratchpad/perfprof.sh` in the session; the S4.0 hot
+path for input B was 455 instructions: 97 branches, 72 xmm↔gpr moves + 31 stack spills (register pressure: `chars` was
+kept in `xmm11`, the parsed fields in `xmm0–xmm5`), 26 char loads, 25 bounds checks, 65 `lea` (index arithmetic).
+H3 from S2 is answered: PrintInlining shows the whole parser as one C2 compilation unit already.
+
+| id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
+|------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
+| S4.0 | 2026-09-20 | —   | BASELINE buffer path @ `e431b8f`                                          | 562 / 106 | 465 / 99 | 325 / 70 | 20.3 / 17.5 / 12.0 | — | `e431b8f` |
+| S4.1 | 2026-09-20 | H6  | `length >= 19` fast path: prefix parsed without per-field window checks or the `length ==` chain; short inputs keep the old code | 535 / 96 | 451 / 90 | 289 / 59 | 19.7 / 16.2 / 10.8 | KEPT | |
+
+H6: for a full date-time the ten "is the window long enough" checks and four `length ==` branches are dead weight;
+removing them is −14 branches and their index arithmetic. Errors for short inputs are unchanged because they take the
+old path; errors for bad characters in long inputs are raised by the same helpers.
+
 ## Dead ends — do not retry without a new reason
 
 - (S2.1) Expecting a large win from "zero allocation" alone on this parser: the objects were cheap TLAB bumps. Zero
