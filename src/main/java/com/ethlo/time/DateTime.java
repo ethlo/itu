@@ -494,7 +494,10 @@ public class DateTime implements TemporalAccessor
             return temporalField.isSupportedBy(this);
         }
 
-        if (temporalField.equals(ChronoField.INSTANT_SECONDS))
+        // INSTANT_SECONDS is always available (missing fields are the start of their range), and Instant.from(..)
+        // reads NANO_OF_SECOND right after it, so the two must be supported together or generic java.time code
+        // cannot obtain an Instant from anything parsed without a fraction
+        if (temporalField.equals(ChronoField.INSTANT_SECONDS) || temporalField.equals(ChronoField.NANO_OF_SECOND))
         {
             return true;
         }
@@ -509,8 +512,7 @@ public class DateTime implements TemporalAccessor
                 || temporalField.equals(ChronoField.DAY_OF_MONTH)
                 || temporalField.equals(ChronoField.HOUR_OF_DAY)
                 || temporalField.equals(ChronoField.MINUTE_OF_HOUR)
-                || temporalField.equals(ChronoField.SECOND_OF_MINUTE)
-                || temporalField.equals(ChronoField.NANO_OF_SECOND))
+                || temporalField.equals(ChronoField.SECOND_OF_MINUTE))
         {
             return Field.of(temporalField).ordinal() <= this.field.ordinal();
         }
