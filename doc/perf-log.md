@@ -200,6 +200,18 @@ control), `--thorough` timing for the cumulative result at the end.
 | S5.4 | 2026-09-20 | H14 | String seconds and zone-offset fields via `parse2In` / `assertCharAt` where the bound is already known (S4.9 transferred) | 466 / 86 | 343 / 65 | 269 / 53 | 17.2 / 13.5 / 10.8 | KEPT | |
 | S5.5 | 2026-09-20 | H7  | Checked `parse2`/`parse4` (String and char[]; used by `parseShort` and the token path): xor digit test. Gate: `candidates.itu_configurable` A / B, baseline 1693 / 310 · 1652 / 324 (65.7 / 62.9 ns) → 1668 / 301 · 1625 / 317 (two runs; a first run read B as 1350, JIT variance) | — | — | — | 71.2 / 63.7 | KEPT | |
 | S5.6 | 2026-09-20 | H16 | Both parsers, 9-digit fraction: `millis * 1_000_000 + micros * 1_000 + nanosPart` (independent products) instead of the serial `nanos * 1000 + …` chain. Instructions unchanged by construction (466 / 85 · buffer 453 / 83); judged on `--thorough` A: String 17.63 ±1.22 → 17.45 ±1.40, buffer 19.39 ±0.24 → 19.63 ±0.48 | 466 / 85 | 344 / 66 | 273 / 53 | 17.5 / 14.4 / 10.4 | NO-GAIN | — |
+| S5.7 | 2026-09-20 | H17 | `ITU.isValid(String)`: a boolean walk (`ITUValidator`) instead of parse-and-catch. Gate: `candidates.itu_isvalid`, valid A / B / C and invalid (trailing junk / month 13 / truncated / not a date): 709 / 519 / 455 instr, 28.6 / 20.5 / 18.0 ns · 14157 / 13661 / 13239 / — instr, 860 / 871 / 809 / — ns → 292 / 216 / 151 instr, 11.3 / 9.2 / 6.4 ns · 150 / 132 / 31 / 31 instr, 6.3 / 5.6 / 1.2 / 1.2 ns | — | — | — | — | KEPT | |
+
+H16 (no gain): the S4 findings blamed A's flat time on the serial `nanos * 1000 + …` chain. Making the three
+products independent changed nothing measurable, on either path, so the latency is elsewhere. The `--thorough`
+pair also showed the buffer path *slower* than the String path on A (19.4 vs 17.6 ns) while ahead on B and C, with
+fewer instructions (453 vs 466): the buffer path has an A-specific stall that a `hotpath.sh` listing should find.
+
+H17: a validator is called on invalid input by design, and parse-and-catch pays a formatted message plus a stack
+trace for each one: 13–14k instructions and 800+ ns, 130× the valid case. A straight-line boolean walk with the same
+acceptance (held to `parseDateTime` by the corpus, a directed edge-case list and a differential fuzz target) makes
+an invalid answer cost 1–6 ns and a valid one 6–11 ns; the valid case also drops the `OffsetDateTime` construction
+that `parseDateTime` needs and `isValid` never did.
 
 ## Dead ends — do not retry without a new reason
 

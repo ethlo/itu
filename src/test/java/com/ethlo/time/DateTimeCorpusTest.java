@@ -98,6 +98,11 @@ public class DateTimeCorpusTest
         {
             assertThat(ITU.isValid(c.getInput())).isEqualTo(c.getError() == null);
         }
+        if (position == null)
+        {
+            // isValid is the strict parse as a boolean; a lenient entry is still an input it must judge the same way
+            IsValidDifferential.assertSameAsParseDateTime(c.getInput());
+        }
     }
 
     @ParameterizedTest(name = "[{index}] {0}")

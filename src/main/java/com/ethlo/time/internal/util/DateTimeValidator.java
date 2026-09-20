@@ -98,7 +98,7 @@ public final class DateTimeValidator
         }
     }
 
-    private static boolean isValidDate(final int year, final int month, final int day)
+    public static boolean isValidDate(final int year, final int month, final int day)
     {
         if (month < 1 || month > 12 || day < 1 || year < -999_999_999 || year > 999_999_999)
         {

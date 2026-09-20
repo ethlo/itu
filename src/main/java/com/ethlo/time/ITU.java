@@ -32,6 +32,7 @@ import com.ethlo.time.internal.ItuDurationParser;
 import com.ethlo.time.internal.fixed.ITUCharArrayParser;
 import com.ethlo.time.internal.fixed.ITUFormatter;
 import com.ethlo.time.internal.fixed.ITUParser;
+import com.ethlo.time.internal.fixed.ITUValidator;
 
 /**
  * The main access to the parse and formatting functions in this library.
@@ -199,15 +200,7 @@ public class ITU
      */
     public static boolean isValid(String text)
     {
-        try
-        {
-            parseDateTime(text);
-            return true;
-        }
-        catch (DateTimeException exc)
-        {
-            return false;
-        }
+        return ITUValidator.isValid(text);
     }
 
     /**
