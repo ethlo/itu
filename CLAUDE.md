@@ -32,7 +32,7 @@ The `license-maven-plugin` rewrites Apache license headers into `src/main/java` 
 ## Architecture
 
 `ITU` (`src/main/java/com/ethlo/time/ITU.java`) is the static facade over everything and the only entry point
-most users see. It delegates to three engines:
+most users see. It delegates to five engines:
 
 - **`internal/fixed/ITUParser`** — the fast path. A hand-rolled, index-arithmetic parser over the known
   RFC-3339 character layout (`parseDateTime`, `parseLenient`). No regex, no `DateTimeFormatter`, no
