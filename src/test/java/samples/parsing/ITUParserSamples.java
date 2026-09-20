@@ -45,6 +45,7 @@ import com.ethlo.time.DateTime;
 import com.ethlo.time.DateTimeParser;
 import com.ethlo.time.DateTimeParsers;
 import com.ethlo.time.ITU;
+import com.ethlo.time.MutableDateTimeBuffer;
 import com.ethlo.time.ParseConfig;
 import com.ethlo.time.TemporalHandler;
 
@@ -106,6 +107,23 @@ class ITUParserSamples
         final OffsetDateTime result = ITU.parseDateTime("some-data,1999-11-22T11:22:19+05:30,some-other-data", pos);
         assertThat(result.toString()).isEqualTo("1999-11-22T11:22:19+05:30");
         assertThat(pos.getIndex()).isEqualTo(35);
+    }
+
+    /*
+     When the text is already available as characters, parse into a reusable buffer: nothing is allocated, and the
+     fields are read straight off the buffer. This is the fastest way to parse. The window `[offset, offset + length)`
+     is the text, so trailing junk inside it is rejected and anything outside it is never read.
+     */
+    @Test
+    void parseIntoBuffer()
+    {
+        final char[] chars = "2012-12-27T19:07:22.123456789-03:00".toCharArray();
+        final MutableDateTimeBuffer buffer = new MutableDateTimeBuffer();
+        final int consumed = ITU.parseLenient(chars, 0, chars.length, buffer);
+        assertThat(consumed).isEqualTo(35);
+        assertThat(buffer.getYear()).isEqualTo(2012);
+        assertThat(buffer.getNano()).isEqualTo(123456789);
+        assertThat(buffer.getOffsetTotalSeconds()).isEqualTo(-3 * 3600);
     }
 
     /*

@@ -29,6 +29,7 @@ import java.time.Year;
 import java.time.YearMonth;
 
 import com.ethlo.time.internal.ItuDurationParser;
+import com.ethlo.time.internal.fixed.ITUCharArrayParser;
 import com.ethlo.time.internal.fixed.ITUFormatter;
 import com.ethlo.time.internal.fixed.ITUParser;
 
@@ -151,6 +152,43 @@ public class ITU
     public static DateTime parseLenient(String text, ParseConfig parseConfig, ParsePosition position)
     {
         return ITUParser.parseLenient(text, parseConfig, position);
+    }
+
+    /**
+     * Parses leniently, like {@link #parseLenient(String)}, from the window {@code [offset, offset + length)} of a
+     * char array into a reusable {@link MutableDateTimeBuffer}. Nothing is allocated on success, which makes this
+     * the fastest way to parse when the text is already available as characters.
+     * <p>
+     * The result, or the exception with its message and error index, is exactly what
+     * {@code parseLenient(new String(chars, offset, length))} would give: error indices are relative to the window,
+     * and the trailing-junk check applies to the window regardless of {@code offset}. Nothing outside the window is read.
+     * On failure the buffer is left untouched.
+     *
+     * @param chars  The characters to parse from
+     * @param offset The index of the first character of the date-time
+     * @param length The number of characters to consider
+     * @param buffer The buffer to write the parsed fields into
+     * @return The number of characters consumed
+     */
+    public static int parseLenient(final char[] chars, final int offset, final int length, final MutableDateTimeBuffer buffer)
+    {
+        return ITUCharArrayParser.parseLenient(chars, offset, length, ParseConfig.DEFAULT, buffer);
+    }
+
+    /**
+     * As {@link #parseLenient(char[], int, int, MutableDateTimeBuffer)}, with {@link ParseConfig} to control
+     * some aspects of the parsing.
+     *
+     * @param chars       The characters to parse from
+     * @param offset      The index of the first character of the date-time
+     * @param length      The number of characters to consider
+     * @param parseConfig The configuration to use for parsing
+     * @param buffer      The buffer to write the parsed fields into
+     * @return The number of characters consumed
+     */
+    public static int parseLenient(final char[] chars, final int offset, final int length, final ParseConfig parseConfig, final MutableDateTimeBuffer buffer)
+    {
+        return ITUCharArrayParser.parseLenient(chars, offset, length, parseConfig, buffer);
     }
 
     /**

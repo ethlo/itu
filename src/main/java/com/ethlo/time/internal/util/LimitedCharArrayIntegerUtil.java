@@ -91,6 +91,44 @@ public final class LimitedCharArrayIntegerUtil
         return parsePositiveInt(s, start, start + 4);
     }
 
+    /**
+     * {@link #parse2(String, int)} over a window of a {@code char[]}. The window bounds the fast path; the slow
+     * path re-parses the window as a String so the error message and index are identical to the String path,
+     * with the index relative to {@code windowStart}.
+     */
+    public static int parse2(final char[] s, final int start, final int windowStart, final int windowEnd)
+    {
+        if (start + 2 <= windowEnd)
+        {
+            final int d0 = s[start] - ZERO;
+            final int d1 = s[start + 1] - ZERO;
+            if ((d0 | d1) >= 0 && d0 <= 9 && d1 <= 9)
+            {
+                return d0 * 10 + d1;
+            }
+        }
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart), start - windowStart, start - windowStart + 2);
+    }
+
+    /**
+     * {@link #parse4(String, int)} over a window of a {@code char[]}, see {@link #parse2(char[], int, int, int)}.
+     */
+    public static int parse4(final char[] s, final int start, final int windowStart, final int windowEnd)
+    {
+        if (start + 4 <= windowEnd)
+        {
+            final int d0 = s[start] - ZERO;
+            final int d1 = s[start + 1] - ZERO;
+            final int d2 = s[start + 2] - ZERO;
+            final int d3 = s[start + 3] - ZERO;
+            if ((d0 | d1 | d2 | d3) >= 0 && d0 <= 9 && d1 <= 9 && d2 <= 9 && d3 <= 9)
+            {
+                return d0 * 1000 + d1 * 100 + d2 * 10 + d3;
+            }
+        }
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart), start - windowStart, start - windowStart + 4);
+    }
+
     public static int parsePositiveInt(final String strNum, int startInclusive, int endExclusive)
     {
         int result = 0;

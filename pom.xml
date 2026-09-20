@@ -326,6 +326,7 @@ limitations under the License.
                                 <option>-keep public class com.ethlo.time.ParseConfig { *; }</option>
                                 <option>-keep public class com.ethlo.time.ITU { *; }</option>
                                 <option>-keep public class com.ethlo.time.DateTime { *; }</option>
+                                <option>-keep public class com.ethlo.time.MutableDateTimeBuffer { *; }</option>
                                 <option>-keep public class com.ethlo.time.Field { *; }</option>
                                 <option>-keep public class com.ethlo.time.TemporalType { *; }</option>
                                 <option>-keep public class com.ethlo.time.TemporalConsumer { *; }</option>
