@@ -195,6 +195,7 @@ control), `--thorough` timing for the cumulative result at the end.
 |------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
 | S5.0 | 2026-09-20 | —   | BASELINE String path @ `f83dfcd` (buffer path same run: 447 / 82 · 302 / 61 · 243 / 48; 19.7 / 11.7 / 8.9 ns) | 617 / 123 | 521 / 117 | 342 / 69 | 24.3 / 21.4 / 13.1 | — | `f83dfcd` |
 | S5.1 | 2026-09-20 | H6  | String path: `availableLength >= 19` fast path with `parse4In`/`parse2In(String)` and `assertCharAt`; short inputs keep the old code (S4.1 transferred) | 593 / 107 | 446 / 119 | 309 / 60 | 24.8 / 18.7 / 12.2 | KEPT | |
+| S5.2 | 2026-09-20 | H7  | String `parse2In`/`parse4In`: `(c ^ '0') <= 9` digit test (S4.2 transferred) | 544 / 107 | 441 / 100 | 278 / 55 | 23.1 / 18.4 / 11.1 | KEPT | |
 
 ## Dead ends — do not retry without a new reason
 

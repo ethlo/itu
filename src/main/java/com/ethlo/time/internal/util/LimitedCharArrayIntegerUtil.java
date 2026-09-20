@@ -94,12 +94,13 @@ public final class LimitedCharArrayIntegerUtil
     /**
      * {@link #parse2(String, int)} when the caller has already established that {@code start + 2 <= s.length()},
      * so the fast path is the digit test alone. The slow path is the same, for the same message.
+     * See {@link #parse2In(char[], int, int, int)} for the {@code c ^ '0'} digit test.
      */
     public static int parse2In(final String s, final int start)
     {
-        final int d0 = s.charAt(start) - ZERO;
-        final int d1 = s.charAt(start + 1) - ZERO;
-        if ((d0 | d1) >= 0 && d0 <= 9 && d1 <= 9)
+        final int d0 = s.charAt(start) ^ ZERO;
+        final int d1 = s.charAt(start + 1) ^ ZERO;
+        if (d0 <= 9 && d1 <= 9)
         {
             return d0 * 10 + d1;
         }
@@ -111,11 +112,11 @@ public final class LimitedCharArrayIntegerUtil
      */
     public static int parse4In(final String s, final int start)
     {
-        final int d0 = s.charAt(start) - ZERO;
-        final int d1 = s.charAt(start + 1) - ZERO;
-        final int d2 = s.charAt(start + 2) - ZERO;
-        final int d3 = s.charAt(start + 3) - ZERO;
-        if ((d0 | d1 | d2 | d3) >= 0 && d0 <= 9 && d1 <= 9 && d2 <= 9 && d3 <= 9)
+        final int d0 = s.charAt(start) ^ ZERO;
+        final int d1 = s.charAt(start + 1) ^ ZERO;
+        final int d2 = s.charAt(start + 2) ^ ZERO;
+        final int d3 = s.charAt(start + 3) ^ ZERO;
+        if (d0 <= 9 && d1 <= 9 && d2 <= 9 && d3 <= 9)
         {
             return d0 * 1000 + d1 * 100 + d2 * 10 + d3;
         }
