@@ -42,7 +42,17 @@ public final class MutableDateTimeBuffer
      */
     public static final int NO_OFFSET = Integer.MIN_VALUE;
 
-    private Field field;
+    /**
+     * {@link Field#values()}, indexed by {@link #fieldOrdinal}
+     */
+    private static final Field[] FIELDS = Field.values();
+    private static final int NO_FIELD = -1;
+
+    /**
+     * The ordinal of the most granular field, or {@link #NO_FIELD}. Kept as an int rather than a {@link Field} so that a
+     * parse stores only primitives: a reference store costs a GC write barrier on every call (perf-log S4.7)
+     */
+    private int fieldOrdinal = NO_FIELD;
     private int year;
     private int month;
     private int day;
@@ -71,7 +81,7 @@ public final class MutableDateTimeBuffer
      */
     public void set(final Field field, final int year, final int month, final int day, final int hour, final int minute, final int second, final int nano, final int fractionDigits, final int offsetTotalSeconds, final int parseLength)
     {
-        this.field = field;
+        this.fieldOrdinal = field.ordinal();
         this.year = year;
         this.month = month;
         this.day = day;
@@ -91,7 +101,7 @@ public final class MutableDateTimeBuffer
      */
     public Field getMostGranularField()
     {
-        return field;
+        return fieldOrdinal == NO_FIELD ? null : FIELDS[fieldOrdinal];
     }
 
     /**
@@ -102,7 +112,7 @@ public final class MutableDateTimeBuffer
      */
     public boolean includesGranularity(final Field field)
     {
-        return this.field != null && field.ordinal() <= this.field.ordinal();
+        return fieldOrdinal != NO_FIELD && field.ordinal() <= fieldOrdinal;
     }
 
     public int getYear()
@@ -187,7 +197,7 @@ public final class MutableDateTimeBuffer
      */
     public DateTime toDateTime()
     {
-        return new DateTime(field, year, month, day, hour, minute, second, nano, hasOffset() ? TimezoneOffset.ofTotalSeconds(offsetTotalSeconds) : null, fractionDigits, parseLength);
+        return new DateTime(getMostGranularField(), year, month, day, hour, minute, second, nano, hasOffset() ? TimezoneOffset.ofTotalSeconds(offsetTotalSeconds) : null, fractionDigits, parseLength);
     }
 
     /**
@@ -211,6 +221,6 @@ public final class MutableDateTimeBuffer
     @Override
     public String toString()
     {
-        return field == null ? "<empty>" : toDateTime().toString();
+        return fieldOrdinal == NO_FIELD ? "<empty>" : toDateTime().toString();
     }
 }

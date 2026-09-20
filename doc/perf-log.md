@@ -111,7 +111,8 @@ H3 from S2 is answered: PrintInlining shows the whole parser as one C2 compilati
 | S4.3 | 2026-09-20 | H8  | `ParseConfig`: check the first configured separator before looping over the array (`'T'` / `'.'` for DEFAULT) | 486 / 89 | 394 / 82 | 264 / 55 | 19.7 / 15.1 / 9.1 | KEPT | `13569e9` |
 | S4.4 | 2026-09-20 | H9  | `finish`: OR-combined upper-bound test `((23-hour)\|(59-minute)\|(59-second)) < 0` and a `DAYS_IN_MONTH` table instead of the `switch`; generic `validate` only on doubt | 503 / 86 | 404 / 79 | 282 / 53 | 20.0 / 13.9 / 10.2 | REGRESSION | — |
 | S4.5 | 2026-09-20 | H10 | `ParseConfig`: separators as a 128-bit ASCII set (shift + mask), array loop only for non-ASCII; replaces S4.3's primary check | 521 / 98 | 394 / 86 | 258 / 52 | 18.4 / 15.1 / 9.9 | KEPT (see S4.6) | |
-| S4.6 | 2026-09-20 | H11 | Fraction: nested straight-line blocks for 3/6/9 digits (`digits3`, xor digit test) instead of the 3-at-a-time loop; remainder loop unchanged | 479 / 91 | 325 / 65 | 256 / 52 | 17.9 / 12.7 / 9.9 | KEPT | |
+| S4.6 | 2026-09-20 | H11 | Fraction: nested straight-line blocks for 3/6/9 digits (`digits3`, xor digit test) instead of the 3-at-a-time loop; remainder loop unchanged | 479 / 91 | 325 / 65 | 256 / 52 | 17.9 / 12.7 / 9.9 | KEPT | `ce4822c` |
+| S4.7 | 2026-09-20 | H12 | `MutableDateTimeBuffer` stores the field ordinal (int) instead of the `Field` reference: no GC write barrier in `set` | 468 / 89 | 311 / 63 | 251 / 51 | 17.9 / 12.3 / 9.5 | KEPT | |
 
 H6: for a full date-time the ten "is the window long enough" checks and four `length ==` branches are dead weight;
 removing them is −14 branches and their index arithmetic. Errors for short inputs are unchanged because they take the
@@ -143,6 +144,10 @@ H11: the 3-at-a-time fraction loop is at the JIT's mercy (unrolled or not, predi
 straight-line blocks there is nothing to unroll; each block reads three chars with the xor digit test and either
 takes them or leaves everything to the one-at-a-time remainder loop, which is unchanged. Semantics are identical
 (the differential and fuzz tests exercise 0–12 fraction digits). B's `.123` now costs ~70 instructions over C, not 149.
+
+H12: the S4.0 listing ended with `cmpb $0x0,0x48(%r15)` (G1 pre-barrier check), the reference store, then the
+cross-region `xor/shr/je` of the post-barrier: ~10 instructions and 2–3 branches for storing which `Field` was
+parsed. An int ordinal is a plain store; `getMostGranularField()` indexes `Field.values()` on the way out.
 
 ## Dead ends — do not retry without a new reason
 
