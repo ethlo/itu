@@ -4,7 +4,7 @@ package com.ethlo.time;
  * #%L
  * Internet Time Utility
  * %%
- * Copyright (C) 2017 Morten Haraldsen (ethlo)
+ * Copyright (C) 2017 - 2024 Morten Haraldsen (ethlo)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,19 +31,16 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Formatting to, and conversion from, the W3C date-time granularities. Parsing them is covered by
+ * {@code date-time-corpus.json}.
+ */
 @Tag("CorrectnessTest")
 public class W3cCorrectnessTest
 {
-    @Test
-    public void testParseEmptyString()
-    {
-        assertThrows(DateTimeException.class, () -> ITU.parseDateTime(""));
-    }
-
     @Test
     public void testFormatYear()
     {
@@ -63,76 +60,19 @@ public class W3cCorrectnessTest
     }
 
     @Test
-    public void testParseYear()
+    public void testToYear()
     {
-        final DateTime date = ITU.parseLenient("2012");
-        assertThat(date.getYear()).isEqualTo(2012);
-        assertThat(date.getMostGranularField()).isEqualTo(Field.YEAR);
-        assertThat(date.toYear()).isEqualTo(Year.of(2012));
+        assertThat(ITU.parseLenient("2012").toYear()).isEqualTo(Year.of(2012));
     }
 
     @Test
-    public void testParseYearMonth()
+    public void testToYearMonth()
     {
-        final DateTime date = ITU.parseLenient("2012-10");
-        assertThat(date.getYear()).isEqualTo(2012);
-        assertThat(date.getMonth()).isEqualTo(10);
-        assertThat(date.getMostGranularField()).isEqualTo(Field.MONTH);
         final YearMonth yearMonth = ITU.parseLenient("2012-10").toYearMonth();
         assertThat(yearMonth.getYear()).isEqualTo(2012);
         assertThat(yearMonth.getMonthValue()).isEqualTo(10);
 
         assertThrows(DateTimeException.class, () -> ITU.parseLenient("2012").toYearMonth());
-    }
-
-    @Test
-    public void testParseDate()
-    {
-        final String input = "2012-03-29";
-        final DateTime date = ITU.parseLenient(input);
-        assertThat(date.getYear()).isEqualTo(2012);
-        assertThat(date.getMonth()).isEqualTo(3);
-        assertThat(date.getDayOfMonth()).isEqualTo(29);
-        assertThat(date.getMostGranularField()).isEqualTo(Field.DAY);
-        assertThat(date.toString()).isEqualTo(input);
-    }
-
-    @Test
-    public void testParseDateTimeNanos()
-    {
-        final String input = "2012-10-27T17:22:39.123456789+13:30";
-        final DateTime date = ITU.parseLenient(input);
-        assertThat(date.getYear()).isEqualTo(2012);
-        assertThat(date.getMonth()).isEqualTo(10);
-        assertThat(date.getDayOfMonth()).isEqualTo(27);
-        assertThat(date.getHour()).isEqualTo(17);
-        assertThat(date.getMinute()).isEqualTo(22);
-        assertThat(date.getSecond()).isEqualTo(39);
-        assertThat(date.getNano()).isEqualTo(123456789);
-        assertThat(date.getMostGranularField()).isEqualTo(Field.NANO);
-        assertThat(date.getOffset()).isPresent();
-        assertThat(date.getOffset().get().getHours()).isEqualTo(13);
-        assertThat(date.getOffset().get().getMinutes()).isEqualTo(30);
-        assertThat(date.getOffset()).hasValue(TimezoneOffset.ofHoursMinutes(13, 30));
-        assertThat(date.toString(9)).isEqualTo(input);
-    }
-
-    @Test
-    public void testParseDateTimeWithoutFractions()
-    {
-        final DateTime date = ITU.parseLenient("2012-10-27T17:22:39+13:30");
-        assertThat(date.getYear()).isEqualTo(2012);
-        assertThat(date.getMonth()).isEqualTo(10);
-        assertThat(date.getDayOfMonth()).isEqualTo(27);
-        assertThat(date.getHour()).isEqualTo(17);
-        assertThat(date.getMinute()).isEqualTo(22);
-        assertThat(date.getSecond()).isEqualTo(39);
-        assertThat(date.getNano()).isEqualTo(0);
-        assertThat(date.getMostGranularField()).isEqualTo(Field.SECOND);
-        assertThat(date.getOffset()).isPresent();
-        assertThat(date.getOffset().get().getHours()).isEqualTo(13);
-        assertThat(date.getOffset().get().getMinutes()).isEqualTo(30);
-        assertThat(date.getOffset()).hasValue(TimezoneOffset.ofHoursMinutes(13, 30));
     }
 
     @Test
@@ -153,29 +93,9 @@ public class W3cCorrectnessTest
     }
 
     @Test
-    public void testParseDateTimeWithoutSeconds()
-    {
-        final DateTime date = ITU.parseLenient("2012-10-27T17:22Z");
-        assertThat(date.getYear()).isEqualTo(2012);
-        assertThat(date.getMonth()).isEqualTo(10);
-        assertThat(date.getDayOfMonth()).isEqualTo(27);
-        assertThat(date.getHour()).isEqualTo(17);
-        assertThat(date.getMinute()).isEqualTo(22);
-        assertThat(date.getMostGranularField()).isEqualTo(Field.MINUTE);
-        assertThat(date.getOffset()).hasValue(TimezoneOffset.UTC);
-    }
-
-    @Test
-    public void testParseDateTimeWithoutSecondsAndTimezone()
+    public void testToLocalDateTimeWithoutSecondsAndTimezone()
     {
         final DateTime date = ITU.parseLenient("2012-10-27T17:22");
-        assertThat(date.getYear()).isEqualTo(2012);
-        assertThat(date.getMonth()).isEqualTo(10);
-        assertThat(date.getDayOfMonth()).isEqualTo(27);
-        assertThat(date.getHour()).isEqualTo(17);
-        assertThat(date.getMinute()).isEqualTo(22);
-        assertThat(date.getMostGranularField()).isEqualTo(Field.MINUTE);
-        assertThat(date.getOffset()).isEmpty();
 
         final DateTimeException excOffsetDateTime = assertThrows(DateTimeException.class, date::toOffsetDatetime);
         assertThat(excOffsetDateTime).hasMessage("No timezone information: 2012-10-27T17:22");
@@ -189,18 +109,9 @@ public class W3cCorrectnessTest
     }
 
     @Test
-    public void testParseDateTimeNoOffsetToLocalDateTime()
+    public void testToLocalDateTime()
     {
-        final DateTime date = ITU.parseLenient("2012-10-27T17:22:39");
-        assertThat(date.getYear()).isEqualTo(2012);
-        assertThat(date.getMonth()).isEqualTo(10);
-        assertThat(date.getDayOfMonth()).isEqualTo(27);
-        assertThat(date.getHour()).isEqualTo(17);
-        assertThat(date.getMinute()).isEqualTo(22);
-        assertThat(date.getSecond()).isEqualTo(39);
-        assertThat(date.getMostGranularField()).isEqualTo(Field.SECOND);
-        assertThat(date.getOffset()).isEmpty();
-        final LocalDateTime localDateTime = date.toLocalDatetime();
+        final LocalDateTime localDateTime = ITU.parseLenient("2012-10-27T17:22:39").toLocalDatetime();
         assertThat(localDateTime.getYear()).isEqualTo(2012);
         assertThat(localDateTime.getMonthValue()).isEqualTo(10);
         assertThat(localDateTime.getDayOfMonth()).isEqualTo(27);
@@ -225,7 +136,7 @@ public class W3cCorrectnessTest
     }
 
     @Test
-    public void testParseLenientWithTimeToLocalDate()
+    public void testToLocalDateWithTime()
     {
         final LocalDate date = ITU.parseLenient("2012-10-27T17:22:39+10:00").toLocalDate();
         assertThat(date.getYear()).isEqualTo(2012);
@@ -234,7 +145,7 @@ public class W3cCorrectnessTest
     }
 
     @Test
-    public void testParseLenientToLocalDate()
+    public void testToLocalDate()
     {
         final LocalDate date = ITU.parseLenient("2012-10-27").toLocalDate();
         assertThat(date.getYear()).isEqualTo(2012);
@@ -243,20 +154,8 @@ public class W3cCorrectnessTest
     }
 
     @Test
-    public void testParseLenientToLocalDateNoDays()
+    public void testToLocalDateNoDays()
     {
         assertThrows(DateTimeException.class, () -> ITU.parseLenient("2012-10").toLocalDate());
-    }
-
-    @Test
-    public void testParseBestEffort1DigitMinute()
-    {
-        Assertions.assertThrows(DateTimeException.class, () -> ITU.parseLenient("2012-03-29T23:1"));
-    }
-
-    @Test
-    public void testParseNull()
-    {
-        assertThrows(NullPointerException.class, () -> ITU.parseDateTime(null));
     }
 }

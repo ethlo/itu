@@ -29,16 +29,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.text.ParsePosition;
 import java.time.DateTimeException;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.Temporal;
 
 import org.junit.jupiter.api.Tag;
@@ -48,18 +45,6 @@ import org.junit.jupiter.api.Test;
 public class ITUTest
 {
     private static final OffsetDateTime VALID_DATETIME = OffsetDateTime.parse("2017-05-01T16:23:12Z");
-
-    @Test
-    public void parseDateTime()
-    {
-        assertThat(ITU.parseDateTime(VALID_DATETIME.toString())).isNotNull();
-    }
-
-    @Test
-    public void parseDateTimeWithoutSeconds()
-    {
-        assertThrows(DateTimeException.class, () -> ITU.parseDateTime("2017-12-09T11:23Z"));
-    }
 
     @Test
     void formatUtcWithFractionDigits()
@@ -138,18 +123,6 @@ public class ITUTest
     public void testFormatUtcMilli()
     {
         assertThat(ITU.formatUtcMilli(VALID_DATETIME)).isNotNull();
-    }
-
-    @Test
-    public void parseLenient()
-    {
-        assertThat(ITU.parseLenient("2017-01-31")).isNotNull();
-    }
-
-    @Test
-    public void parseLenient2()
-    {
-        assertThat(ITU.parseLenient("2017-01-31")).isNotNull();
     }
 
     @Test
@@ -313,6 +286,12 @@ public class ITUTest
     }
 
     @Test
+    void testParseDurationNull()
+    {
+        assertThrows(NullPointerException.class, () -> ITU.parseDuration(null));
+    }
+
+    @Test
     void testRfcExample()
     {
         // 1994-11-05T08:15:30-05:00 corresponds to November 5, 1994, 8:15:30 am, US Eastern Standard Time/
@@ -324,30 +303,4 @@ public class ITUTest
         assertThat(ITU.formatUtc(dA)).isEqualTo(ITU.formatUtc(dB));
     }
 
-    @Test
-    void testParseCommaFractionSeparator()
-    {
-        final ParseConfig config = ParseConfig.DEFAULT
-                .withFractionSeparators('.', ',')
-                .withDateTimeSeparators('T', '|');
-        final ParsePosition pos = new ParsePosition(0);
-        assertThat(ITU.parseLenient("1999-11-22|11:22:17,191", config, pos).toInstant()).isEqualTo(Instant.parse("1999-11-22T11:22:17.191Z"));
-        assertThat(pos.getErrorIndex()).isEqualTo(-1);
-        assertThat(pos.getIndex()).isEqualTo(23);
-    }
-
-
-    @Test
-    void testParseWithStrictConfig()
-    {
-        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ITU.parseLenient("2020-02-22t12:00:00Z", ParseConfig.STRICT));
-        assertThat(exc).hasMessage("Expected character T at position 11, found t: 2020-02-22t12:00:00Z");
-    }
-
-    @Test
-    void parseDuration()
-    {
-        final Duration result = ITU.parseDuration("PT2.5S");
-        assertThat(result).isEqualTo(Duration.ofMillis(2_500));
-    }
 }
