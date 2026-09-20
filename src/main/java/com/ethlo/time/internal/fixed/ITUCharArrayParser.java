@@ -89,15 +89,16 @@ public final class ITUCharArrayParser
         // NOTE: The whole fixed-width prefix YYYY-MM-DDTHH:MM:SS is present, so nothing below needs to ask whether the
         // window is long enough: only the characters themselves can be wrong. Every error raised here is raised by the
         // same helper the short path uses, so the messages and indices are identical (the differential tests hold this)
-        final int year = parse4In(chars, offset, offset, end);
-        assertCharAt(chars, offset, end, offset + 4, DATE_SEPARATOR);
-        final int month = parse2In(chars, offset + 5, offset, end);
-        assertCharAt(chars, offset, end, offset + 7, DATE_SEPARATOR);
-        final int day = parse2In(chars, offset + 8, offset, end);
+        // NOTE: Positions are passed as (base, constant) pairs, never as a precomputed offset + k, see parse2In
+        final int year = parse4In(chars, offset, 0, offset, end);
+        assertCharAt(chars, offset, end, offset, 4, DATE_SEPARATOR);
+        final int month = parse2In(chars, offset, 5, offset, end);
+        assertCharAt(chars, offset, end, offset, 7, DATE_SEPARATOR);
+        final int day = parse2In(chars, offset, 8, offset, end);
         assertAllowedDateTimeSeparator(chars, offset, end, parseConfig);
-        final int hour = parse2In(chars, offset + 11, offset, end);
-        assertCharAt(chars, offset, end, offset + 13, TIME_SEPARATOR);
-        final int minute = parse2In(chars, offset + 14, offset, end);
+        final int hour = parse2In(chars, offset, 11, offset, end);
+        assertCharAt(chars, offset, end, offset, 13, TIME_SEPARATOR);
+        final int minute = parse2In(chars, offset, 14, offset, end);
         if (chars[offset + 16] != TIME_SEPARATOR)
         {
             // Minute resolution with a timezone, or an error: handleTime raises the same exception as always
@@ -105,7 +106,7 @@ public final class ITUCharArrayParser
         }
         if (length == FIXED_PREFIX_LENGTH)
         {
-            final int second = parse2In(chars, offset + 17, offset, end);
+            final int second = parse2In(chars, offset, 17, offset, end);
             return finish(out, Field.SECOND, year, month, day, hour, minute, second, 0, 0, NO_OFFSET, length);
         }
         return handleTimeResolution(chars, offset, end, parseConfig, out, year, month, day, hour, minute);
@@ -229,7 +230,7 @@ public final class ITUCharArrayParser
             }
             else if (c == ZULU_UPPER || c == ZULU_LOWER)
             {
-                assertNoMoreChars(chars, offset, end, parseConfig, offset + 19);
+                assertNoMoreChars(chars, offset, end, parseConfig, offset, 19);
                 return handleSecondResolution(chars, offset, end, out, year, month, day, hour, minute, 0, ZULU_LENGTH);
             }
             else if (c == PLUS || c == MINUS)
@@ -249,49 +250,48 @@ public final class ITUCharArrayParser
 
     private static int handleSecondResolution(final char[] chars, final int offset, final int end, final MutableDateTimeBuffer out, final int year, final int month, final int day, final int hour, final int minute, final int timezoneOffset, final int timezoneLength)
     {
-        final int second = parse2In(chars, offset + 17, offset, end);
+        final int second = parse2In(chars, offset, 17, offset, end);
         return finish(out, Field.SECOND, year, month, day, hour, minute, second, 0, 0, timezoneOffset, 19 + timezoneLength);
     }
 
     private static int handleFractionalSeconds(final char[] chars, final int offset, final int end, final ParseConfig parseConfig, final MutableDateTimeBuffer out, final int year, final int month, final int day, final int hour, final int minute)
     {
-        int idx = offset + 20;
         int fractionDigits = 0;
         int nanos = 0;
 
         // The common 3/6/9 digit cases as nested straight-line blocks rather than a loop: C2 unrolled the loop
         // itself, but with loop predication checks and a stack spill per digit (perf-log S4.5). Each block takes
-        // three digits or nothing; whatever is left goes to the one-at-a-time loop below, as before
-        if (idx + 3 <= end)
+        // three digits or nothing; whatever is left goes to the one-at-a-time loop below, as before.
+        // The blocks index from offset with constants and only fractionDigits (a constant on each path) changes:
+        // an idx local advanced per block is a value C2 must keep materialised for the traps (perf-log S6.6)
+        if (offset + 23 <= end)
         {
-            final int millis = digits3(chars, idx);
+            final int millis = digits3(chars, offset + 20);
             if (millis >= 0)
             {
                 nanos = millis;
                 fractionDigits = 3;
-                idx += 3;
-                if (idx + 3 <= end)
+                if (offset + 26 <= end)
                 {
-                    final int micros = digits3(chars, idx);
+                    final int micros = digits3(chars, offset + 23);
                     if (micros >= 0)
                     {
                         nanos = nanos * 1000 + micros;
                         fractionDigits = 6;
-                        idx += 3;
-                        if (idx + 3 <= end)
+                        if (offset + 29 <= end)
                         {
-                            final int nanosPart = digits3(chars, idx);
+                            final int nanosPart = digits3(chars, offset + 26);
                             if (nanosPart >= 0)
                             {
                                 nanos = nanos * 1000 + nanosPart;
                                 fractionDigits = 9;
-                                idx += 3;
                             }
                         }
                     }
                 }
             }
         }
+        int idx = offset + 20 + fractionDigits;
 
         // Remainder: one digit at a time
         while (idx < end)
@@ -319,13 +319,13 @@ public final class ITUCharArrayParser
 
         final int timezoneOffset = parseTimezone(chars, offset, end, parseConfig, idx);
         final int charLength = (idx + timezoneLength(chars, idx, end)) - offset;
-        final int second = parse2In(chars, offset + 17, offset, end);
+        final int second = parse2In(chars, offset, 17, offset, end);
         return finish(out, Field.NANO, year, month, day, hour, minute, second, nanos, fractionDigits, timezoneOffset, charLength);
     }
 
     /**
      * @return The value of the three digits at {@code idx}, or -1 if any of them is not a digit. The caller guarantees
-     * {@code idx + 3 <= end}. See {@code LimitedCharArrayIntegerUtil.parse2In} for the {@code c ^ '0'} digit test
+     * {@code idx + 3 <= end}. See {@code LimitedCharArrayIntegerUtil.parse2} for the {@code c ^ '0'} digit test
      */
     private static int digits3(final char[] chars, final int idx)
     {
@@ -351,7 +351,7 @@ public final class ITUCharArrayParser
         final char c = chars[idx];
         if (c == ZULU_UPPER || c == ZULU_LOWER)
         {
-            assertNoMoreChars(chars, offset, end, parseConfig, idx);
+            assertNoMoreChars(chars, offset, end, parseConfig, idx, 0);
             return 0;
         }
 
@@ -368,10 +368,10 @@ public final class ITUCharArrayParser
         }
 
         // Six characters are present, so the fields need no window checks
-        assertCharAt(chars, offset, end, idx + 3, TIME_SEPARATOR);
+        assertCharAt(chars, offset, end, idx, 3, TIME_SEPARATOR);
 
-        int hours = parse2In(chars, idx + 1, offset, end);
-        int minutes = parse2In(chars, idx + 4, offset, end);
+        int hours = parse2In(chars, idx, 1, offset, end);
+        int minutes = parse2In(chars, idx, 4, offset, end);
         if (c == MINUS)
         {
             hours = -hours;
@@ -384,7 +384,7 @@ public final class ITUCharArrayParser
             }
         }
 
-        assertNoMoreChars(chars, offset, end, parseConfig, idx + 5);
+        assertNoMoreChars(chars, offset, end, parseConfig, idx, 5);
 
         // NOTE: Arithmetic fast path; the ranges are those of TimezoneOffset.ofHoursMinutes, which is only called
         // to produce its exception (identical to the String path) when a value is out of range
@@ -406,13 +406,16 @@ public final class ITUCharArrayParser
         return c == ZULU_UPPER || c == ZULU_LOWER ? ZULU_LENGTH : OFFSET_LENGTH;
     }
 
-    private static void assertNoMoreChars(final char[] chars, final int offset, final int end, final ParseConfig parseConfig, final int lastUsed)
+    /**
+     * The last used position is {@code base + rel}, two arguments for the reason given at {@code parse2In}
+     */
+    private static void assertNoMoreChars(final char[] chars, final int offset, final int end, final ParseConfig parseConfig, final int base, final int rel)
     {
         // NOTE: Unlike the String path this applies to any window, not only when offset == 0: the window is the text
-        if (parseConfig.isFailOnTrailingJunk() && end > lastUsed + 1)
+        if (parseConfig.isFailOnTrailingJunk() && end > base + rel + 1)
         {
             final String text = text(chars, offset, end);
-            final int relative = lastUsed - offset;
+            final int relative = base + rel - offset;
             throw new DateTimeParseException(String.format("Trailing junk data after position %d: %s", relative + 2, text), text, relative + 1);
         }
     }
@@ -429,15 +432,16 @@ public final class ITUCharArrayParser
     }
 
     /**
-     * {@link #assertPositionContains} for an index the caller knows is inside the window
+     * {@link #assertPositionContains} for a position {@code base + rel} the caller knows is inside the window (two
+     * arguments for the reason given at {@code parse2In})
      */
-    private static void assertCharAt(final char[] chars, final int offset, final int end, final int index, final char expected)
+    private static void assertCharAt(final char[] chars, final int offset, final int end, final int base, final int rel, final char expected)
     {
-        if (chars[index] != expected)
+        if (chars[base + rel] != expected)
         {
             final String text = text(chars, offset, end);
-            final int relative = index - offset;
-            throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", expected, relative + 1, chars[index], text), text, relative);
+            final int relative = base + rel - offset;
+            throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", expected, relative + 1, chars[base + rel], text), text, relative);
         }
     }
 

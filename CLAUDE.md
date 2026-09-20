@@ -37,6 +37,11 @@ most users see. It delegates to three engines:
 - **`internal/fixed/ITUParser`** — the fast path. A hand-rolled, index-arithmetic parser over the known
   RFC-3339 character layout (`parseDateTime`, `parseLenient`). No regex, no `DateTimeFormatter`, no
   intermediate collections.
+- **`internal/fixed/ITUCharArrayParser`** — the same algorithm over a `char[]` window into a
+  `MutableDateTimeBuffer`, zero allocation. Kept method-for-method in step with `ITUParser`; the corpus runs every
+  case through both.
+- **`internal/fixed/ITUValidator`** — `ITU.isValid(String)` as a boolean walk of the strict grammar, no exceptions.
+  A third copy of the grammar, held to `parseDateTime` by `IsValidDifferential` (corpus, `IsValidTest`, fuzz target).
 - **`internal/fixed/ITUFormatter`** — formatting, writing straight into a `char[]`.
 - **`internal/ItuDurationParser`** — duration parsing, feeding a `DurationPartsConsumer` state machine that
   validates unit order/duplication as it goes.
@@ -106,7 +111,9 @@ gate for individual changes; elapsed time confirms the accumulated result at the
 - Things learned this way that a source-level reading would not show: C2 only removes the per-character
   bounds checks when no other `if` sits between the `chars[offset + k]` loads (range-check smearing); it does
   not emit unsigned compares for `x + MIN_VALUE` or `Integer.compareUnsigned`; a reference store into the
-  buffer costs a GC barrier. See the S4 findings in `doc/perf-log.md`.
+  buffer costs a GC barrier; a local that only an inlined callee's slow path needs is still materialised when
+  that path is an uncommon trap, so pass `(base, constant)` positions, never a precomputed `offset + k`.
+  See the S4 and S6 findings in `doc/perf-log.md`.
 
 ### Error reporting
 
@@ -129,7 +136,8 @@ arithmetic are effectively part of the contract.
   - Put the *why* in the entry's `note`; that is where the regression stories from the old test names went.
 - Java tests are for API behaviour that is not an input/output pair: `DurationTest` (arithmetic),
   `TimezoneOffsetTest`, `TemporalAccessorTest`, `ConfigurableDateTimeParserTest`, the window/buffer tests in
-  `CharArrayParseTest`, `ParseConfig` withers, and `ErrorOffsetTest` (error index vs the JDK's).
+  `CharArrayParseTest`, `ParseConfig` withers, `ErrorOffsetTest` (error index vs the JDK's), and `IsValidTest`
+  (the edges `isValid` decides itself, each also checked against `parseDateTime`).
 - `CorrectnessRegressionTest` is organised as one `@Nested` class per historical defect, with a javadoc
   describing the bug. Parse-shaped regressions go in the corpus with a `note`; API-shaped ones follow that
   pattern.
