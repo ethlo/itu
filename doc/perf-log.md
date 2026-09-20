@@ -199,6 +199,7 @@ control), `--thorough` timing for the cumulative result at the end.
 | S5.3 | 2026-09-20 | H11 | String fraction: nested straight-line 3/6/9-digit blocks (`digits3`, xor test) instead of the 3-at-a-time loop; remainder loop xor test (S4.6 transferred) | 519 / 96 | 353 / 68 | 274 / 55 | 18.8 / 13.6 / 10.4 | KEPT | |
 | S5.4 | 2026-09-20 | H14 | String seconds and zone-offset fields via `parse2In` / `assertCharAt` where the bound is already known (S4.9 transferred) | 466 / 86 | 343 / 65 | 269 / 53 | 17.2 / 13.5 / 10.8 | KEPT | |
 | S5.5 | 2026-09-20 | H7  | Checked `parse2`/`parse4` (String and char[]; used by `parseShort` and the token path): xor digit test. Gate: `candidates.itu_configurable` A / B, baseline 1693 / 310 · 1652 / 324 (65.7 / 62.9 ns) → 1668 / 301 · 1625 / 317 (two runs; a first run read B as 1350, JIT variance) | — | — | — | 71.2 / 63.7 | KEPT | |
+| S5.6 | 2026-09-20 | H16 | Both parsers, 9-digit fraction: `millis * 1_000_000 + micros * 1_000 + nanosPart` (independent products) instead of the serial `nanos * 1000 + …` chain. Instructions unchanged by construction (466 / 85 · buffer 453 / 83); judged on `--thorough` A: String 17.63 ±1.22 → 17.45 ±1.40, buffer 19.39 ±0.24 → 19.63 ±0.48 | 466 / 85 | 344 / 66 | 273 / 53 | 17.5 / 14.4 / 10.4 | NO-GAIN | — |
 
 ## Dead ends — do not retry without a new reason
 
