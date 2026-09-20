@@ -197,6 +197,7 @@ control), `--thorough` timing for the cumulative result at the end.
 | S5.1 | 2026-09-20 | H6  | String path: `availableLength >= 19` fast path with `parse4In`/`parse2In(String)` and `assertCharAt`; short inputs keep the old code (S4.1 transferred) | 593 / 107 | 446 / 119 | 309 / 60 | 24.8 / 18.7 / 12.2 | KEPT | |
 | S5.2 | 2026-09-20 | H7  | String `parse2In`/`parse4In`: `(c ^ '0') <= 9` digit test (S4.2 transferred) | 544 / 107 | 441 / 100 | 278 / 55 | 23.1 / 18.4 / 11.1 | KEPT | |
 | S5.3 | 2026-09-20 | H11 | String fraction: nested straight-line 3/6/9-digit blocks (`digits3`, xor test) instead of the 3-at-a-time loop; remainder loop xor test (S4.6 transferred) | 519 / 96 | 353 / 68 | 274 / 55 | 18.8 / 13.6 / 10.4 | KEPT | |
+| S5.4 | 2026-09-20 | H14 | String seconds and zone-offset fields via `parse2In` / `assertCharAt` where the bound is already known (S4.9 transferred) | 466 / 86 | 343 / 65 | 269 / 53 | 17.2 / 13.5 / 10.8 | KEPT | |
 
 ## Dead ends — do not retry without a new reason
 

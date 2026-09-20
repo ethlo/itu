@@ -244,7 +244,7 @@ public class ITUParser implements DateTimeParser
 
     private static DateTime handleSecondResolution(int offset, int year, int month, int day, int hour, int minute, String chars, TimezoneOffset timezoneOffset)
     {
-        final int seconds = parse2(chars, offset + 17);
+        final int seconds = parse2In(chars, offset + 17);
         final int charLength = Field.SECOND.getRequiredLength() + (timezoneOffset != null ? timezoneOffset.getRequiredLength() : 0);
         return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, timezoneOffset, 0, charLength);
     }
@@ -312,7 +312,7 @@ public class ITUParser implements DateTimeParser
 
         final TimezoneOffset timezoneOffset = parseTimezone(offset, parseConfig, chars, idx);
         final int charLength = (idx + (timezoneOffset != null ? timezoneOffset.getRequiredLength() : 0)) - offset;
-        final int second = parse2(chars, offset + 17);
+        final int second = parse2In(chars, offset + 17);
         return new DateTime(Field.NANO, year, month, day, hour, minute, second, nanos, timezoneOffset, fractionDigits, charLength);
     }
 
@@ -338,8 +338,6 @@ public class ITUParser implements DateTimeParser
         {
             return null;
         }
-        final int len = chars.length();
-        final int left = len - idx;
         final char c = chars.charAt(idx);
         if (c == ZULU_UPPER || c == ZULU_LOWER)
         {
@@ -347,22 +345,23 @@ public class ITUParser implements DateTimeParser
             return TimezoneOffset.UTC;
         }
 
-        final char sign = chars.charAt(idx);
-        if (sign != PLUS && sign != MINUS)
+        if (c != PLUS && c != MINUS)
         {
             throw raiseUnexpectedCharacter(chars, idx, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
         }
 
+        final int left = chars.length() - idx;
         if (left < OFFSET_LENGTH)
         {
             throw new DateTimeParseException(String.format("Invalid timezone offset: %s", chars), chars, idx);
         }
 
-        assertPositionContains(Field.ZONE_OFFSET, chars, idx + 3, TIME_SEPARATOR);
+        // Six characters are present, so the fields need no length checks
+        assertCharAt(chars, idx + 3, TIME_SEPARATOR);
 
-        int hours = parse2(chars, idx + 1);
-        int minutes = parse2(chars, idx + 4);
-        if (sign == MINUS)
+        int hours = parse2In(chars, idx + 1);
+        int minutes = parse2In(chars, idx + 4);
+        if (c == MINUS)
         {
             hours = -hours;
             minutes = -minutes;
