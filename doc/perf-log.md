@@ -201,6 +201,7 @@ control), `--thorough` timing for the cumulative result at the end.
 | S5.5 | 2026-09-20 | H7  | Checked `parse2`/`parse4` (String and char[]; used by `parseShort` and the token path): xor digit test. Gate: `candidates.itu_configurable` A / B, baseline 1693 / 310 · 1652 / 324 (65.7 / 62.9 ns) → 1668 / 301 · 1625 / 317 (two runs; a first run read B as 1350, JIT variance) | — | — | — | 71.2 / 63.7 | KEPT | |
 | S5.6 | 2026-09-20 | H16 | Both parsers, 9-digit fraction: `millis * 1_000_000 + micros * 1_000 + nanosPart` (independent products) instead of the serial `nanos * 1000 + …` chain. Instructions unchanged by construction (466 / 85 · buffer 453 / 83); judged on `--thorough` A: String 17.63 ±1.22 → 17.45 ±1.40, buffer 19.39 ±0.24 → 19.63 ±0.48 | 466 / 85 | 344 / 66 | 273 / 53 | 17.5 / 14.4 / 10.4 | NO-GAIN | — |
 | S5.7 | 2026-09-20 | H17 | `ITU.isValid(String)`: a boolean walk (`ITUValidator`) instead of parse-and-catch. Gate: `candidates.itu_isvalid`, valid A / B / C and invalid (trailing junk / month 13 / truncated / not a date): 709 / 519 / 455 instr, 28.6 / 20.5 / 18.0 ns · 14157 / 13661 / 13239 / — instr, 860 / 871 / 809 / — ns → 292 / 216 / 151 instr, 11.3 / 9.2 / 6.4 ns · 150 / 132 / 31 / 31 instr, 6.3 / 5.6 / 1.2 / 1.2 ns | — | — | — | — | KEPT | |
+| S5.t | 2026-09-20 | —   | **`--thorough` confirmation**, String path, S5.0 code (`f83dfcd`) vs S5.7: 22.65 ±0.51 / 18.76 ±0.40 / 12.05 ±0.31 → **16.58 ±0.27 / 12.54 ±0.26 / 9.61 ±0.18** ns (floor 0.44); buffer path same runs 19.51 / 11.66 / 9.25 → 19.20 / 11.31 / 8.60 | | | | −27% / −33% / −20% | KEPT | |
 
 H16 (no gain): the S4 findings blamed A's flat time on the serial `nanos * 1000 + …` chain. Making the three
 products independent changed nothing measurable, on either path, so the latency is elsewhere. The `--thorough`
@@ -212,6 +213,17 @@ trace for each one: 13–14k instructions and 800+ ns, 130× the valid case. A s
 acceptance (held to `parseDateTime` by the corpus, a directed edge-case list and a differential fuzz target) makes
 an invalid answer cost 1–6 ns and a valid one 6–11 ns; the valid case also drops the `OffsetDateTime` construction
 that `parseDateTime` needs and `isValid` never did.
+
+### S5 findings
+
+- **Session result** (`--thorough`, ±2–3%): String path A −27%, B −33%, C −20%; instructions 617/521/342 →
+  466/343/269, branches 123/117/69 → 86/65/53. The S4 shapes transferred one for one; the String path is now
+  within 1–3 ns of the buffer path on B and C and ahead of it on A (see H16). `String.charAt` costs a coder check
+  and a bounds check per access that `chars[i]` does not, which is where the remaining B/C gap is.
+- `isValid` went from 18–29 ns valid / 800+ ns invalid to 6–11 ns / 1–6 ns (S5.7); its grammar is a third walk, but
+  a boolean one with no error contract, guarded differentially rather than by shared code.
+- **Not done, candidates for a later session**: (1) the buffer path's A-specific stall (H16: slower than the String
+  path on A alone, with fewer instructions); (2) `ITU.isValid(String, TemporalType...)` still parses and catches.
 
 ## Dead ends — do not retry without a new reason
 
