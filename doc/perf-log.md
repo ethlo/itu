@@ -225,6 +225,42 @@ that `parseDateTime` needs and `isValid` never did.
 - **Not done, candidates for a later session**: (1) the buffer path's A-specific stall (H16: slower than the String
   path on A alone, with fewer instructions); (2) `ITU.isValid(String, TemporalType...)` still parses and catches.
 
+## Session S6 — 2026-09-20 · i9-13900H (20 threads) · JDK 25.0.4 (OpenJDK, Ubuntu 26.04) · governor: powersave
+
+**Scope.** The S5 lead: the buffer path is slower than the String path on input A alone (19.4 vs 17.6 ns) with fewer
+instructions. `hotpath.sh` on both paths first, then diagnostics that isolate the cause before any candidate. Gate as
+in S4/S5: `perf/instr.sh` instructions and branches per op, buffer path unless stated; `--thorough` at the end.
+
+What the two A listings showed (`dis-A-buf.txt` vs `dis-A-str.txt`): the buffer path spends 32% of its samples on
+xmm↔gpr moves against 8% for the String path; `chars` is moved to `xmm9` at entry and pulled back into a GPR before
+every one of ~30 loads (`vmovq %xmm9,%r10; movzwl 0x2a(%r10,%r8,2)`), `length` is spilled to the stack at entry, and
+the parsed digits go through `xmm1–xmm5`. It is register pressure, and the String path does not have it because the
+benchmark calls `ITU.parseLenient(String)`, where `offset` is the constant 0: no `offset + k` index temporaries, no
+sign-extended copy of `offset` for addressing, and bounds checks that fold against `length >= 19`.
+
+| id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
+|------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
+| S6.0 | 2026-09-20 | —   | BASELINE buffer path @ `869c38d` (String path same code: 461 / 85 · 344 / 66 · 272 / 53; 16.8 / 12.6 / 9.7 ns) | 449 / 82 | 304 / 62 | 242 / 48 | 19.7 / 11.9 / 8.4 | — | `869c38d` |
+| S6.1 | 2026-09-20 | H18 | DIAGNOSTIC, not a candidate: `offset` replaced by the constant 0 inside the parser — the cost of a variable window start | 354 / 76 | 241 / 56 | 194 / 45 | 13.2 / 8.7 / 6.4 | (−95 / −63 / −48 instr) | — |
+| S6.2 | 2026-09-20 | H18 | DIAGNOSTIC: S6.0 code with `-XX:-UseCompressedOops` (frees `r12` as a 14th GPR), input A only | 423 / 83 | — | — | 16.3 (one run: 18.4) | (−27 instr) | — |
+| S6.3 | 2026-09-20 | H19 | `ParseConfig.isDateTimeSeparator` / `isFractionSeparator`: `needle == primary \|\| set test`, the first configured separator compared before the 128-bit set. String path: 421 / 78 · 305 / 57 · 271 / 51 (14.9 / 11.4 / 10.0 ns); strict `parse`: 702 / 110 · 521 / 84 · 465 / 72 → 685 / 103 · 500 / 76 · 451 / 70 | 395 / 73 | 269 / 52 | 238 / 47 | 15.6 / 9.5 / 8.7 | KEPT | |
+
+H18 (diagnostics): the S5 lead is not A-specific in cause, only in size. With `offset` a compile-time constant the
+buffer path is 95 / 63 / 48 instructions and 6.5 / 3.2 / 2.0 ns cheaper on A / B / C and ends up *ahead* of the String
+path on all three, so the whole gap is what a variable window start costs: a 32-bit `offset` for the index
+arithmetic, a sign-extended 64-bit copy for addressing, `chars.length` for the bounds checks that no longer fold, and
+`end`/`length` both live — 3–4 registers on a path that is already at the edge, which is where A (nine fraction
+digits and an offset, the most live values) tips over. One extra GPR (S6.2) is worth 27 instructions and 3 ns on A
+by itself. The API is the window, so the constant cannot be had; the candidates below try to give back registers.
+
+H19: the S4.5 bit-set membership test is a diamond (`c < 64 ? lo : hi`, a shift, a mask, a phi) and C2's
+range-check smearing does not walk through it: every bounds check *after* the fraction separator (the three digit
+blocks and the zone offset) survived, keeping `chars.length` and the `lea k(%rdx)` index temporaries live to the end
+of the method. A plain compare against the first configured separator in front of the set — the S4.3 form, which
+S4.5 had replaced — makes the common case a single `cmp/jcc`, and the smearing then folds every remaining check into
+the prefix's: the A listing goes from 8 bounds checks to 0, hot-path instructions 338 → 302, xmm↔gpr share 32% → 16%.
+The String path uses the same `ParseConfig` and gains the same way (A −40, B −39), as does strict `parse`.
+
 ## Dead ends — do not retry without a new reason
 
 - (S2.1) Expecting a large win from "zero allocation" alone on this parser: the objects were cheap TLAB bumps. Zero

@@ -46,6 +46,14 @@ public class ParseConfig
     private final long dateTimeSeparatorsHi;
     private final long fractionSeparatorsLo;
     private final long fractionSeparatorsHi;
+    /**
+     * The first configured separator of each kind, tested with a plain compare before the set is consulted. An int so
+     * that "none" (-1) can never equal a char. The compare is not a shortcut for its own sake: C2's range-check
+     * smearing does not see through the set test, so with the set alone every bounds check of the fraction and the
+     * zone offset stayed in the parser's hot path, and with them the array length and index temporaries (perf-log S6.3)
+     */
+    private final int primaryDateTimeSeparator;
+    private final int primaryFractionSeparator;
 
     protected ParseConfig(char[] dateTimeSeparators, char[] allowedFractionSeparators)
     {
@@ -61,6 +69,8 @@ public class ParseConfig
         this.dateTimeSeparatorsHi = asciiMask(this.dateTimeSeparators, 64);
         this.fractionSeparatorsLo = asciiMask(this.fractionSeparators, 0);
         this.fractionSeparatorsHi = asciiMask(this.fractionSeparators, 64);
+        this.primaryDateTimeSeparator = this.dateTimeSeparators.length > 0 ? this.dateTimeSeparators[0] : -1;
+        this.primaryFractionSeparator = this.fractionSeparators.length > 0 ? this.fractionSeparators[0] : -1;
     }
 
     private static long asciiMask(final char[] chars, final int base)
@@ -136,12 +146,12 @@ public class ParseConfig
 
     public boolean isDateTimeSeparator(char needle)
     {
-        return needle < 128 ? isSet(dateTimeSeparatorsLo, dateTimeSeparatorsHi, needle) : contains(dateTimeSeparators, needle);
+        return needle == primaryDateTimeSeparator || (needle < 128 ? isSet(dateTimeSeparatorsLo, dateTimeSeparatorsHi, needle) : contains(dateTimeSeparators, needle));
     }
 
     public boolean isFractionSeparator(char needle)
     {
-        return needle < 128 ? isSet(fractionSeparatorsLo, fractionSeparatorsHi, needle) : contains(fractionSeparators, needle);
+        return needle == primaryFractionSeparator || (needle < 128 ? isSet(fractionSeparatorsLo, fractionSeparatorsHi, needle) : contains(fractionSeparators, needle));
     }
 
     private static boolean contains(final char[] haystack, final char needle)
