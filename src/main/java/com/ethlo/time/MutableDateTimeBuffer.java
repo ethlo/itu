@@ -21,6 +21,7 @@ package com.ethlo.time;
  */
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 /**
  * A reusable, mutable target for {@link ITU#parseLenient(char[], int, int, MutableDateTimeBuffer)}. Parsing into a
@@ -196,6 +197,14 @@ public final class MutableDateTimeBuffer
      */
     public OffsetDateTime toOffsetDateTime()
     {
+        if (includesGranularity(Field.MINUTE) && hasOffset())
+        {
+            // NOTE: Built directly rather than via toDateTime() so that the intermediate DateTime and TimezoneOffset
+            // are never allocated. java.time performs its own range checks, so a buffer filled through set(..) with
+            // out-of-range values still fails, just with java.time's message
+            return OffsetDateTime.of(year, month, day, hour, minute, second, nano, ZoneOffset.ofTotalSeconds(offsetTotalSeconds));
+        }
+        // Missing granularity or offset: let DateTime produce the exception it always has
         return toDateTime().toOffsetDatetime();
     }
 

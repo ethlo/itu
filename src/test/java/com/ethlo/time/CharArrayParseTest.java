@@ -35,6 +35,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.ethlo.time.internal.DateTimeFormatException;
+
 /**
  * The zero-allocation char[] path is a second implementation of the same grammar, so it is tested differentially
  * against the String path (the reference) over the whole corpus, plus the behaviour that only exists on this path:
@@ -232,6 +234,29 @@ public class CharArrayParseTest
         assertThat(buffer.getOffsetTotalSeconds()).isEqualTo(18 * 3600);
         assertThat(buffer.getFractionDigits()).isEqualTo(1);
         assertThat(buffer.getNano()).isEqualTo(500_000_000);
+    }
+
+    /**
+     * toOffsetDateTime() skips the intermediate DateTime on the happy path, so pin that it still matches DateTime
+     * exactly, and that the two failure modes still raise the exceptions DateTime raises
+     */
+    @Test
+    void toOffsetDateTimeMatchesDateTimePath()
+    {
+        final MutableDateTimeBuffer buffer = new MutableDateTimeBuffer();
+        for (final String text : Arrays.asList("2017-05-01T16:23Z", "2017-05-01T16:23:12-03:30", "2017-05-01T16:23:12.987654321+18:00", "2017-05-01T16:23:12.5+00:00"))
+        {
+            parse(text, buffer);
+            assertThat(buffer.toOffsetDateTime()).isEqualTo(buffer.toDateTime().toOffsetDatetime());
+        }
+
+        parse("2017-05-01T16:23:12", buffer);
+        final DateTimeParseException noOffset = assertThrows(DateTimeParseException.class, buffer::toOffsetDateTime);
+        assertThat(noOffset).hasMessage("No timezone information: 2017-05-01T16:23:12");
+
+        parse("2017-05-01", buffer);
+        final DateTimeFormatException noTime = assertThrows(DateTimeFormatException.class, buffer::toOffsetDateTime);
+        assertThat(noTime).hasMessage("No MINUTE field found");
     }
 
     /**
