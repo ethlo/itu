@@ -108,7 +108,10 @@ H3 from S2 is answered: PrintInlining shows the whole parser as one C2 compilati
 | S4.0 | 2026-09-20 | —   | BASELINE buffer path @ `e431b8f`                                          | 562 / 106 | 465 / 99 | 325 / 70 | 20.3 / 17.5 / 12.0 | — | `e431b8f` |
 | S4.1 | 2026-09-20 | H6  | `length >= 19` fast path: prefix parsed without per-field window checks or the `length ==` chain; short inputs keep the old code | 535 / 96 | 451 / 90 | 289 / 59 | 19.7 / 16.2 / 10.8 | KEPT | `5620e0d` |
 | S4.2 | 2026-09-20 | H7  | Digit test in the fast-path helpers: `(c ^ '0') <= 9` — one signed compare per digit, no subtract, no negative test | 504 / 91 | 404 / 85 | 273 / 55 | 19.9 / 15.5 / 10.0 | KEPT | `20910dc` |
-| S4.3 | 2026-09-20 | H8  | `ParseConfig`: check the first configured separator before looping over the array (`'T'` / `'.'` for DEFAULT) | 486 / 89 | 394 / 82 | 264 / 55 | 19.7 / 15.1 / 9.1 | KEPT | |
+| S4.3 | 2026-09-20 | H8  | `ParseConfig`: check the first configured separator before looping over the array (`'T'` / `'.'` for DEFAULT) | 486 / 89 | 394 / 82 | 264 / 55 | 19.7 / 15.1 / 9.1 | KEPT | `13569e9` |
+| S4.4 | 2026-09-20 | H9  | `finish`: OR-combined upper-bound test `((23-hour)\|(59-minute)\|(59-second)) < 0` and a `DAYS_IN_MONTH` table instead of the `switch`; generic `validate` only on doubt | 503 / 86 | 404 / 79 | 282 / 53 | 20.0 / 13.9 / 10.2 | REGRESSION | — |
+| S4.5 | 2026-09-20 | H10 | `ParseConfig`: separators as a 128-bit ASCII set (shift + mask), array loop only for non-ASCII; replaces S4.3's primary check | 521 / 98 | 394 / 86 | 258 / 52 | 18.4 / 15.1 / 9.9 | KEPT (see S4.6) | |
+| S4.6 | 2026-09-20 | H11 | Fraction: nested straight-line blocks for 3/6/9 digits (`digits3`, xor digit test) instead of the 3-at-a-time loop; remainder loop unchanged | 479 / 91 | 325 / 65 | 256 / 52 | 17.9 / 12.7 / 9.9 | KEPT | |
 
 H6: for a full date-time the ten "is the window long enough" checks and four `length ==` branches are dead weight;
 removing them is −14 branches and their index arithmetic. Errors for short inputs are unchanged because they take the
@@ -125,6 +128,22 @@ H8: `isDateTimeSeparator` / `isFractionSeparator` loop over a `char[]` field (ar
 to accept what is almost always `'T'` / `'.'`. Comparing against the first configured separator first is one load and
 one compare on the common path; the loop still runs for the alternatives, so behaviour is unchanged.
 
+H9 (failed): fewer branches should mean fewer instructions. The disassembly says no: each `cmp $imm; jcc` pair was
+one macro-fused µop, and the OR-tree became `mov $imm; sub; or …; jl` — 9 instructions for the three time fields
+where the compares were 6 — while the table index `m` was rebuilt from three stack spills. Predictable compare
+chains are already optimal on x86; combining them only pays when the branches mispredict, and here they never do.
+
+H10: the S4.3 primary check still fell into the array loop (with a safepoint poll) for every `Z`, `+` or `-` after
+the seconds, since `isFractionSeparator` is asked first. Two `long`s per separator kind make the test a shift and a
+mask for all of ASCII. On its own the row reads as mixed: C −7, B ±0, but A +35 — the A listing showed C2 had fully
+unrolled the fraction loop with loop-predication checks and a spill per digit, a code-shape change unrelated to the
+separators. S4.6 removes that loop, so S4.5 is judged together with it.
+
+H11: the 3-at-a-time fraction loop is at the JIT's mercy (unrolled or not, predicated or not). Written as nested
+straight-line blocks there is nothing to unroll; each block reads three chars with the xor digit test and either
+takes them or leaves everything to the one-at-a-time remainder loop, which is unchanged. Semantics are identical
+(the differential and fuzz tests exercise 0–12 fraction digits). B's `.123` now costs ~70 instructions over C, not 149.
+
 ## Dead ends — do not retry without a new reason
 
 - (S2.1) Expecting a large win from "zero allocation" alone on this parser: the objects were cheap TLAB bumps. Zero
@@ -132,6 +151,12 @@ one compare on the common path; the loop still runs for the alternatives, so beh
 - (S3.1) Unifying the String and char[] parsers by `toCharArray()` on the String side: ≈4 ns flat, 17–29% on the
   String path. The two algorithms stay; keep them aligned through `DateTimeValidator`, `LimitedCharArrayIntegerUtil`,
   `ErrorUtil` and the differential tests, not by sharing the walk.
+- (S4.4) Replacing predictable `cmp/jcc` chains with OR-combined arithmetic (`(a - x) | (b - y) < 0`) or a
+  lookup table to "save branches": +10–18 instructions. Macro-fused compare-and-branch is the cheapest form of a
+  predictable range check on x86; only an unpredictable branch is worth removing.
+- (S4.2) Expecting C2 to emit an unsigned compare for `x + MIN_VALUE <= 9 + MIN_VALUE` or
+  `Integer.compareUnsigned(x, 9) <= 0`: it does not (`lea`/`cmp $0x80000009`/signed jump). `(c ^ '0') <= 9` is the
+  form that works for chars.
 
 ## Before the log existed (from git history; numbers were not recorded — the gap this file closes)
 
