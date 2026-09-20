@@ -182,6 +182,20 @@ the index temporaries, `chars.length`, `end` and the fraction/offset state, not 
   `parseShort` still have the old three-branch digit test; (3) A's latency chain: accumulate the three fraction
   blocks independently (`millis * 1_000_000 + micros * 1_000 + nanosPart`) instead of the serial `* 1000 + …`.
 
+## Session S5 — 2026-09-20 · i9-13900H (20 threads) · JDK 25.0.4 (OpenJDK, Ubuntu 26.04) · governor: powersave
+
+**Scope.** The String path, `ITU.parseLenient(String)` (`candidates.itu`), gets the S4 shapes that were left as
+candidates: the `length >= 19` fast path (S4.1), the xor digit test (S4.2), the straight-line fraction blocks (S4.6)
+and unchecked seconds/zone-offset helpers (S4.9). Then the leftovers that apply to both paths: the checked
+`parse2`/`parse4` used by the short path (still the three-branch test), and A's fraction latency chain.
+Same method as S4: instructions and branches per op from `perf/instr.sh` (buffer path measured in the same run as a
+control), `--thorough` timing for the cumulative result at the end.
+
+| id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
+|------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
+| S5.0 | 2026-09-20 | —   | BASELINE String path @ `f83dfcd` (buffer path same run: 447 / 82 · 302 / 61 · 243 / 48; 19.7 / 11.7 / 8.9 ns) | 617 / 123 | 521 / 117 | 342 / 69 | 24.3 / 21.4 / 13.1 | — | `f83dfcd` |
+| S5.1 | 2026-09-20 | H6  | String path: `availableLength >= 19` fast path with `parse4In`/`parse2In(String)` and `assertCharAt`; short inputs keep the old code (S4.1 transferred) | 593 / 107 | 446 / 119 | 309 / 60 | 24.8 / 18.7 / 12.2 | KEPT | |
+
 ## Dead ends — do not retry without a new reason
 
 - (S2.1) Expecting a large win from "zero allocation" alone on this parser: the objects were cheap TLAB bumps. Zero

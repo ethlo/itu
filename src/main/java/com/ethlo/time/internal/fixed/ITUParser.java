@@ -26,7 +26,9 @@ import static com.ethlo.time.internal.util.ErrorUtil.raiseUnexpectedCharacter;
 import static com.ethlo.time.internal.util.ErrorUtil.raiseUnexpectedEndOfText;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parse2;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parse2In;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parse4;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.parse4In;
 
 import java.text.ParsePosition;
 import java.time.OffsetDateTime;
@@ -40,6 +42,11 @@ import com.ethlo.time.ParseConfig;
 import com.ethlo.time.TimezoneOffset;
 import com.ethlo.time.internal.util.ArrayUtils;
 
+/**
+ * The String parser. {@link ITUCharArrayParser} is the same algorithm over a {@code char[]} window and must stay
+ * aligned with this one (the corpus tests run every case through both); the structure of the two is deliberately
+ * identical, method for method, so that a change in one is a copy into the other.
+ */
 public class ITUParser implements DateTimeParser
 {
     /**
@@ -71,6 +78,11 @@ public class ITUParser implements DateTimeParser
     public static final int RADIX = 10;
     public static final int DIGITS_IN_NANO = 9;
     private static final int[] NANO_SCALE = {1_000_000_000, 100_000_000, 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1};
+    /**
+     * The length of {@code YYYY-MM-DDTHH:MM:SS}: at or beyond it, every field position of the prefix is inside the text
+     */
+    private static final int FIXED_PREFIX_LENGTH = 19;
+    private static final int OFFSET_LENGTH = 6;
     private static final DateTimeParser instance = new ITUParser();
 
     private ITUParser()
@@ -78,103 +90,47 @@ public class ITUParser implements DateTimeParser
 
     }
 
-    private static DateTime handleTime(final int offset, final ParseConfig parseConfig, final String chars, final int year, final int month, final int day, final int hour, final int minute)
-    {
-        switch (chars.charAt(offset + 16))
-        {
-            case TIME_SEPARATOR:
-                // We have seconds
-                return handleTimeResolution(offset, parseConfig, year, month, day, hour, minute, chars);
-
-            // We look for time-zone information
-            case PLUS:
-            case MINUS:
-            case ZULU_UPPER:
-            case ZULU_LOWER:
-                final TimezoneOffset zoneOffset = parseTimezone(offset, parseConfig, chars, offset + 16);
-                final int charLength = Field.MINUTE.getRequiredLength() + (zoneOffset != null ? zoneOffset.getRequiredLength() : 0);
-                return new DateTime(Field.MINUTE, year, month, day, hour, minute, 0, 0, zoneOffset, 0, charLength);
-
-            default:
-                throw raiseUnexpectedCharacter(chars, offset + 16, TIME_SEPARATOR, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
-        }
-    }
-
-    private static void assertAllowedDateTimeSeparator(final int offset, final String chars, final ParseConfig config)
-    {
-        final int index = offset + 10;
-        final char needle = chars.charAt(index);
-        if (!config.isDateTimeSeparator(needle))
-        {
-            final String allowedCharStr = config.getDateTimeSeparators().length > 1 ? Arrays.toString(config.getDateTimeSeparators()) : Character.toString(config.getDateTimeSeparators()[0]);
-            throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", allowedCharStr, index + 1, chars.charAt(index), chars), chars, index);
-        }
-    }
-
-    private static TimezoneOffset parseTimezone(int offset, final ParseConfig parseConfig, final String chars, final int idx)
-    {
-        if (idx >= chars.length())
-        {
-            return null;
-        }
-        final int len = chars.length();
-        final int left = len - idx;
-        final char c = chars.charAt(idx);
-        if (c == ZULU_UPPER || c == ZULU_LOWER)
-        {
-            assertNoMoreChars(offset, parseConfig, chars, idx);
-            return TimezoneOffset.UTC;
-        }
-
-        final char sign = chars.charAt(idx);
-        if (sign != PLUS && sign != MINUS)
-        {
-            throw raiseUnexpectedCharacter(chars, idx, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
-        }
-
-        if (left < 6)
-        {
-            throw new DateTimeParseException(String.format("Invalid timezone offset: %s", chars), chars, idx);
-        }
-
-        assertPositionContains(Field.ZONE_OFFSET, chars, idx + 3, TIME_SEPARATOR);
-
-        int hours = parse2(chars, idx + 1);
-        int minutes = parse2(chars, idx + 4);
-        if (sign == MINUS)
-        {
-            hours = -hours;
-            minutes = -minutes;
-
-            if (hours == 0 && minutes == 0)
-            {
-                throw new DateTimeParseException("Unknown 'Local Offset Convention' date-time not allowed", chars, idx);
-            }
-        }
-
-        assertNoMoreChars(offset, parseConfig, chars, idx + 5);
-        return TimezoneOffset.ofHoursMinutes(hours, minutes);
-    }
-
-    private static void assertNoMoreChars(final int offset, final ParseConfig parseConfig, final String chars, final int lastUsed)
-    {
-        if (parseConfig.isFailOnTrailingJunk() && offset == 0)
-        {
-            if (chars.length() > lastUsed + 1)
-            {
-                throw new DateTimeParseException(String.format("Trailing junk data after position %d: %s", lastUsed + 2, chars), chars, lastUsed + 1);
-            }
-        }
-    }
-
-    public static DateTime parseLenient(final String chars, final ParseConfig parseConfig, int offset)
+    public static DateTime parseLenient(final String chars, final ParseConfig parseConfig, final int offset)
     {
         final int availableLength = sanityCheckInputParams(chars, offset);
+        if (availableLength < FIXED_PREFIX_LENGTH)
+        {
+            return parseShort(chars, parseConfig, offset, availableLength);
+        }
 
-        // Date portion
+        // NOTE: The whole fixed-width prefix YYYY-MM-DDTHH:MM:SS is present, so nothing below needs to ask whether the
+        // text is long enough: only the characters themselves can be wrong. Every error raised here is raised by the
+        // same helper the short path uses, so the messages and indices are identical (the corpus tests hold this)
+        final int year = parse4In(chars, offset);
+        assertCharAt(chars, offset + 4, DATE_SEPARATOR);
+        final int month = parse2In(chars, offset + 5);
+        assertCharAt(chars, offset + 7, DATE_SEPARATOR);
+        final int day = parse2In(chars, offset + 8);
+        assertAllowedDateTimeSeparator(offset, chars, parseConfig);
+        final int hour = parse2In(chars, offset + 11);
+        assertCharAt(chars, offset + 13, TIME_SEPARATOR);
+        final int minute = parse2In(chars, offset + 14);
+        if (chars.charAt(offset + 16) != TIME_SEPARATOR)
+        {
+            // Minute resolution with a timezone, or an error: handleTime raises the same exception as always
+            return handleTime(offset, parseConfig, chars, year, month, day, hour, minute);
+        }
+        if (availableLength == FIXED_PREFIX_LENGTH)
+        {
+            final int second = parse2In(chars, offset + 17);
+            return new DateTime(Field.SECOND, year, month, day, hour, minute, second, 0, null, 0, availableLength);
+        }
+        return handleTimeResolution(offset, parseConfig, year, month, day, hour, minute, chars);
+    }
 
+    /**
+     * Inputs shorter than the fixed-width prefix: date-only granularities, minute resolution, and every truncation
+     * error. Checks the text length before each field.
+     */
+    private static DateTime parseShort(final String chars, final ParseConfig parseConfig, final int offset, final int availableLength)
+    {
         // YEAR
-        final int years = parseYears(chars, offset);
+        final int years = parse4(chars, offset);
         if (4 == availableLength)
         {
             return new DateTime(Field.YEAR, years, 0, 0, 0, 0, 0, 0, null, 0, availableLength);
@@ -182,7 +138,7 @@ public class ITUParser implements DateTimeParser
 
         // MONTH
         assertPositionContains(Field.MONTH, chars, offset + 4, DATE_SEPARATOR);
-        final int month = parseMonth(chars, offset);
+        final int month = parse2(chars, offset + 5);
         if (7 == availableLength)
         {
             return new DateTime(Field.MONTH, years, month, 0, 0, 0, 0, 0, null, 0, availableLength);
@@ -190,7 +146,7 @@ public class ITUParser implements DateTimeParser
 
         // DAY
         assertPositionContains(Field.DAY, chars, offset + 7, DATE_SEPARATOR);
-        final int days = parseDays(chars, offset);
+        final int days = parse2(chars, offset + 8);
         if (10 == availableLength)
         {
             return new DateTime(Field.DAY, years, month, days, 0, 0, 0, 0, null, 0, availableLength);
@@ -198,11 +154,11 @@ public class ITUParser implements DateTimeParser
 
         // HOURS
         assertAllowedDateTimeSeparator(offset, chars, parseConfig);
-        final int hours = parseHours(chars, offset);
+        final int hours = parse2(chars, offset + 11);
 
         // MINUTES
         assertPositionContains(Field.MINUTE, chars, offset + 13, TIME_SEPARATOR);
-        final int minutes = parseMinutes(chars, offset);
+        final int minutes = parse2(chars, offset + 14);
         if (availableLength == 16)
         {
             // Have only minutes
@@ -234,34 +190,26 @@ public class ITUParser implements DateTimeParser
         return availableLength;
     }
 
-    private static int parseSeconds(int offset, String chars)
+    private static DateTime handleTime(final int offset, final ParseConfig parseConfig, final String chars, final int year, final int month, final int day, final int hour, final int minute)
     {
-        return parse2(chars, offset + 17);
-    }
+        switch (chars.charAt(offset + 16))
+        {
+            case TIME_SEPARATOR:
+                // We have seconds
+                return handleTimeResolution(offset, parseConfig, year, month, day, hour, minute, chars);
 
-    private static int parseMinutes(String chars, int offset)
-    {
-        return parse2(chars, offset + 14);
-    }
+            // We look for time-zone information
+            case PLUS:
+            case MINUS:
+            case ZULU_UPPER:
+            case ZULU_LOWER:
+                final TimezoneOffset zoneOffset = parseTimezone(offset, parseConfig, chars, offset + 16);
+                final int charLength = Field.MINUTE.getRequiredLength() + (zoneOffset != null ? zoneOffset.getRequiredLength() : 0);
+                return new DateTime(Field.MINUTE, year, month, day, hour, minute, 0, 0, zoneOffset, 0, charLength);
 
-    private static int parseHours(String chars, int offset)
-    {
-        return parse2(chars, offset + 11);
-    }
-
-    private static int parseDays(String chars, int offset)
-    {
-        return parse2(chars, offset + 8);
-    }
-
-    private static int parseMonth(String chars, int offset)
-    {
-        return parse2(chars, offset + 5);
-    }
-
-    private static int parseYears(String chars, int offset)
-    {
-        return parse4(chars, offset);
+            default:
+                throw raiseUnexpectedCharacter(chars, offset + 16, TIME_SEPARATOR, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
+        }
     }
 
     private static DateTime handleTimeResolution(final int offset, ParseConfig parseConfig, int year, int month, int day, int hour, int minute, String chars)
@@ -289,18 +237,14 @@ public class ITUParser implements DateTimeParser
                 throw raiseUnexpectedCharacter(chars, offset + 19, ArrayUtils.merge(parseConfig.getFractionSeparators(), new char[]{ZULU_UPPER, ZULU_LOWER, PLUS, MINUS}));
             }
         }
-        else if (length == 19)
-        {
-            final int seconds = parseSeconds(offset, chars);
-            return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, null, 0, length);
-        }
 
+        // NOTE: length == 19 never gets here: parseLenient handles it before calling, and parseShort has length < 19
         throw raiseUnexpectedEndOfText(chars, offset + 16);
     }
 
     private static DateTime handleSecondResolution(int offset, int year, int month, int day, int hour, int minute, String chars, TimezoneOffset timezoneOffset)
     {
-        final int seconds = parseSeconds(offset, chars);
+        final int seconds = parse2(chars, offset + 17);
         final int charLength = Field.SECOND.getRequiredLength() + (timezoneOffset != null ? timezoneOffset.getRequiredLength() : 0);
         return new DateTime(Field.SECOND, year, month, day, hour, minute, seconds, 0, timezoneOffset, 0, charLength);
     }
@@ -350,8 +294,86 @@ public class ITUParser implements DateTimeParser
 
         final TimezoneOffset timezoneOffset = parseTimezone(offset, parseConfig, chars, idx);
         final int charLength = (idx + (timezoneOffset != null ? timezoneOffset.getRequiredLength() : 0)) - offset;
-        final int second = parseSeconds(offset, chars);
+        final int second = parse2(chars, offset + 17);
         return new DateTime(Field.NANO, year, month, day, hour, minute, second, nanos, timezoneOffset, fractionDigits, charLength);
+    }
+
+    private static TimezoneOffset parseTimezone(int offset, final ParseConfig parseConfig, final String chars, final int idx)
+    {
+        if (idx >= chars.length())
+        {
+            return null;
+        }
+        final int len = chars.length();
+        final int left = len - idx;
+        final char c = chars.charAt(idx);
+        if (c == ZULU_UPPER || c == ZULU_LOWER)
+        {
+            assertNoMoreChars(offset, parseConfig, chars, idx);
+            return TimezoneOffset.UTC;
+        }
+
+        final char sign = chars.charAt(idx);
+        if (sign != PLUS && sign != MINUS)
+        {
+            throw raiseUnexpectedCharacter(chars, idx, ZULU_UPPER, ZULU_LOWER, PLUS, MINUS);
+        }
+
+        if (left < OFFSET_LENGTH)
+        {
+            throw new DateTimeParseException(String.format("Invalid timezone offset: %s", chars), chars, idx);
+        }
+
+        assertPositionContains(Field.ZONE_OFFSET, chars, idx + 3, TIME_SEPARATOR);
+
+        int hours = parse2(chars, idx + 1);
+        int minutes = parse2(chars, idx + 4);
+        if (sign == MINUS)
+        {
+            hours = -hours;
+            minutes = -minutes;
+
+            if (hours == 0 && minutes == 0)
+            {
+                throw new DateTimeParseException("Unknown 'Local Offset Convention' date-time not allowed", chars, idx);
+            }
+        }
+
+        assertNoMoreChars(offset, parseConfig, chars, idx + 5);
+        return TimezoneOffset.ofHoursMinutes(hours, minutes);
+    }
+
+    private static void assertNoMoreChars(final int offset, final ParseConfig parseConfig, final String chars, final int lastUsed)
+    {
+        if (parseConfig.isFailOnTrailingJunk() && offset == 0)
+        {
+            if (chars.length() > lastUsed + 1)
+            {
+                throw new DateTimeParseException(String.format("Trailing junk data after position %d: %s", lastUsed + 2, chars), chars, lastUsed + 1);
+            }
+        }
+    }
+
+    private static void assertAllowedDateTimeSeparator(final int offset, final String chars, final ParseConfig config)
+    {
+        final int index = offset + 10;
+        final char needle = chars.charAt(index);
+        if (!config.isDateTimeSeparator(needle))
+        {
+            final String allowedCharStr = config.getDateTimeSeparators().length > 1 ? Arrays.toString(config.getDateTimeSeparators()) : Character.toString(config.getDateTimeSeparators()[0]);
+            throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", allowedCharStr, index + 1, chars.charAt(index), chars), chars, index);
+        }
+    }
+
+    /**
+     * {@link com.ethlo.time.internal.util.ErrorUtil#assertPositionContains} for an index the caller knows is inside the text
+     */
+    private static void assertCharAt(final String chars, final int index, final char expected)
+    {
+        if (chars.charAt(index) != expected)
+        {
+            throw new DateTimeParseException(String.format("Expected character %s at position %d, found %s: %s", expected, index + 1, chars.charAt(index), chars), chars, index);
+        }
     }
 
     public static OffsetDateTime parseDateTime(final String chars, int offset)
