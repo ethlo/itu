@@ -247,6 +247,7 @@ sign-extended copy of `offset` for addressing, and bounds checks that fold again
 | S6.4 | 2026-09-20 | H20 | Year/month/day and hour/minute packed into two ints (7 bits per field) after the prefix, unpacked in `finish`: fewer values live across the fraction | 410 / 73 | 284 / 52 | 246 / 47 | 15.8 / 10.1 / 8.7 | REGRESSION | — |
 | S6.5 | 2026-09-20 | H21 | Fraction block guards as `length >= 23 / 26 / 29` instead of `idx + 3 <= end`, so `end` is not live in the blocks | 404 / 73 | 273 / 52 | 239 / 47 | 15.3 / 9.8 / 8.9 | NO-GAIN | — |
 | S6.6 | 2026-09-20 | H22 | Positions passed as `(base, constant)` pairs, never as a precomputed `offset + k`: `parse2In`/`parse4In`/`assertCharAt`/`assertNoMoreChars` take `base, rel`; the fraction blocks index `offset + 20/23/26` directly and derive `idx` afterwards | 363 / 73 | 261 / 52 | 224 / 47 | 13.1 / 9.0 / 8.1 | KEPT | |
+| S6.7 | 2026-09-20 | H23 | `TimezoneOffset.toZoneOffset`: quarter-hour `ZoneOffset`s from a 145-entry array (`totalSeconds / 900 + 72`) instead of `ZoneOffset.ofHoursMinutes` → `ofTotalSeconds` → `ConcurrentHashMap.get(Integer)`; UTC keeps returning the constant. Gate: strict `parse` (`candidates.itu.ItuParseBenchmark`), same-session baseline 683 / 103 · 497 / 76 · 455 / 71 (25.6 / 19.2 / 16.4 ns) | 660 / 99 | 512 / 78 | 458 / 71 | 25.6 / 19.5 / 16.9 | NO-GAIN | — |
 | S6.t | 2026-09-20 | —   | **`--thorough` confirmation** vs the S6.0 run (`20260920-202242-all-thorough`, floor 0.44): buffer path 19.1 / 11.4 / 8.84 → **13.0 ±0.2 / 8.89 ±0.2 / 7.81 ±0.2** ns; String path 16.5 / 12.6 / 9.61 → **15.1 ±0.4 / 11.1 ±0.2 / 10.0 ±0.2**; strict `parse` 25.1 / 18.4 / 16.2 → 24.9 / 17.8 / 16.4 | | | | −32% / −22% / −12% (buffer) | KEPT | `20260920-213655`, `-214854` |
 
 H18 (diagnostics): the S5 lead is not A-specific in cause, only in size. With `offset` a compile-time constant the
@@ -280,6 +281,14 @@ info can name a register, a stack slot or a constant but cannot recompute `offse
 interpreter-visible locals `base` (already live) and a constant. Buffer path A −32 / B −8 / C −14 instructions, and A
 is now within 9 of the constant-offset diagnostic (S6.1). The String path is unaffected in the benchmark (its
 `offset` is the constant 0 there, so those sums were constants already) and keeps its shape.
+
+H23 (no gain): the strict path's extra ~8 ns over `parseLenient` is `toOffsetDatetime()`, and for a non-UTC offset
+that includes the JDK's cache lookup for `ZoneOffset`. A direct table takes 23 instructions off A but the time does
+not move (25.6 → 25.6 ns), and B / C — UTC, which never touch the table — read +15 / +3 from the JIT reshuffling
+around it. A first version without the explicit UTC branch was worse still (B +32, C +38): returning the table's
+entry instead of the `ZoneOffset.UTC` constant costs C2 the folding it does around a constant offset downstream in
+`OffsetDateTime.of`. The hash lookup is not where the strict path's time goes; the `LocalDate`/`LocalTime`/
+`LocalDateTime`/`OffsetDateTime` construction and re-validation is, and that is JDK code.
 
 ### S6 findings
 
