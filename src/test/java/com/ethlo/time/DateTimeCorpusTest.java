@@ -140,6 +140,9 @@ public class DateTimeCorpusTest
                     .isEqualTo(expected);
         }
 
+        // The TemporalAccessor route is what generic java.time code uses; it must see the same instant
+        assertThat(Instant.from(result)).as("Instant.from(..) for '%s'", c.getInput()).isEqualTo(result.toInstant());
+
         if (c.getParseLength() != null)
         {
             assertThat(result.getParseLength()).as("parse length of '%s'", c.getInput()).isEqualTo(c.getParseLength());
