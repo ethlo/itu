@@ -112,7 +112,9 @@ H3 from S2 is answered: PrintInlining shows the whole parser as one C2 compilati
 | S4.4 | 2026-09-20 | H9  | `finish`: OR-combined upper-bound test `((23-hour)\|(59-minute)\|(59-second)) < 0` and a `DAYS_IN_MONTH` table instead of the `switch`; generic `validate` only on doubt | 503 / 86 | 404 / 79 | 282 / 53 | 20.0 / 13.9 / 10.2 | REGRESSION | — |
 | S4.5 | 2026-09-20 | H10 | `ParseConfig`: separators as a 128-bit ASCII set (shift + mask), array loop only for non-ASCII; replaces S4.3's primary check | 521 / 98 | 394 / 86 | 258 / 52 | 18.4 / 15.1 / 9.9 | KEPT (see S4.6) | |
 | S4.6 | 2026-09-20 | H11 | Fraction: nested straight-line blocks for 3/6/9 digits (`digits3`, xor digit test) instead of the 3-at-a-time loop; remainder loop unchanged | 479 / 91 | 325 / 65 | 256 / 52 | 17.9 / 12.7 / 9.9 | KEPT | `ce4822c` |
-| S4.7 | 2026-09-20 | H12 | `MutableDateTimeBuffer` stores the field ordinal (int) instead of the `Field` reference: no GC write barrier in `set` | 468 / 89 | 311 / 63 | 251 / 51 | 17.9 / 12.3 / 9.5 | KEPT | |
+| S4.7 | 2026-09-20 | H12 | `MutableDateTimeBuffer` stores the field ordinal (int) instead of the `Field` reference: no GC write barrier in `set` | 468 / 89 | 311 / 63 | 251 / 51 | 17.9 / 12.3 / 9.5 | KEPT | `2054234` |
+| S4.8 | 2026-09-20 | H13 | Argument checks as one happy-path branch (`chars == null \|\| out == null \|\| (offset \| length) < 0 \|\| offset + length > chars.length`), messages from a slow path | 475 / 88 | 314 / 62 | 245 / 49 | 19.4 / 11.0 / 9.2 | NO-GAIN | — |
+| S4.9 | 2026-09-20 | H14 | Seconds and zone-offset fields via `parse2In` / `assertCharAt` where the bound is already known (`length >= 19`, `left >= 6`); dead `length == 19` branch removed | 437 / 82 | 297 / 61 | 244 / 48 | 18.9 / 12.7 / 9.1 | KEPT | |
 
 H6: for a full date-time the ten "is the window long enough" checks and four `length ==` branches are dead weight;
 removing them is −14 branches and their index arithmetic. Errors for short inputs are unchanged because they take the
@@ -148,6 +150,12 @@ takes them or leaves everything to the one-at-a-time remainder loop, which is un
 H12: the S4.0 listing ended with `cmpb $0x0,0x48(%r15)` (G1 pre-barrier check), the reference store, then the
 cross-region `xor/shr/je` of the post-barrier: ~10 instructions and 2–3 branches for storing which `Field` was
 parsed. An int ordinal is a plain store; `getMostGranularField()` indexes `Field.values()` on the way out.
+
+H13 (no gain): five entry branches into one. Mixed within JIT variance (A +7, B +3, C −6); the OR loses the
+individual `offset >= 0` / `length >= 0` facts C2 had from the separate compares. Same lesson as S4.4.
+
+H14: the timezone and seconds fields were still parsed with the window-checked `parse2` and the old three-branch digit
+test, although `left >= 6` / `length >= 19` had already been established. Same change as S4.1/S4.2 applied there.
 
 ## Dead ends — do not retry without a new reason
 

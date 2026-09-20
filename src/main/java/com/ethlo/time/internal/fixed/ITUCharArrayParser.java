@@ -242,18 +242,14 @@ public final class ITUCharArrayParser
                 throw raiseUnexpectedCharacter(text(chars, offset, end), 19, ArrayUtils.merge(parseConfig.getFractionSeparators(), new char[]{ZULU_UPPER, ZULU_LOWER, PLUS, MINUS}));
             }
         }
-        else if (length == 19)
-        {
-            final int second = parse2(chars, offset + 17, offset, end);
-            return finish(out, Field.SECOND, year, month, day, hour, minute, second, 0, 0, NO_OFFSET, length);
-        }
 
+        // NOTE: length == 19 never gets here: parseLenient handles it before calling, and parseShort has length < 19
         throw raiseUnexpectedEndOfText(text(chars, offset, end), 16);
     }
 
     private static int handleSecondResolution(final char[] chars, final int offset, final int end, final MutableDateTimeBuffer out, final int year, final int month, final int day, final int hour, final int minute, final int timezoneOffset, final int timezoneLength)
     {
-        final int second = parse2(chars, offset + 17, offset, end);
+        final int second = parse2In(chars, offset + 17, offset, end);
         return finish(out, Field.SECOND, year, month, day, hour, minute, second, 0, 0, timezoneOffset, 19 + timezoneLength);
     }
 
@@ -323,7 +319,7 @@ public final class ITUCharArrayParser
 
         final int timezoneOffset = parseTimezone(chars, offset, end, parseConfig, idx);
         final int charLength = (idx + timezoneLength(chars, idx, end)) - offset;
-        final int second = parse2(chars, offset + 17, offset, end);
+        final int second = parse2In(chars, offset + 17, offset, end);
         return finish(out, Field.NANO, year, month, day, hour, minute, second, nanos, fractionDigits, timezoneOffset, charLength);
     }
 
@@ -371,10 +367,11 @@ public final class ITUCharArrayParser
             throw new DateTimeParseException(String.format("Invalid timezone offset: %s", text), text, idx - offset);
         }
 
-        assertPositionContains(Field.ZONE_OFFSET, chars, offset, end, idx + 3, TIME_SEPARATOR);
+        // Six characters are present, so the fields need no window checks
+        assertCharAt(chars, offset, end, idx + 3, TIME_SEPARATOR);
 
-        int hours = parse2(chars, idx + 1, offset, end);
-        int minutes = parse2(chars, idx + 4, offset, end);
+        int hours = parse2In(chars, idx + 1, offset, end);
+        int minutes = parse2In(chars, idx + 4, offset, end);
         if (c == MINUS)
         {
             hours = -hours;
