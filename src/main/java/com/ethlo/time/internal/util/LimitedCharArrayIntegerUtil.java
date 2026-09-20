@@ -132,12 +132,17 @@ public final class LimitedCharArrayIntegerUtil
     /**
      * {@link #parse2(char[], int, int, int)} when the caller has already established that {@code start + 2 <= windowEnd},
      * so the fast path is the digit test alone. The slow path is the same, for the same message.
+     * <p>
+     * NOTE: {@code c ^ '0'} is the digit value for '0'..'9' and is at least 10 for every other char, because a char is
+     * never negative and the xor keeps every bit above the low nibble. One signed compare per digit therefore replaces
+     * the subtract, the negative test and the upper-bound test; C2 does not otherwise emit an unsigned compare for the
+     * {@code x + MIN_VALUE} or {@code Integer.compareUnsigned} idioms (checked in the disassembly, perf-log S4.2).
      */
     public static int parse2In(final char[] s, final int start, final int windowStart, final int windowEnd)
     {
-        final int d0 = s[start] - ZERO;
-        final int d1 = s[start + 1] - ZERO;
-        if ((d0 | d1) >= 0 && d0 <= 9 && d1 <= 9)
+        final int d0 = s[start] ^ ZERO;
+        final int d1 = s[start + 1] ^ ZERO;
+        if (d0 <= 9 && d1 <= 9)
         {
             return d0 * 10 + d1;
         }
@@ -149,11 +154,11 @@ public final class LimitedCharArrayIntegerUtil
      */
     public static int parse4In(final char[] s, final int start, final int windowStart, final int windowEnd)
     {
-        final int d0 = s[start] - ZERO;
-        final int d1 = s[start + 1] - ZERO;
-        final int d2 = s[start + 2] - ZERO;
-        final int d3 = s[start + 3] - ZERO;
-        if ((d0 | d1 | d2 | d3) >= 0 && d0 <= 9 && d1 <= 9 && d2 <= 9 && d3 <= 9)
+        final int d0 = s[start] ^ ZERO;
+        final int d1 = s[start + 1] ^ ZERO;
+        final int d2 = s[start + 2] ^ ZERO;
+        final int d3 = s[start + 3] ^ ZERO;
+        if (d0 <= 9 && d1 <= 9 && d2 <= 9 && d3 <= 9)
         {
             return d0 * 1000 + d1 * 100 + d2 * 10 + d3;
         }

@@ -106,11 +106,19 @@ H3 from S2 is answered: PrintInlining shows the whole parser as one C2 compilati
 | id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
 |------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
 | S4.0 | 2026-09-20 | —   | BASELINE buffer path @ `e431b8f`                                          | 562 / 106 | 465 / 99 | 325 / 70 | 20.3 / 17.5 / 12.0 | — | `e431b8f` |
-| S4.1 | 2026-09-20 | H6  | `length >= 19` fast path: prefix parsed without per-field window checks or the `length ==` chain; short inputs keep the old code | 535 / 96 | 451 / 90 | 289 / 59 | 19.7 / 16.2 / 10.8 | KEPT | |
+| S4.1 | 2026-09-20 | H6  | `length >= 19` fast path: prefix parsed without per-field window checks or the `length ==` chain; short inputs keep the old code | 535 / 96 | 451 / 90 | 289 / 59 | 19.7 / 16.2 / 10.8 | KEPT | `5620e0d` |
+| S4.2 | 2026-09-20 | H7  | Digit test in the fast-path helpers: `(c ^ '0') <= 9` — one signed compare per digit, no subtract, no negative test | 504 / 91 | 404 / 85 | 273 / 55 | 19.9 / 15.5 / 10.0 | KEPT | |
 
 H6: for a full date-time the ten "is the window long enough" checks and four `length ==` branches are dead weight;
 removing them is −14 branches and their index arithmetic. Errors for short inputs are unchanged because they take the
 old path; errors for bad characters in long inputs are raised by the same helpers.
+Found in the S4.1 disassembly: with no window checks between the loads, C2's range-check smearing collapses the
+per-character bounds checks of the prefix into one `offset + 19 < chars.length` — most of the C gain is that.
+
+H7: `(d0 | d1) >= 0 && d0 <= 9 && d1 <= 9` is 3 branches per pair. Neither `x + MIN_VALUE <= 9 + MIN_VALUE` nor
+`Integer.compareUnsigned(x, 9) <= 0` made C2 emit an unsigned compare (both: `lea 0x7fffffd0(..)`, `cmp $0x80000009`,
+signed jump — same instruction count, fewer branches). `c ^ '0'` is the digit value and ≥ 10 for any non-digit char, so
+one signed compare does the whole test and the subtract goes away: −1 instruction and −½ branch per digit.
 
 ## Dead ends — do not retry without a new reason
 
