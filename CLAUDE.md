@@ -112,16 +112,27 @@ gate for individual changes; elapsed time confirms the accumulated result at the
 
 All parse failures funnel through `internal/util/ErrorUtil` and surface as `java.time.format.DateTimeParseException`
 with a **1-based position in the message text** and a **0-based `getErrorIndex()`**. Tests
-(`ErrorOffsetTest`, `CorrectnessRegressionTest`, `test-data.json`) assert on both, so message wording and index
+(`ErrorOffsetTest`, `date-time-corpus.json`, `duration-corpus.json`) assert on both, so message wording and index
 arithmetic are effectively part of the contract.
 
 ## Tests
 
-- `src/test/resources/test-data.json` is a declarative corpus (input, `lenient`, expected `"epochSecond,nano"`,
-  `error`, `error_index`, `config`) consumed by `ExternalParameterizedTest` via `TestParam`. Prefer adding
-  correctness cases here over new Java test methods.
+- Parsing is tested from two declarative corpora, and a case belongs there whenever it is "this input gives
+  this output":
+  - `src/test/resources/date-time-corpus.json` — one entry per input (`lenient`, `offset`, `config`, canonical
+    `expected` text, `instant`, `parse_length`, `error` + `error_index`, `leap_second`, `note`; the field
+    contract is the javadoc of `DateTimeCase`). `DateTimeCorpusTest` runs every entry through the String path
+    with the overloads the entry names, and through the char[] path differentially (`CharArrayDifferential`),
+    so a case recorded once covers every implementation of the grammar.
+  - `src/test/resources/duration-corpus.json` (`DurationCase`, `DurationCorpusTest`) — every success is also
+    round-tripped through `normalized()` and, when it has no weeks, compared with `java.time.Duration.parse`.
+  - Put the *why* in the entry's `note`; that is where the regression stories from the old test names went.
+- Java tests are for API behaviour that is not an input/output pair: `DurationTest` (arithmetic),
+  `TimezoneOffsetTest`, `TemporalAccessorTest`, `ConfigurableDateTimeParserTest`, the window/buffer tests in
+  `CharArrayParseTest`, `ParseConfig` withers, and `ErrorOffsetTest` (error index vs the JDK's).
 - `CorrectnessRegressionTest` is organised as one `@Nested` class per historical defect, with a javadoc
-  describing the bug. Follow that pattern for new regressions.
+  describing the bug. Parse-shaped regressions go in the corpus with a `note`; API-shaped ones follow that
+  pattern.
 - `src/test/java/com/ethlo/time/fuzzer/*` are jazzer `@FuzzTest`s. Under a normal `mvn test` they only replay
   the seed corpus (fast); set `JAZZER_FUZZ=1` to fuzz for real.
 - `src/test/java/samples/**` are real tests *and* the source of the README examples — see below.

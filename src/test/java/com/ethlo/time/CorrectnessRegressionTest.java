@@ -42,7 +42,9 @@ import com.ethlo.time.internal.DateTimeFormatException;
 
 /**
  * Regression tests for defects found during review of 1.14.0. Each nested class corresponds to one defect,
- * and every test in here fails on 1.14.0.
+ * and every test in here fails on 1.14.0. Defects that show as a parse input with a wrong output are recorded in
+ * {@code date-time-corpus.json} / {@code duration-corpus.json} instead, with the story in the entry's note; what
+ * remains here is the API behaviour around them.
  */
 class CorrectnessRegressionTest
 {
@@ -51,56 +53,14 @@ class CorrectnessRegressionTest
     {
         /**
          * The offset separator position was never inspected, so any character was accepted between the hour
-         * and minute part and the value silently parsed as if it had been a colon.
+         * and minute part and the value silently parsed as if it had been a colon. The fixed parsers are covered
+         * by the corpus; the configurable parser shared the defect.
          */
-        @ParameterizedTest
-        @ValueSource(strings = {
-                "2017-02-21T15:27:39+01x30",
-                "2017-02-21T15:27:39+01930",
-                "2017-02-21T15:27:39+01-30",
-                "2017-02-21T15:27:39+01 30",
-                "2017-02-21T15:27:39-01.30"
-        })
-        void rejectsNonColonOffsetSeparator(String input)
-        {
-            assertThatThrownBy(() -> ITU.parseDateTime(input))
-                    .isInstanceOf(DateTimeParseException.class)
-                    .hasMessageContaining("Expected character : at position 23");
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {
-                "2017-02-21T15:27:39+01x30",
-                "2017-02-21T15:27:39+01930"
-        })
-        void rejectsNonColonOffsetSeparatorWhenLenient(String input)
-        {
-            assertThrows(DateTimeParseException.class, () -> ITU.parseLenient(input));
-        }
-
         @Test
         void rejectsNonColonOffsetSeparatorInConfigurableParser()
         {
             final DateTimeParser parser = rfc3339LikeTokenParser();
             assertThrows(DateTimeParseException.class, () -> parser.parse("2017-02-21T15:27:39+01x30"));
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"2017-02-21T15:27:39+01:30", "2017-02-21T15:27:39-05:00", "2017-02-21T15:27:39Z"})
-        void stillAcceptsWellFormedOffsets(String input)
-        {
-            assertThat(ITU.parseDateTime(input)).isEqualTo(OffsetDateTime.parse(input));
-        }
-
-        /**
-         * A short offset must still be reported as such, rather than as a missing separator
-         */
-        @Test
-        void shortOffsetIsStillReportedAsInvalidOffset()
-        {
-            assertThatThrownBy(() -> ITU.parseDateTime("2017-02-21T15:27:39+0000"))
-                    .isInstanceOf(DateTimeParseException.class)
-                    .hasMessage("Invalid timezone offset: 2017-02-21T15:27:39+0000");
         }
     }
 
@@ -109,23 +69,8 @@ class CorrectnessRegressionTest
     {
         /**
          * Only the date and the second field were range-checked, so an out-of-range hour or minute survived
-         * lenient parsing and round-tripped through toString().
+         * lenient parsing and round-tripped through toString(). The fixed parsers are covered by the corpus.
          */
-        @ParameterizedTest
-        @CsvSource({
-                "2017-02-21T99:99, HourOfDay",
-                "2017-02-21T24:00, HourOfDay",
-                "2017-02-21T25:00:00Z, HourOfDay",
-                "2017-02-21T23:60, MinuteOfHour",
-                "2017-02-21T23:60:00Z, MinuteOfHour"
-        })
-        void rejectsOutOfRangeTimeFields(String input, String expectedField)
-        {
-            assertThatThrownBy(() -> ITU.parseLenient(input))
-                    .isInstanceOf(DateTimeException.class)
-                    .hasMessageContaining("Invalid value for " + expectedField);
-        }
-
         @Test
         void rejectsOutOfRangeHourInConfigurableParser()
         {
@@ -133,14 +78,6 @@ class CorrectnessRegressionTest
             assertThatThrownBy(() -> parser.parse("2017-02-21T99:27:39Z"))
                     .isInstanceOf(DateTimeException.class)
                     .hasMessageContaining("Invalid value for HourOfDay");
-        }
-
-        @Test
-        void rejectsOutOfRangeOffsetWhenLenient()
-        {
-            assertThatThrownBy(() -> ITU.parseLenient("2017-02-21T15:27:39+99:99"))
-                    .isInstanceOf(DateTimeException.class)
-                    .hasMessage("Zone offset hours not in valid range: value 99 is not in the range -18 to 18");
         }
 
         @Test
@@ -174,60 +111,10 @@ class CorrectnessRegressionTest
     class TrailingJunkConfiguration
     {
         /**
-         * withFailOnTrailingJunk(..) dropped its argument and isFailOnTrailingJunk() was hard-coded to true
+         * withFailOnTrailingJunk(..) dropped its argument and isFailOnTrailingJunk() was hard-coded to true. That
+         * the parsers honour the setting - and that the Z form at second resolution does not skip the check - is
+         * covered by the corpus.
          */
-        @Test
-        void honoursDisabledTrailingJunkCheck()
-        {
-            final ParseConfig config = ParseConfig.DEFAULT.withFailOnTrailingJunk(false);
-            assertThat(config.isFailOnTrailingJunk()).isFalse();
-            assertThat(ITU.parseLenient("2017-02-21T15:27:39Zjunk", config).toString()).isEqualTo("2017-02-21T15:27:39Z");
-        }
-
-        @Test
-        void honoursEnabledTrailingJunkCheck()
-        {
-            final ParseConfig config = ParseConfig.DEFAULT.withFailOnTrailingJunk(true);
-            assertThat(config.isFailOnTrailingJunk()).isTrue();
-            assertThrows(DateTimeParseException.class, () -> ITU.parseLenient("2017-02-21T15:27:39Zjunk", config));
-        }
-
-        /**
-         * The Z form at second resolution short-cut straight to TimezoneOffset.UTC and never ran the
-         * trailing junk check, so this one shape - by far the most common RFC-3339 form - let junk through
-         * while every other shape rejected it.
-         */
-        @ParameterizedTest
-        @ValueSource(strings = {
-                "2017-02-21T15:27:39Zjunk",
-                "2017-02-21T15:27:39zjunk",
-                "2017-02-21T15:27:39Z ",
-                "2017-02-21T15:27:39Z2017-02-21T15:27:39Z"
-        })
-        void rejectsTrailingJunkAfterZuluAtSecondResolution(String input)
-        {
-            assertThatThrownBy(() -> ITU.parseDateTime(input))
-                    .isInstanceOf(DateTimeParseException.class)
-                    .hasMessageContaining("Trailing junk data after position 21");
-            assertThat(ITU.isValid(input)).isFalse();
-        }
-
-        /**
-         * ..and the other shapes, which already worked, must keep working
-         */
-        @ParameterizedTest
-        @CsvSource({
-                "2017-02-21T15:27:39+01:00junk, 26",
-                "2017-02-21T15:00:00.123ZGGG, 25",
-                "2017-02-21T15:27Zjunk, 18"
-        })
-        void rejectsTrailingJunkInOtherShapes(String input, int position)
-        {
-            assertThatThrownBy(() -> ITU.parseDateTime(input))
-                    .isInstanceOf(DateTimeParseException.class)
-                    .hasMessageContaining("Trailing junk data after position " + position);
-        }
-
         @Test
         void trailingJunkSettingSurvivesOtherWithers()
         {
@@ -435,29 +322,6 @@ class CorrectnessRegressionTest
                 Locale.setDefault(original);
             }
         }
-
-        /**
-         * Overflow escaped as ArithmeticException, although the API documents DateTimeParseException
-         */
-        @ParameterizedTest
-        @ValueSource(strings = {
-                "P99999999999999999999D",
-                "P15250284452471WT9223372036854775807S",
-                "P1DT9223372036854775807S"
-        })
-        void overflowIsReportedAsParseException(String input)
-        {
-            assertThatThrownBy(() -> ITU.parseDuration(input)).isInstanceOf(DateTimeParseException.class);
-        }
-
-        @Test
-        void normalizedRoundTrips()
-        {
-            for (String input : new String[]{"PT0S", "PT1S", "-PT1S", "PT1.5S", "-PT1.5S", "P1W", "P1DT2H3M4S", "-PT0.000000001S"})
-            {
-                assertThat(ITU.parseDuration(input).normalized()).as(input).isEqualTo(input);
-            }
-        }
     }
 
     @Nested
@@ -488,35 +352,6 @@ class CorrectnessRegressionTest
         void stillAcceptsValidFractions(String input, int expectedNano)
         {
             assertThat(DateTimeParsers.localTime().parse(input).getNano()).isEqualTo(expectedNano);
-        }
-    }
-
-    @Nested
-    class ErrorIndex
-    {
-        /**
-         * The offset was added twice when reporting the position of a fraction error, producing an index
-         * beyond the end of the input that was then pushed into the caller's ParsePosition
-         */
-        @Test
-        void fractionErrorIndexIsWithinTheInput()
-        {
-            final String text = "xxxxx2017-02-21T15:27:39.Z";
-            final ParsePosition position = new ParsePosition(5);
-            assertThatThrownBy(() -> ITU.parseLenient(text, ParseConfig.DEFAULT, position))
-                    .isInstanceOf(DateTimeParseException.class)
-                    .satisfies(exc -> assertThat(((DateTimeParseException) exc).getErrorIndex())
-                            .isBetween(0, text.length() - 1)
-                            .isEqualTo(24));
-            assertThat(position.getErrorIndex()).isBetween(0, text.length() - 1);
-        }
-
-        @Test
-        void fractionErrorIndexUnchangedAtZeroOffset()
-        {
-            assertThatThrownBy(() -> ITU.parseLenient("2017-02-21T15:27:39.Z"))
-                    .isInstanceOf(DateTimeParseException.class)
-                    .satisfies(exc -> assertThat(((DateTimeParseException) exc).getErrorIndex()).isEqualTo(19));
         }
     }
 
@@ -600,15 +435,12 @@ class CorrectnessRegressionTest
     {
         /**
          * Pins the distinction between the one-character Z form and the six-character +00:00 form, which
-         * TimezoneOffset.getRequiredLength() relies on an identity comparison to tell apart
+         * TimezoneOffset.getRequiredLength() relies on an identity comparison to tell apart. The fixed parser's
+         * parse lengths are corpus entries; the token parser reports its through the ParsePosition.
          */
         @Test
         void parseLengthCoversTheWholeOffset()
         {
-            assertThat(ITU.parseLenient("2017-02-21T15:27:39Z").getParseLength()).isEqualTo(20);
-            assertThat(ITU.parseLenient("2017-02-21T15:27:39+00:00").getParseLength()).isEqualTo(25);
-            assertThat(ITU.parseLenient("2017-02-21T15:27:39.123+01:00").getParseLength()).isEqualTo(29);
-
             final ParsePosition position = new ParsePosition(0);
             DateTimeParsers.rfc3339().parse("2017-02-21T15:27:39+00:00", position);
             assertThat(position.getIndex()).isEqualTo(25);

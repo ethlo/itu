@@ -23,7 +23,6 @@ package com.ethlo.time;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -39,18 +38,14 @@ import com.ethlo.time.internal.DateTimeFormatException;
 
 /**
  * The zero-allocation char[] path is a second implementation of the same grammar, so it is tested differentially
- * against the String path (the reference) over the whole corpus, plus the behaviour that only exists on this path:
- * windows, buffer reuse, and the offset representation.
+ * against the String path (the reference): over the whole corpus in {@link DateTimeCorpusTest#charArrayPath}, and
+ * here over the inputs that probe its own branches, plus the behaviour that only exists on this path: windows,
+ * buffer reuse, and the offset representation.
  */
 @Tag("CorrectnessTest")
 public class CharArrayParseTest
 {
     private static final String VALID = "2017-05-01T16:23:12.123456789+05:30";
-
-    public static List<TestParam> corpus() throws IOException
-    {
-        return ExternalParameterizedTest.fromFile();
-    }
 
     /**
      * Inputs that probe every early-return and error branch of the parser, so the corpus is not the only line of defence
@@ -146,13 +141,6 @@ public class CharArrayParseTest
         result.add("2020-01-01T10:00:00٠Z");
         result.add("２０２０-01-01T10:00:00Z");
         return result;
-    }
-
-    @ParameterizedTest
-    @MethodSource("corpus")
-    void sameAsStringPathForCorpus(final TestParam param)
-    {
-        CharArrayDifferential.assertSameAsStringPath(param.getInput(), param.getConfig() != null ? param.getConfig() : ParseConfig.DEFAULT);
     }
 
     @ParameterizedTest
