@@ -38,11 +38,14 @@ public class ParseConfig
     private final char[] fractionSeparators;
     private final boolean failOnTrailingJunk;
     /**
-     * The first allowed separator of each kind, or -1 if there is none. Checked before the array is consulted: for the
-     * default configuration that is 'T' and '.', so RFC-3339 input never pays for the loop over the alternatives
+     * The separators of each kind as a 128-bit set over ASCII (bit {@code c} of {@code lo} for {@code c < 64}, of
+     * {@code hi} for {@code 64 <= c < 128}). A membership test is then a shift and a mask; only a non-ASCII candidate
+     * consults the array. Without this the parser ran a loop with a safepoint poll for every 'Z' after the seconds
      */
-    private final int primaryDateTimeSeparator;
-    private final int primaryFractionSeparator;
+    private final long dateTimeSeparatorsLo;
+    private final long dateTimeSeparatorsHi;
+    private final long fractionSeparatorsLo;
+    private final long fractionSeparatorsHi;
 
     protected ParseConfig(char[] dateTimeSeparators, char[] allowedFractionSeparators)
     {
@@ -54,8 +57,37 @@ public class ParseConfig
         this.dateTimeSeparators = Optional.ofNullable(dateTimeSeparators).orElse(DEFAULT_DATE_TIME_SEPARATORS).clone();
         this.fractionSeparators = Optional.ofNullable(allowedFractionSeparators).orElse(RFC_3339_FRACTION_SEPARATOR).clone();
         this.failOnTrailingJunk = failOnTrailingJunk;
-        this.primaryDateTimeSeparator = this.dateTimeSeparators.length > 0 ? this.dateTimeSeparators[0] : -1;
-        this.primaryFractionSeparator = this.fractionSeparators.length > 0 ? this.fractionSeparators[0] : -1;
+        this.dateTimeSeparatorsLo = asciiMask(this.dateTimeSeparators, 0);
+        this.dateTimeSeparatorsHi = asciiMask(this.dateTimeSeparators, 64);
+        this.fractionSeparatorsLo = asciiMask(this.fractionSeparators, 0);
+        this.fractionSeparatorsHi = asciiMask(this.fractionSeparators, 64);
+    }
+
+    private static long asciiMask(final char[] chars, final int base)
+    {
+        long mask = 0;
+        for (final char c : chars)
+        {
+            if (c >= base && c < base + 64)
+            {
+                mask |= 1L << (c - base);
+            }
+        }
+        return mask;
+    }
+
+    private static boolean isSet(final long lo, final long hi, final char c)
+    {
+        // NOTE: The shift count is taken modulo 64 by the JVM, which is exactly the bit wanted in each half
+        if (c < 64)
+        {
+            return ((lo >>> c) & 1) != 0;
+        }
+        if (c < 128)
+        {
+            return ((hi >>> c) & 1) != 0;
+        }
+        return false;
     }
 
     public char[] getFractionSeparators()
@@ -104,12 +136,12 @@ public class ParseConfig
 
     public boolean isDateTimeSeparator(char needle)
     {
-        return needle == primaryDateTimeSeparator || contains(dateTimeSeparators, needle);
+        return needle < 128 ? isSet(dateTimeSeparatorsLo, dateTimeSeparatorsHi, needle) : contains(dateTimeSeparators, needle);
     }
 
     public boolean isFractionSeparator(char needle)
     {
-        return needle == primaryFractionSeparator || contains(fractionSeparators, needle);
+        return needle < 128 ? isSet(fractionSeparatorsLo, fractionSeparatorsHi, needle) : contains(fractionSeparators, needle);
     }
 
     private static boolean contains(final char[] haystack, final char needle)
