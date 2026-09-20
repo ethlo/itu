@@ -70,7 +70,7 @@ This is a collection of usage examples for parsing.
 
 
 #### parseRfc3339
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L60C5-L69C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L61C5-L70C6)</smaller>
 
 The simplest and fastest way to parse an RFC-3339 timestamp by far!
 ```java
@@ -80,7 +80,7 @@ assertThat(dateTime.toString()).isEqualTo(text);
 ```
 
 #### parseLenient
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L71C5-L83C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L72C5-L84C6)</smaller>
 
 Parses a date-time with flexible granularity. Works for anything from a year to a timestamp with nanoseconds, with or without timezone offset.
 ```java
@@ -91,7 +91,7 @@ assertThat(formatted).isEqualTo(text);
 ```
 
 #### parseLenientWithCustomSeparators
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L85C5-L97C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L86C5-L98C6)</smaller>
 
 In case you encounter the need for a somewhat different time-separator or fraction separator
  you can use the `ParseConfig` to set up you preferred delimiters.
@@ -104,7 +104,7 @@ assertThat(result.toString()).isEqualTo("1999-11-22T11:22:17.191");
 ```
 
 #### parsePosition
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L99C5-L109C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L100C5-L110C6)</smaller>
 
 This allows you to track where to start reading. Note that the check for trailing junk is disabled when using `ParsePosition`.
 ```java
@@ -114,8 +114,24 @@ assertThat(result.toString()).isEqualTo("1999-11-22T11:22:19+05:30");
 assertThat(pos.getIndex()).isEqualTo(35);
 ```
 
+#### parseIntoBuffer
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L112C5-L127C6)</smaller>
+
+When the text is already available as characters, parse into a reusable buffer: nothing is allocated, and the
+ fields are read straight off the buffer. This is the fastest way to parse. The window `[offset, offset + length)`
+ is the text, so trailing junk inside it is rejected and anything outside it is never read.
+```java
+final char[] chars = "2012-12-27T19:07:22.123456789-03:00".toCharArray();
+final MutableDateTimeBuffer buffer = new MutableDateTimeBuffer();
+final int consumed = ITU.parseLenient(chars, 0, chars.length, buffer);
+assertThat(consumed).isEqualTo(35);
+assertThat(buffer.getYear()).isEqualTo(2012);
+assertThat(buffer.getNano()).isEqualTo(123456789);
+assertThat(buffer.getOffsetTotalSeconds()).isEqualTo(-3 * 3600);
+```
+
 #### explicitGranularity
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L111C5-L134C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L129C5-L152C6)</smaller>
 
 This is useful if you need to handle different granularity with different logic or interpolation.
 ```java
@@ -138,7 +154,7 @@ assertThat(result.toString()).isEqualTo("2017-12-06T00:00Z");
 ```
 
 #### lenientTimestamp
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L136C5-L146C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L154C5-L164C6)</smaller>
 
 In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `DateTime` instance into `Instant`.
 
@@ -149,7 +165,7 @@ assertThat(instant.toString()).isEqualTo("2017-12-06T00:00:00Z");
 ```
 
 #### parseCustomFormat
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L148C5-L170C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L166C5-L188C6)</smaller>
 
 In case the format is not supported directly, you can build your own parser.
 ```java
@@ -172,7 +188,7 @@ assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
 ```
 
 #### parseUsingInterfaceRfc33939
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L172C5-L182C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L190C5-L200C6)</smaller>
 
 `DateTimerParser` interface for RFC-3339.
 ```java
@@ -183,7 +199,7 @@ assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
 ```
 
 #### parseUsingInterfaceLocalTime
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L184C5-L194C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L202C5-L212C6)</smaller>
 
 `DateTimerParser` interface for local time.
 ```java
@@ -194,7 +210,7 @@ assertThat(result.toString()).isEqualTo(text);
 ```
 
 #### parseUsingInterfaceLocalDate
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L196C5-L206C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L214C5-L224C6)</smaller>
 
 `DateTimerParser` interface for local date.
 ```java

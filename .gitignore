@@ -6,3 +6,5 @@
 *.iml
 *.versionsBackup
 .cifuzz-corpus
+.aider*
+/perf/out/

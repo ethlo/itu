@@ -24,7 +24,6 @@ import static com.ethlo.time.internal.fixed.ITUFormatter.finish;
 import static com.ethlo.time.internal.fixed.ITUParser.DATE_SEPARATOR;
 import static com.ethlo.time.internal.fixed.ITUParser.SEPARATOR_UPPER;
 import static com.ethlo.time.internal.fixed.ITUParser.TIME_SEPARATOR;
-import static com.ethlo.time.internal.util.LeapSecondHandler.LEAP_SECOND_SECONDS;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -45,8 +44,7 @@ import java.util.Optional;
 import com.ethlo.time.internal.DateTimeFormatException;
 import com.ethlo.time.internal.fixed.ITUFormatter;
 import com.ethlo.time.internal.util.DateTimeMath;
-import com.ethlo.time.internal.util.DefaultLeapSecondHandler;
-import com.ethlo.time.internal.util.LeapSecondHandler;
+import com.ethlo.time.internal.util.DateTimeValidator;
 import com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil;
 
 /**
@@ -54,7 +52,6 @@ import com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil;
  */
 public class DateTime implements TemporalAccessor
 {
-    private static final LeapSecondHandler leapSecondHandler = new DefaultLeapSecondHandler();
     private final Field field;
     private final int year;
     private final int month;
@@ -85,8 +82,8 @@ public class DateTime implements TemporalAccessor
         this.nano = nano;
         this.offset = offset;
         this.fractionDigits = fractionDigits;
-        leapSecondCheck(year, month, day, hour, minute, second, nano, offset);
-        validated();
+        DateTimeValidator.leapSecondCheck(year, month, day, hour, minute, second, nano, offset != null, offset != null ? offset.getTotalSeconds() : 0);
+        DateTimeValidator.validate(field, year, month, day, hour, minute, second, nano);
         this.charLength = charLength;
     }
 
@@ -187,34 +184,6 @@ public class DateTime implements TemporalAccessor
     public static DateTime of(OffsetDateTime dateTime)
     {
         return DateTime.of(dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond(), dateTime.getNano(), TimezoneOffset.of(dateTime.getOffset()), 9);
-    }
-
-    private static void leapSecondCheck(int year, int month, int day, int hour, int minute, int second, int nanos, TimezoneOffset offset)
-    {
-        if (second == LEAP_SECOND_SECONDS)
-        {
-            // Do not fall over trying to parse leap seconds
-            final YearMonth needle = YearMonth.of(year, month);
-            final boolean isValidLeapYearMonth = leapSecondHandler.isValidLeapSecondDate(needle);
-            if (isValidLeapYearMonth || needle.isAfter(leapSecondHandler.getLastKnownLeapSecond()))
-            {
-                if (offset == null)
-                {
-                    offset = TimezoneOffset.UTC;
-                }
-
-                final int utcHour = hour - offset.getTotalSeconds() / 3_600;
-                final int utcMinute = minute - (offset.getTotalSeconds() % 3_600) / 60;
-                if (((month == Month.DECEMBER.getValue() && day == 31) || (month == Month.JUNE.getValue() && day == 30))
-                        && utcHour == 23
-                        && utcMinute == 59)
-                {
-                    // Consider it a leap second
-                    final OffsetDateTime nearest = OffsetDateTime.of(year, month, day, hour, minute, 59, nanos, offset.toZoneOffset()).plusSeconds(1);
-                    throw new LeapSecondException(nearest, second, isValidLeapYearMonth);
-                }
-            }
-        }
     }
 
     /**
@@ -610,47 +579,6 @@ public class DateTime implements TemporalAccessor
         final long daysInSeconds = DateTimeMath.daysFromCivil(year, month != 0 ? month : 1, day != 0 ? day : 1) * 86_400;
         final long tsOffset = offset != null ? offset.getTotalSeconds() : 0;
         return (daysInSeconds + secsSinceMidnight) - tsOffset;
-    }
-
-    private void validated()
-    {
-        // NOTE: Cheap arithmetic fast path. Only when a field is out of range do we defer to java.time,
-        // so that the error messages stay identical to what OffsetDateTime.of(..) would have produced
-        if (field.ordinal() >= Field.DAY.ordinal() && !isValidDate(year, month, day))
-        {
-            //noinspection ResultOfMethodCallIgnored
-            LocalDate.of(year, month, day);
-        }
-
-        // NOTE: Validated from the most significant field down, and delegated to ChronoField so the messages
-        // match what java.time would have produced had the value made it as far as OffsetDateTime.of(..)
-        if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59 || nano < 0 || nano > 999_999_999)
-        {
-            ChronoField.HOUR_OF_DAY.checkValidValue(hour);
-            ChronoField.MINUTE_OF_HOUR.checkValidValue(minute);
-            ChronoField.SECOND_OF_MINUTE.checkValidValue(second);
-            ChronoField.NANO_OF_SECOND.checkValidValue(nano);
-        }
-    }
-
-    private static boolean isValidDate(final int year, final int month, final int day)
-    {
-        if (month < 1 || month > 12 || day < 1 || year < -999_999_999 || year > 999_999_999)
-        {
-            return false;
-        }
-        switch (month)
-        {
-            case 2:
-                return day <= (((year & 3) == 0 && (year % 100 != 0 || year % 400 == 0)) ? 29 : 28);
-            case 4:
-            case 6:
-            case 9:
-            case 11:
-                return day <= 30;
-            default:
-                return day <= 31;
-        }
     }
 
     public int getParseLength()

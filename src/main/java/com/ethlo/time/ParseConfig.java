@@ -37,6 +37,15 @@ public class ParseConfig
     private final char[] dateTimeSeparators;
     private final char[] fractionSeparators;
     private final boolean failOnTrailingJunk;
+    /**
+     * The separators of each kind as a 128-bit set over ASCII (bit {@code c} of {@code lo} for {@code c < 64}, of
+     * {@code hi} for {@code 64 <= c < 128}). A membership test is then a shift and a mask; only a non-ASCII candidate
+     * consults the array. Without this the parser ran a loop with a safepoint poll for every 'Z' after the seconds
+     */
+    private final long dateTimeSeparatorsLo;
+    private final long dateTimeSeparatorsHi;
+    private final long fractionSeparatorsLo;
+    private final long fractionSeparatorsHi;
 
     protected ParseConfig(char[] dateTimeSeparators, char[] allowedFractionSeparators)
     {
@@ -48,6 +57,37 @@ public class ParseConfig
         this.dateTimeSeparators = Optional.ofNullable(dateTimeSeparators).orElse(DEFAULT_DATE_TIME_SEPARATORS).clone();
         this.fractionSeparators = Optional.ofNullable(allowedFractionSeparators).orElse(RFC_3339_FRACTION_SEPARATOR).clone();
         this.failOnTrailingJunk = failOnTrailingJunk;
+        this.dateTimeSeparatorsLo = asciiMask(this.dateTimeSeparators, 0);
+        this.dateTimeSeparatorsHi = asciiMask(this.dateTimeSeparators, 64);
+        this.fractionSeparatorsLo = asciiMask(this.fractionSeparators, 0);
+        this.fractionSeparatorsHi = asciiMask(this.fractionSeparators, 64);
+    }
+
+    private static long asciiMask(final char[] chars, final int base)
+    {
+        long mask = 0;
+        for (final char c : chars)
+        {
+            if (c >= base && c < base + 64)
+            {
+                mask |= 1L << (c - base);
+            }
+        }
+        return mask;
+    }
+
+    private static boolean isSet(final long lo, final long hi, final char c)
+    {
+        // NOTE: The shift count is taken modulo 64 by the JVM, which is exactly the bit wanted in each half
+        if (c < 64)
+        {
+            return ((lo >>> c) & 1) != 0;
+        }
+        if (c < 128)
+        {
+            return ((hi >>> c) & 1) != 0;
+        }
+        return false;
     }
 
     public char[] getFractionSeparators()
@@ -96,19 +136,17 @@ public class ParseConfig
 
     public boolean isDateTimeSeparator(char needle)
     {
-        for (char c : dateTimeSeparators)
-        {
-            if (c == needle)
-            {
-                return true;
-            }
-        }
-        return false;
+        return needle < 128 ? isSet(dateTimeSeparatorsLo, dateTimeSeparatorsHi, needle) : contains(dateTimeSeparators, needle);
     }
 
     public boolean isFractionSeparator(char needle)
     {
-        for (char c : fractionSeparators)
+        return needle < 128 ? isSet(fractionSeparatorsLo, fractionSeparatorsHi, needle) : contains(fractionSeparators, needle);
+    }
+
+    private static boolean contains(final char[] haystack, final char needle)
+    {
+        for (char c : haystack)
         {
             if (c == needle)
             {
