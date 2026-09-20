@@ -114,7 +114,9 @@ H3 from S2 is answered: PrintInlining shows the whole parser as one C2 compilati
 | S4.6 | 2026-09-20 | H11 | Fraction: nested straight-line blocks for 3/6/9 digits (`digits3`, xor digit test) instead of the 3-at-a-time loop; remainder loop unchanged | 479 / 91 | 325 / 65 | 256 / 52 | 17.9 / 12.7 / 9.9 | KEPT | `ce4822c` |
 | S4.7 | 2026-09-20 | H12 | `MutableDateTimeBuffer` stores the field ordinal (int) instead of the `Field` reference: no GC write barrier in `set` | 468 / 89 | 311 / 63 | 251 / 51 | 17.9 / 12.3 / 9.5 | KEPT | `2054234` |
 | S4.8 | 2026-09-20 | H13 | Argument checks as one happy-path branch (`chars == null \|\| out == null \|\| (offset \| length) < 0 \|\| offset + length > chars.length`), messages from a slow path | 475 / 88 | 314 / 62 | 245 / 49 | 19.4 / 11.0 / 9.2 | NO-GAIN | — |
-| S4.9 | 2026-09-20 | H14 | Seconds and zone-offset fields via `parse2In` / `assertCharAt` where the bound is already known (`length >= 19`, `left >= 6`); dead `length == 19` branch removed | 437 / 82 | 297 / 61 | 244 / 48 | 18.9 / 12.7 / 9.1 | KEPT | |
+| S4.9 | 2026-09-20 | H14 | Seconds and zone-offset fields via `parse2In` / `assertCharAt` where the bound is already known (`length >= 19`, `left >= 6`); dead `length == 19` branch removed | 437 / 82 | 297 / 61 | 244 / 48 | 18.9 / 12.7 / 9.1 | KEPT | `09a5270` |
+| S4.10 | 2026-09-20 | H15 | Write year/month/day and hour/minute into the buffer as soon as parsed (drops "untouched on failure"), validate from the buffer at the end | 432 / 81 | 297 / 61 | 242 / 47 | 18.5 / 12.0 / 9.5 | NO-GAIN | — |
+| S4.t | 2026-09-20 | —   | **`--thorough` confirmation**, buffer path, S4.0 code (`e431b8f`) vs `09a5270`: 20.34 ±0.40 / 17.02 ±0.22 / 12.14 ±0.28 → **19.72 ±0.91 / 11.71 ±0.40 / 9.00 ±0.19** ns (floor 0.47) | | | | −3% / −31% / −26% | KEPT | |
 
 H6: for a full date-time the ten "is the window long enough" checks and four `length ==` branches are dead weight;
 removing them is −14 branches and their index arithmetic. Errors for short inputs are unchanged because they take the
@@ -156,6 +158,29 @@ individual `offset >= 0` / `length >= 0` facts C2 had from the separate compares
 
 H14: the timezone and seconds fields were still parsed with the window-checked `parse2` and the old three-branch digit
 test, although `left >= 6` / `length >= 19` had already been established. Same change as S4.1/S4.2 applied there.
+
+H15 (no gain): the S4.0 listing had 72 xmm↔gpr moves and 31 spills because year…minute stay live until `finish`.
+Storing them into the buffer as they are parsed (and reading them back for the validation at the end, so error
+precedence is unchanged) should have freed five registers. It changed nothing measurable: the pressure comes from
+the index temporaries, `chars.length`, `end` and the fraction/offset state, not from the five field values. The
+"buffer untouched on failure" contract therefore stays; there is nothing to buy by giving it up.
+
+### S4 findings
+
+- **Session result** (`--thorough`, ±2–4%): B −31%, C −26%, A −3% (inside error). Instructions 562/465/325 →
+  437/297/244, branches 106/99/70 → 82/61/48. A's path is latency-bound (chained `nanos * 1000 + …` multiplies,
+  offset arithmetic), so its instruction count fell 22% without the time following; B and C are front-end-bound.
+- **What C2 does with this code** (all from the disassembly, none visible at source level): range-check smearing
+  removes the per-character bounds checks only when no other `if` sits between the loads (S4.1); `x + MIN_VALUE`
+  and `Integer.compareUnsigned` do not become unsigned compares (S4.2); a 3-iteration loop may or may not be
+  unrolled, and when it is it carries predication checks and a spill per digit (S4.5/S4.6); a `char[]` lookup loop
+  over a one-element array still costs a loop with a safepoint poll (S4.5); a reference store into a long-lived
+  object costs a G1 barrier (S4.7); OR-combined range checks are more instructions than macro-fused `cmp/jcc`
+  chains (S4.4, S4.8).
+- **Not done, candidates for a later session**: (1) transfer S4.1/S4.2/S4.6/S4.9 to the String path in
+  `ITUParser` — same structure, `charAt` instead of `chars[i]`; (2) the `parse2`/`parse4` checked variants used by
+  `parseShort` still have the old three-branch digit test; (3) A's latency chain: accumulate the three fraction
+  blocks independently (`millis * 1_000_000 + micros * 1_000 + nanosPart`) instead of the serial `* 1000 + …`.
 
 ## Dead ends — do not retry without a new reason
 
