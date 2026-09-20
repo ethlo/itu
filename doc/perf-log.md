@@ -97,8 +97,8 @@ effects being chased, so the rows below are gated on **P-core instructions and b
 from the same quick run for orientation only. The cumulative result is confirmed with `--thorough` at the end of the
 session. Inputs are the buffer path (`candidates.itu_buffer`) only: `ITU.parseLenient(char[], off, len, buffer)`.
 
-How the counts were obtained: `perf record` attached to the forked JMH JVM plus `-XX:CompileCommand=print` and
-`objdump` on the raw nmethod bytes (no hsdis installed) — see `scratchpad/perfprof.sh` in the session; the S4.0 hot
+How the counts were obtained: `perf/instr.sh` (perfnorm counters) and `perf/hotpath.sh` (`perf record` attached to the
+forked JMH JVM plus `-XX:CompileCommand=print` and `objdump` on the raw nmethod bytes, no hsdis needed); the S4.0 hot
 path for input B was 455 instructions: 97 branches, 72 xmm↔gpr moves + 31 stack spills (register pressure: `chars` was
 kept in `xmm11`, the parsed fields in `xmm0–xmm5`), 26 char loads, 25 bounds checks, 65 `lea` (index arithmetic).
 H3 from S2 is answered: PrintInlining shows the whole parser as one C2 compilation unit already.
