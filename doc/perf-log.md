@@ -247,6 +247,7 @@ sign-extended copy of `offset` for addressing, and bounds checks that fold again
 | S6.4 | 2026-09-20 | H20 | Year/month/day and hour/minute packed into two ints (7 bits per field) after the prefix, unpacked in `finish`: fewer values live across the fraction | 410 / 73 | 284 / 52 | 246 / 47 | 15.8 / 10.1 / 8.7 | REGRESSION | — |
 | S6.5 | 2026-09-20 | H21 | Fraction block guards as `length >= 23 / 26 / 29` instead of `idx + 3 <= end`, so `end` is not live in the blocks | 404 / 73 | 273 / 52 | 239 / 47 | 15.3 / 9.8 / 8.9 | NO-GAIN | — |
 | S6.6 | 2026-09-20 | H22 | Positions passed as `(base, constant)` pairs, never as a precomputed `offset + k`: `parse2In`/`parse4In`/`assertCharAt`/`assertNoMoreChars` take `base, rel`; the fraction blocks index `offset + 20/23/26` directly and derive `idx` afterwards | 363 / 73 | 261 / 52 | 224 / 47 | 13.1 / 9.0 / 8.1 | KEPT | |
+| S6.t | 2026-09-20 | —   | **`--thorough` confirmation** vs the S6.0 run (`20260920-202242-all-thorough`, floor 0.44): buffer path 19.1 / 11.4 / 8.84 → **13.0 ±0.2 / 8.89 ±0.2 / 7.81 ±0.2** ns; String path 16.5 / 12.6 / 9.61 → **15.1 ±0.4 / 11.1 ±0.2 / 10.0 ±0.2**; strict `parse` 25.1 / 18.4 / 16.2 → 24.9 / 17.8 / 16.4 | | | | −32% / −22% / −12% (buffer) | KEPT | `20260920-213655`, `-214854` |
 
 H18 (diagnostics): the S5 lead is not A-specific in cause, only in size. With `offset` a compile-time constant the
 buffer path is 95 / 63 / 48 instructions and 6.5 / 3.2 / 2.0 ns cheaper on A / B / C and ends up *ahead* of the String
@@ -279,6 +280,29 @@ info can name a register, a stack slot or a constant but cannot recompute `offse
 interpreter-visible locals `base` (already live) and a constant. Buffer path A −32 / B −8 / C −14 instructions, and A
 is now within 9 of the constant-offset diagnostic (S6.1). The String path is unaffected in the benchmark (its
 `offset` is the constant 0 there, so those sums were constants already) and keeps its shape.
+
+### S6 findings
+
+- **Session result** (`--thorough`): buffer path A −32%, B −22%, C −12% (19.1 / 11.4 / 8.84 → 13.0 / 8.89 / 7.81 ns);
+  instructions 449 / 304 / 242 → 363 / 261 / 224, branches 82 / 62 / 48 → 73 / 52 / 47. The S5 lead is closed: the
+  buffer path is now ahead of the String path on all three inputs, A included (13.0 vs 15.1 ns). The String path
+  took −8% / −12% on A / B from S6.3 alone (C +4%, at the edge of the error bars with unchanged instructions).
+- **Why the buffer path was slower on A**: not an A-specific stall but register pressure that A's live set (nine
+  fraction digits, an offset, five fields) tipped over, and the pressure came from the variable window start — the
+  String benchmark parses at the constant offset 0. Two of its three costs were removable: bounds checks that the
+  separator set's diamond kept from smearing (S6.3), and `offset + k` locals materialised for the inlined helpers'
+  uncommon traps (S6.6). What remains — `chars` parked in an xmm register and copied to a GPR before each load,
+  `offset` and `length` on the stack — is the allocator's choice with a 64-bit sign-extended copy of `offset` for
+  addressing and the int for the window checks both live; one more GPR is worth another ~25 instructions (S6.2).
+- **What C2 does with this code**, added to the S4 list: range-check smearing stops at the separator set's
+  `c < 64 ? lo : hi` diamond, not only at loop merges (S6.3); a local that is only needed on an inlined callee's
+  slow path still costs a materialised value when that path is an uncommon trap, because deopt state cannot
+  recompute an expression (S6.6); a pure expression is scheduled next to its consumer, so packing fields early
+  does not shorten their live ranges (S6.4, cf. S4.10).
+- **Not done, candidates for a later session**: (1) the same `(base, constant)` rule in `ITUParser` for callers
+  parsing at a non-zero `ParsePosition` — invisible in the benchmark, which parses at 0; (2) the String path's
+  remaining gap to the buffer path (15.1 vs 13.0 on A) is `charAt`'s coder and bounds checks plus the `DateTime`
+  and `TimezoneOffset` allocations; (3) `ITU.isValid(String, TemporalType...)` still parses and catches.
 
 ## Dead ends — do not retry without a new reason
 
