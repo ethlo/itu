@@ -256,26 +256,44 @@ public class ITUParser implements DateTimeParser
         int fractionDigits = 0;
         int nanos = 0;
 
-        // Fast path for the common 3/6/9 digit cases: consume digits three at a time in straight-line code
-        while (fractionDigits < MAX_FRACTION_DIGITS && idx + 3 <= length)
+        // The common 3/6/9 digit cases as nested straight-line blocks rather than a loop, as in the char[] parser
+        // (perf-log S4.6). Each block takes three digits or nothing; whatever is left goes to the one-at-a-time loop
+        if (idx + 3 <= length)
         {
-            final int d0 = chars.charAt(idx) - ZERO;
-            final int d1 = chars.charAt(idx + 1) - ZERO;
-            final int d2 = chars.charAt(idx + 2) - ZERO;
-            if ((d0 | d1 | d2) < 0 || d0 > 9 || d1 > 9 || d2 > 9)
+            final int millis = digits3(chars, idx);
+            if (millis >= 0)
             {
-                break;
+                nanos = millis;
+                fractionDigits = 3;
+                idx += 3;
+                if (idx + 3 <= length)
+                {
+                    final int micros = digits3(chars, idx);
+                    if (micros >= 0)
+                    {
+                        nanos = nanos * 1000 + micros;
+                        fractionDigits = 6;
+                        idx += 3;
+                        if (idx + 3 <= length)
+                        {
+                            final int nanosPart = digits3(chars, idx);
+                            if (nanosPart >= 0)
+                            {
+                                nanos = nanos * 1000 + nanosPart;
+                                fractionDigits = 9;
+                                idx += 3;
+                            }
+                        }
+                    }
+                }
             }
-            nanos = nanos * 1000 + d0 * 100 + d1 * 10 + d2;
-            fractionDigits += 3;
-            idx += 3;
         }
 
         // Remainder: one digit at a time
         while (idx < length)
         {
-            final int d = chars.charAt(idx) - ZERO;
-            if (d < 0 || d > 9)
+            final int d = chars.charAt(idx) ^ ZERO;
+            if (d > 9)
             {
                 break;
             }
@@ -296,6 +314,22 @@ public class ITUParser implements DateTimeParser
         final int charLength = (idx + (timezoneOffset != null ? timezoneOffset.getRequiredLength() : 0)) - offset;
         final int second = parse2(chars, offset + 17);
         return new DateTime(Field.NANO, year, month, day, hour, minute, second, nanos, timezoneOffset, fractionDigits, charLength);
+    }
+
+    /**
+     * @return The value of the three digits at {@code idx}, or -1 if any of them is not a digit. The caller guarantees
+     * {@code idx + 3 <= chars.length()}. See {@code LimitedCharArrayIntegerUtil.parse2In} for the {@code c ^ '0'} digit test
+     */
+    private static int digits3(final String chars, final int idx)
+    {
+        final int d0 = chars.charAt(idx) ^ ZERO;
+        final int d1 = chars.charAt(idx + 1) ^ ZERO;
+        final int d2 = chars.charAt(idx + 2) ^ ZERO;
+        if (d0 <= 9 && d1 <= 9 && d2 <= 9)
+        {
+            return d0 * 100 + d1 * 10 + d2;
+        }
+        return -1;
     }
 
     private static TimezoneOffset parseTimezone(int offset, final ParseConfig parseConfig, final String chars, final int idx)
