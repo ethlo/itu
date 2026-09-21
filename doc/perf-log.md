@@ -343,6 +343,48 @@ non-negative and mostly fit in an int.
 | S7.7 | 2026-09-21 | H28 | S7.6 plus a straight-line block of four digits in front of the eight when the text has twelve or more, so the loop is left with 1–6 digits and the chain is two multiply-adds | 403 / 38 | 424 / 42 | 423 / 42 | 25.1 / 26.3 / 26.4 | NO-GAIN (reverted to S7.6: after the split the walk is no longer the critical path) | — |
 | S7.8 | 2026-09-21 | H28 | S7.6's split walk ported to the String path (`parseLong(String)`); this row's numbers are the String path, buffer path unchanged (394 / 40 · 410 / 42 · 407 / 42; 24.8 / 25.5 / 26.0) | 409 / 48 | 417 / 49 | 408 / 49 | 26.7 / 27.3 / 26.9 | KEPT (from 32.0 / 33.1 / 33.0 in the S7.5 run) | |
 | S7.9 | 2026-09-21 | H27 | S7.5 retried on top of S7.8 (single division by 86 400 000), now that the walk is off the critical path. Same-run reference without it: 397 / 40 · 417 / 43 · 415 / 43; 25.9 / 27.9 / 26.8 | 402 / 40 | 414 / 42 | 417 / 42 | 25.8 / 27.6 / 27.2 | NO-GAIN (reverted) | — |
+| S7.t | 2026-09-21 | —   | **`--thorough` confirmation**, `bench.sh --thorough --gc 'candidates\.itu_epoch.*'`, S7.0 code rebuilt and run in the same session (`20260921-104110-…-s7-baseline`) against the kept code (`…-104408-…-s7-final`): buffer 29.3 ±0.4 / 30.8 ±0.4 / 30.7 ±0.4 → **24.8 ±0.4 / 25.7 ±0.4 / 25.9 ±0.5**; String 29.7 ±0.4 / 31.0 ±0.5 / 30.1 ±0.5 → **26.6 ±0.6 / 27.9 ±0.7 / 27.1 ±0.5**; 0 / 56 B/op unchanged | | | | −15% / −17% / −16% (buffer), −10% / −10% / −10% (String) | KEPT | |
+
+H24–H26 (no gain): three attempts at making the divisions cheaper *as instructions* — no sign handling (rebase
+so that nothing is negative), 32-bit instead of 64-bit magic multiplies, and no-op `&` masks so that C2's type
+system sees each dividend as non-negative — all landed within ±5 instructions of each other and within noise in
+time. The masks did what they were meant to (the `sar $0x3f; sub` pairs are gone from the listing) but a mask is
+an instruction too, and the magics for 1460 and 36524 need an add-back step that a sign correction did not. The
+count was never the issue: S7.4 shows the conversion is ~145 instructions in ~19 ns, an IPC of under 2 on a core
+that does 4+ on the digit walk, so it is a dependency chain — `/ 1000` → `/ 86400` → era → doe → yoe → doy → mp
+→ d → pack → store, every step a 3–5 cycle multiply that waits for the one before.
+
+H27 (no gain, twice): one division by 86 400 000 instead of `/ 1000` then `/ 86 400` takes one 64-bit multiply
+out of that chain, in theory 4–5 cycles. Not measurable, before or after the walk was shortened.
+
+H28 (kept): the digit walk *is* a chain — `value * 10 + d` fourteen times, and C2's ×4 unroll changes nothing
+about that — and it sat in front of the conversion chain. Two accumulators (a loop for the leading digits, the
+last eight straight-line) joined by one multiply-add cost 45 more instructions and took 5 ns off. Going further
+(S7.7, a four-digit block in front of the eight) gained nothing more: the walk is now shorter than the
+conversion, so the conversion is the critical path and the next nanosecond has to come from it.
+
+### S7 findings
+
+- **Session result** (`--thorough`, same-session baseline): buffer path 29.3 / 30.8 / 30.7 → 24.8 / 25.7 / 25.9 ns
+  (−15% / −17% / −16%), String path 29.7 / 31.0 / 30.1 → 26.6 / 27.9 / 27.1 (−10% each); one row (S7.6 / S7.8)
+  did all of it. Instructions went *up* (359 → 397 on A) and the time went down, so for this code the
+  instruction count is not the gate the way it is for the date-time parsers: both halves are latency-bound
+  chains, and the gate is the length of the longest one.
+- **The epoch argument, measured**: epoch-millis text → civil fields is 25–26 ns against 8–13 ns for the
+  date-time string on the same path. Turning the number into a date costs about twice what parsing the date
+  does, and `Long.parseLong` alone (12 ns) is not the like-for-like comparison. The date-time string carries its
+  fields; the epoch count has to compute them.
+- **Where the rest is**: ~12 ns is the digit walk (S7.4, equal to `Long.parseLong`, and now split in two), the
+  remaining ~13 ns is the Hinnant chain — seven dependent divisions. That chain is the algorithm's shape, not C2's
+  codegen, and the only way to shorten it is a different algorithm.
+- **Next session, not this one**: Ben Joffe's "very fast 64-bit date algorithm" (<https://www.benjoffe.com/fast-date-64>,
+  BSL-1.0) does days → civil in four multiplications with no division at all, by counting years backwards from a
+  far-future epoch so the leap rule becomes a Julian-style correction, and reading day-of-year and month out of the
+  fraction bits of one fixed-point product ("year-modulus-bitshift"). As published it needs 64×64→128 products
+  (`Math.multiplyHigh`, JDK 9 — this library builds for 8). The day count here is 22 bits, so the same fixed-point
+  scheme should fit 64-bit products with re-derived constants, and the proof of exactness is a brute-force loop over
+  the 3 652 425 days against `daysFromCivil` — cheap enough to be a unit test. Expected to take most of the ~13 ns
+  chain down to a handful of multiplies. Gate as S7: ns and the `--thorough` pair, instruction count reported.
 
 ## Dead ends — do not retry without a new reason
 
@@ -354,6 +396,12 @@ non-negative and mostly fit in an int.
 - (S4.4) Replacing predictable `cmp/jcc` chains with OR-combined arithmetic (`(a - x) | (b - y) < 0`) or a
   lookup table to "save branches": +10–18 instructions. Macro-fused compare-and-branch is the cheapest form of a
   predictable range check on x86; only an unpredictable branch is worth removing.
+- (S7.3) Giving C2 a non-negative type for a dividend with a no-op `&` mask to drop the sign correction of a
+  magic division: it works (the `sar $0x3f; sub` goes) and it buys nothing — the mask is an instruction and the
+  chain is latency-bound anyway. Do not cast, rebase or mask for the instruction count on the conversion path;
+  only shortening the dependency chain moves it (S7.6 vs S7.1–S7.3, S7.5).
+- (S7.7) Splitting the epoch digit walk beyond two accumulators: the second split is invisible because the
+  conversion chain is longer than the walk once the first split is in.
 - (S4.2) Expecting C2 to emit an unsigned compare for `x + MIN_VALUE <= 9 + MIN_VALUE` or
   `Integer.compareUnsigned(x, 9) <= 0`: it does not (`lea`/`cmp $0x80000009`/signed jump). `(c ^ '0') <= 9` is the
   form that works for chars.
