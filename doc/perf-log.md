@@ -338,6 +338,7 @@ non-negative and mostly fit in an int.
 | S7.2 | 2026-09-21 | H25 | `civilFromDaysSince0000` in `int`: the day count is 22 bits, so the seven era/year/month divisions become 32-bit magic multiplies instead of 64-bit high multiplies. String path: 389 / 40 · 394 / 43 · 347 / 38 | 351 / 32 | 366 / 36 | 374 / 37 | 32.5 / 35.8 / 33.5 | NO-GAIN (kept anyway, as the simpler code with S7.1; not a speed-up) | |
 | S7.3 | 2026-09-21 | H26 | Non-negativity hints: no-op `&` masks on every dividend (`& Long.MAX_VALUE` on the two long ones, `& 0x3FFFFF` / `0x3FFFF` / `0x1FF` on days, doe, yoe, doy, `& 0x1FFFF` on secondOfDay) so C2's type says ≥ 0 and it omits the sign correction of each magic division. String path: 363 / 39 · 378 / 43 · 376 / 43 | 353 / 32 | 369 / 36 | 375 / 37 | 31.2 / 32.4 / 32.8 | NO-GAIN (reverted: the corrections went, the masks and the add-back magics cost the same) | — |
 | S7.4 | 2026-09-21 | —   | DIAGNOSTIC, not a candidate: conversion removed, the parsed long stored as-is — what the digit walk and the stores cost by themselves | 209 / 30 | 224 / 34 | 225 / 34 | 11.5 / 12.3 / 12.4 | (conversion = ~145 instr, ~19 ns) | — |
+| S7.5 | 2026-09-21 | H27 | Millis: one long division by 86 400 000 for the days; the 27-bit remainder splits into second and millisecond in int, off the civil chain — instead of `/ 1000` then `/ 86 400` in series. String path: 366 / 39 · 374 / 42 · 369 / 42 | 353 / 33 | 367 / 36 | 364 / 36 | 30.2 / 31.7 / 31.4 | NO-GAIN (reverted; retried as S7.9) | — |
 
 ## Dead ends — do not retry without a new reason
 
