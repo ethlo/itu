@@ -257,7 +257,7 @@ limitations under the License.
         <gpg.skip>true</gpg.skip>
         <!-- Version advertised in the generated README. Kept separate from project.version, which stays
              on -SNAPSHOT because the release version comes from the git tag. Bump on each release. -->
-        <itu.released.version>1.15.0</itu.released.version>
+        <itu.released.version>1.16.0</itu.released.version>
     </properties>
     <profiles>
         <profile>
