@@ -22,6 +22,7 @@ package com.ethlo.time;
 
 import com.ethlo.time.internal.token.DigitsToken;
 import com.ethlo.time.internal.token.FractionsToken;
+import com.ethlo.time.internal.token.OptionalFractionsToken;
 import com.ethlo.time.internal.token.SeparatorToken;
 import com.ethlo.time.internal.token.SeparatorsToken;
 import com.ethlo.time.internal.token.ZoneOffsetToken;
@@ -51,6 +52,23 @@ public class DateTimeTokens
     public static DateTimeToken fractions()
     {
         return new FractionsToken();
+    }
+
+    /**
+     * A fraction of a second that may be absent, as in RFC-3339: one of the given separators followed by 1-9 digits,
+     * or nothing. Unlike {@code separators('.'), fractions()} the separator belongs to this token, so a text
+     * without a fraction parses with {@link Field#SECOND} granularity.
+     *
+     * @param anyOf The characters that may introduce the fraction
+     * @return A token for an optional fraction
+     */
+    public static DateTimeToken optionalFractions(char... anyOf)
+    {
+        if (anyOf == null || anyOf.length == 0)
+        {
+            throw new IllegalArgumentException("Need at least one separator character");
+        }
+        return new OptionalFractionsToken(anyOf);
     }
 
     public static DateTimeToken zoneOffset()

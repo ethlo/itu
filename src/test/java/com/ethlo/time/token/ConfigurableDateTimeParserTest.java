@@ -22,6 +22,7 @@ package com.ethlo.time.token;
 
 import static com.ethlo.time.DateTimeTokens.digits;
 import static com.ethlo.time.DateTimeTokens.fractions;
+import static com.ethlo.time.DateTimeTokens.optionalFractions;
 import static com.ethlo.time.DateTimeTokens.separators;
 import static com.ethlo.time.DateTimeTokens.zoneOffset;
 import static com.ethlo.time.Field.DAY;
@@ -37,10 +38,13 @@ import java.text.ParsePosition;
 import java.time.format.DateTimeParseException;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.ethlo.time.DateTime;
 import com.ethlo.time.DateTimeParser;
 import com.ethlo.time.DateTimeParsers;
+import com.ethlo.time.Field;
 import com.ethlo.time.ITU;
 import com.ethlo.time.internal.token.FractionsToken;
 import com.ethlo.time.internal.token.ZoneOffsetToken;
@@ -127,6 +131,89 @@ public class ConfigurableDateTimeParserTest
         assertThat(custom).isEqualTo(fixed);
         assertThat(fixed.toString()).isEqualTo(input);
         assertThat(custom.toString()).isEqualTo(input);
+    }
+
+    private static DateTimeParser rfc3339WithOptionalFraction()
+    {
+        return DateTimeParsers.of(
+                digits(YEAR, 4),
+                separators('-'),
+                digits(MONTH, 2),
+                separators('-'),
+                digits(DAY, 2),
+                separators('T', 't'),
+                digits(HOUR, 2),
+                separators(':'),
+                digits(MINUTE, 2),
+                separators(':'),
+                digits(SECOND, 2),
+                optionalFractions('.'),
+                zoneOffset()
+        );
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "2023-01-01T23:38:34.987654321+06:00",
+            "5050-01-01T12:02:01.123Z",
+            "3074-07-01T12:02:01Z",
+            "2023-01-01T23:38:34.5-06:00",
+            "2023-01-01T23:38:34"
+    })
+    void optionalFractionMatchesFixedParser(final String input)
+    {
+        final DateTime fixed = ITU.parseLenient(input);
+        final DateTime custom = rfc3339WithOptionalFraction().parse(input, new ParsePosition(0));
+        assertThat(custom).isEqualTo(fixed);
+        assertThat(custom.getMostGranularField()).isEqualTo(fixed.getMostGranularField());
+        assertThat(custom.getFractionDigits()).isEqualTo(fixed.getFractionDigits());
+        assertThat(custom.toString()).isEqualTo(input);
+    }
+
+    @Test
+    void optionalFractionSeparatorWithoutDigits()
+    {
+        final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> rfc3339WithOptionalFraction().parse("2023-01-01T23:38:34.Z", new ParsePosition(0)));
+        assertThat(exc).hasMessage("Must have at least 1 fraction digit: 2023-01-01T23:38:34.Z");
+        assertThat(exc.getErrorIndex()).isEqualTo(20);
+    }
+
+    @Test
+    void optionalFractionAnyOfSeparators()
+    {
+        final DateTimeParser parser = DateTimeParsers.of(digits(SECOND, 2), optionalFractions('.', ','));
+        assertThat(parser.parse("37,25", new ParsePosition(0)).getNano()).isEqualTo(250_000_000);
+        assertThat(parser.parse("37.25", new ParsePosition(0)).getNano()).isEqualTo(250_000_000);
+        assertThat(parser.parse("37", new ParsePosition(0)).getMostGranularField()).isEqualTo(SECOND);
+    }
+
+    @Test
+    void optionalFractionNeedsSeparator()
+    {
+        assertThrows(IllegalArgumentException.class, () -> optionalFractions());
+    }
+
+    @Test
+    void offsetIsNotAGranularity()
+    {
+        // A layout without any fraction token used to report NANO for this, because ZONE_OFFSET orders after NANO
+        final DateTimeParser parser = DateTimeParsers.of(
+                digits(YEAR, 4),
+                separators('-'),
+                digits(MONTH, 2),
+                separators('-'),
+                digits(DAY, 2),
+                separators('T'),
+                digits(HOUR, 2),
+                separators(':'),
+                digits(MINUTE, 2),
+                separators(':'),
+                digits(SECOND, 2),
+                zoneOffset()
+        );
+        final DateTime result = parser.parse("3074-07-01T12:02:01Z", new ParsePosition(0));
+        assertThat(result.getMostGranularField()).isEqualTo(Field.SECOND);
+        assertThat(result).isEqualTo(ITU.parseLenient("3074-07-01T12:02:01Z"));
     }
 
     @Test
