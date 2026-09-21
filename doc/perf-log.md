@@ -436,6 +436,40 @@ inlined; no packed return needed.
   constants and a mul-shift for the month, off the era arithmetic. It is not on the parse path, so it needs its
   own benchmark row before it is worth a row here.
 
+## Session S9 — 2026-09-21 · i9-13900H (20 threads) · JDK 25.0.4 (OpenJDK, Ubuntu 26.04) · governor: powersave
+
+**Machine note.** This session ran on battery: the ns column is inflated (parse-only 25 ns where S6 measured 13 on
+mains) and is not comparable to any other session. The instruction counts are unaffected (parse-only 363 / 258 /
+223 against S6's 363 / 261 / 224) and are the gate; the `--thorough` ns pair is deferred until on mains power.
+
+**Scope.** `DateTimeMath.daysFromCivil` — civil → days, the other direction from S8. Not on the parse path, but the
+throughput harness in date-time-wars (`throughput.sh`, 1 GB CSV) showed the buffer parser's share of a pipeline is
+31–35 ns against 8–13 ns in the JMH parse row, and the pipeline's next call after the parse is `toEpochSecond()`,
+which is this function: Hinnant's era arithmetic with four `long` magic divisions (400, 5, 4, 100). Candidate:
+Joffe's inverse (`to_rata_die` in `benjoffe_fast32_v2.hpp`, BSL-1.0, already carried in THIRD-PARTY-LICENSES.md):
+`int` throughout, one division by 100, the rest shifts and one multiply, with the month table folded into
+`(979 * month + shift) / 32`. Gate: a new JMH method `parseLenientToEpochSecond` on the buffer row
+(`perf/instr.sh 'candidates\.itu_buffer\..*'`), the parse-only method reported beside it as the floor.
+
+| id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
+|------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
+| S9.0 | 2026-09-21 | —   | BASELINE `parseLenientToEpochSecond`, `c598d3e` (parse-only same run: 363 / 73 · 258 / 52 · 223 / 47, so the conversion is 65 / 66 / 66 instr) | 428 / 78 | 324 / 57 | 289 / 52 | (battery) | — | `c598d3e` |
+| S9.1 | 2026-09-21 | H31 | `daysFromCivil` as Joffe's inverse: year rebased by one era so nothing is negative, `cen = yrs / 100` the only division, `yrs * 365 + yrs / 4 - cen + cen / 4` for the years and `(979 * month + shift) / 32` for the months, all `int`. Expect −3 to −5 ns on the pair. Parse-only same run: 363 / 73 · 259 / 52 · 223 / 47, so the conversion is now 45 / 46 / 46 instr (−20, −30%) | 408 / 77 | 304 / 56 | 269 / 51 | (battery; −3.5 / −4.1 / −3.6 vs S9.0 in the same state, indicative only) | KEPT (`--thorough` pair below) | |
+| S9.t | 2026-09-21 | —   | **`--thorough` confirmation, on mains**, `bench.sh --thorough --gc 'candidates\.itu_buffer\..*'`, `c598d3e` rebuilt and run in the same session (`20260921-172027-…-s9-ref`) against S9.1 (`…-172318-…-s9-joffe-inverse`): parse-only 14.9 ±0.4 / 10.0 ±0.1 / 9.1 ±0.1 → 15.0 / 10.1 / 9.1 (unchanged); parse + `toEpochSecond` 19.6 ±0.3 / 15.5 ±0.2 / 14.5 ±0.6 → **17.5 ±0.2 / 13.4 ±0.2 / 11.8 ±0.2**; 0 B/op | | | | −2.1 / −2.2 / −2.7 ns on the pair; the conversion alone 4.8 / 5.5 / 5.4 → 2.5 / 3.3 / 2.7 | KEPT | |
+
+### S9 findings
+
+- **Session result**: civil → days is about half its former cost, 2.5–3.3 ns against 4.8–5.5, and the parse +
+  `toEpochSecond` pair that a file reader pays is 17.5 / 13.4 / 11.8 ns. Both directions of the calendar
+  arithmetic are now Joffe's: four multiplies one way, one division the other.
+- **Battery vs mains**: the instruction counts measured on battery (S9.0, S9.1) were reproduced on mains to the
+  instruction, and the ns pair on mains (−2.1 / −2.2 / −2.7) is smaller than the battery-state delta suggested
+  (−3.5 / −4.1 / −3.6) — on battery everything is slower, so a fixed saving in cycles reads as more ns. The rule
+  stands: instructions are the gate anywhere; ns only on mains, back to back.
+- **Why a benchmark row was needed**: the parse row never runs `toEpochSecond`, so S1–S8 could not have seen this.
+  The throughput harness (date-time-wars `throughput.sh`) showed the pipeline pays the pair, which is what put the
+  conversion on the path that matters. Rows should measure what a caller does next, not only the call.
+
 ## Dead ends — do not retry without a new reason
 
 - (S2.1) Expecting a large win from "zero allocation" alone on this parser: the objects were cheap TLAB bumps. Zero
