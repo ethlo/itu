@@ -92,7 +92,6 @@ public class ITU
      *     <li>{@code PT} → Missing time values after `T`</li>
      *     <li>{@code P-1D} → Incorrect negative placement</li>
      * </ul>
-     * <p>
      *
      * @param text the duration string to parse
      * @return a {@link Duration} instance representing the parsed duration
