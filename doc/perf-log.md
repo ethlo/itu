@@ -386,6 +386,23 @@ conversion, so the conversion is the critical path and the next nanosecond has t
   the 3 652 425 days against `daysFromCivil` — cheap enough to be a unit test. Expected to take most of the ~13 ns
   chain down to a handful of multiplies. Gate as S7: ns and the `--thorough` pair, instruction count reported.
 
+## Session S8 — 2026-09-21 · i9-13900H (20 threads) · JDK 25.0.4 (OpenJDK, Ubuntu 26.04) · governor: powersave
+
+**Scope.** The conversion chain of `civilFromDaysSince0000` — the ~13 ns the S7 findings left as "a different
+algorithm". Candidate: Ben Joffe's backwards-counting algorithm (<https://www.benjoffe.com/fast-date-64>, BSL-1.0),
+in its 32-bit form (`benjoffe_fast32_v2.hpp`, range option A: ±284 449 years, 32×32→64 products throughout), which
+Java 8 can express with `long` multiplies and one shift each — no `Math.multiplyHigh`. Four multiplications
+(century, year, year-part, day) replace Hinnant's seven divisions, and `(yrs & 3) * 2` sits off the critical path.
+The day count's 1970 → 0000 rebase folds into `D_SHIFT`. Same inputs, gate and command as S7
+(`perf/instr.sh 'candidates\.itu_epoch.*'`, buffer row is the gate). Correctness: a new exhaustive test over all
+3 652 425 days of 0000–9999 against `LocalDate.ofEpochDay` and `daysFromCivil`.
+
+| id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
+|------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
+| S8.0 | 2026-09-21 | —   | BASELINE buffer path, `3f16012` (S7 kept code). String path same run: 410 / 47 · 429 / 49 · 425 / 49; 27.4 / 28.0 / 28.5 ns | 401 / 40 | 412 / 42 | 410 / 42 | 26.2 / 27.3 / 27.1 | — | `3f16012` |
+| S8.1 | 2026-09-21 | H29 | `civilFromDaysSince0000` as Joffe fast32 v2: reverse day count, mul-shift century + Julian map, one signed multiply for year and year-part, year-modulo-bitshift for month/day. Expect the conversion's ~145 instr / ~19 ns (S7.4) to lose most of the seven-division chain: −5 to −8 ns. String path: 358 / 46 · 371 / 48 · 366 / 47; 20.5 / 21.4 / 21.0 ns | 349 / 39 | 361 / 41 | 361 / 41 | 19.4 / 20.3 / 20.2 | KEPT (−52 instr, −6.8 / −7.0 / −6.9 ns, −26%; `--thorough` pair below) | |
+| S8.t1 | 2026-09-21 | —   | **`--thorough` confirmation of S8.1**, `bench.sh --thorough --gc 'candidates\.itu_epoch.*'`, S8.0 code rebuilt and run in the same session (`20260921-112709-…-s8-baseline`) against S8.1 (`…-112959-…-s8-joffe`): buffer 25.9 ±0.4 / 26.9 ±0.4 / 26.9 ±0.5 → **19.1 ±0.2 / 20.2 ±0.3 / 20.2 ±0.3**; String 27.3 ±0.7 / 27.9 ±0.5 / 27.9 ±0.5 → **20.5 ±0.5 / 20.9 ±0.3 / 20.9 ±0.3**; 0 / 56 B/op unchanged | | | | −26% / −25% / −25% (buffer), −25% / −25% / −25% (String) | KEPT | |
+
 ## Dead ends — do not retry without a new reason
 
 - (S2.1) Expecting a large win from "zero allocation" alone on this parser: the objects were cheap TLAB bumps. Zero
