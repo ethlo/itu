@@ -402,6 +402,37 @@ The day count's 1970 → 0000 rebase folds into `D_SHIFT`. Same inputs, gate and
 | S8.0 | 2026-09-21 | —   | BASELINE buffer path, `3f16012` (S7 kept code). String path same run: 410 / 47 · 429 / 49 · 425 / 49; 27.4 / 28.0 / 28.5 ns | 401 / 40 | 412 / 42 | 410 / 42 | 26.2 / 27.3 / 27.1 | — | `3f16012` |
 | S8.1 | 2026-09-21 | H29 | `civilFromDaysSince0000` as Joffe fast32 v2: reverse day count, mul-shift century + Julian map, one signed multiply for year and year-part, year-modulo-bitshift for month/day. Expect the conversion's ~145 instr / ~19 ns (S7.4) to lose most of the seven-division chain: −5 to −8 ns. String path: 358 / 46 · 371 / 48 · 366 / 47; 20.5 / 21.4 / 21.0 ns | 349 / 39 | 361 / 41 | 361 / 41 | 19.4 / 20.3 / 20.2 | KEPT (−52 instr, −6.8 / −7.0 / −6.9 ns, −26%; `--thorough` pair below) | |
 | S8.t1 | 2026-09-21 | —   | **`--thorough` confirmation of S8.1**, `bench.sh --thorough --gc 'candidates\.itu_epoch.*'`, S8.0 code rebuilt and run in the same session (`20260921-112709-…-s8-baseline`) against S8.1 (`…-112959-…-s8-joffe`): buffer 25.9 ±0.4 / 26.9 ±0.4 / 26.9 ±0.5 → **19.1 ±0.2 / 20.2 ±0.3 / 20.2 ±0.3**; String 27.3 ±0.7 / 27.9 ±0.5 / 27.9 ±0.5 → **20.5 ±0.5 / 20.9 ±0.3 / 20.9 ±0.3**; 0 / 56 B/op unchanged | | | | −26% / −25% / −25% (buffer), −25% / −25% / −25% (String) | KEPT | |
+| S8.2 | 2026-09-21 | H30 | Time of day after Joffe's "fast time-of-day" V2 (<https://www.benjoffe.com/fast-time-of-day>): two independent products of `secondOfDay` (by 2^32/3600+1 and 2^32/60+1), hour in the high word, minute and second from the low words × 60 — four multiplies in two 2-deep chains, against `/ 3600`, `/ 60 % 60`, `% 60` with sign corrections (three magic divisions in a chain plus two multiply-subtracts). Expect −1 to −2 ns. String path: 329 / 42 · 342 / 44 · 344 / 45; 18.4 / 19.0 / 18.9 ns | 327 / 39 | 336 / 41 | 340 / 41 | 17.3 / 18.5 / 18.2 | KEPT (−22 instr, −2.1 / −1.8 / −2.0 ns; `--thorough` pair below) | |
+| S8.t2 | 2026-09-21 | —   | **`--thorough` confirmation of S8.2**, S8.1 code rebuilt and run in the same session (`20260921-114025-…-s8-1-ref`) against S8.2 (`…-114314-…-s8-2-tod`): buffer 19.2 ±0.3 / 20.2 ±0.3 / 20.3 ±0.3 → **17.4 ±0.2 / 18.5 ±0.3 / 18.6 ±0.3**; String 20.5 ±0.3 / 20.9 ±0.3 / 20.9 ±0.3 → **18.6 ±0.3 / 19.1 ±0.3 / 18.9 ±0.3**; 0 / 56 B/op unchanged | | | | −9% / −9% / −8% (buffer), −9% / −9% / −10% (String) | KEPT | |
+
+H29 (kept): the S7 diagnosis was right — the conversion was a latency chain, and the only lever was a shorter
+algorithm. Joffe's form takes 52 instructions and 6.8 ns off the buffer path, a quarter of the whole parse, with
+the same 22-bit input. The Java 8 port needed no `multiplyHigh`: the 32-bit variant's products are 32×32→64
+throughout, so each "free" high word is one `long` multiply and one shift, and the single signed product (year
+and year fraction from one multiply) works unchanged because Java's `long` is two's complement and `>>` is
+arithmetic. The rebase to 0000-01-01 folded into `D_SHIFT`, so the caller's day count is used as-is.
+
+H30 (kept): the same shape for the time of day — two independent products, each field read out of a high word —
+takes another 22 instructions and 2 ns. Three accessors share the products through C2's value numbering once
+inlined; no packed return needed.
+
+### S8 findings
+
+- **Session result** (`--thorough`, same-session references): buffer path 25.9 / 26.9 / 26.9 → **17.4 / 18.5 /
+  18.6 ns** (−33% / −31% / −31%), String path 27.3 / 27.9 / 27.9 → **18.6 / 19.1 / 18.9** (−32%). The epoch text is
+  now ~5 ns from the date-time string on the same path (S7 measured it at 2×).
+- **Instruction count and time moved together this time** (401 → 327 instr, 26.2 → 17.3 ns on A): both
+  algorithms are shorter *and* shallower. The conversion is now four multiplies for the date and four for the time,
+  in two chains each.
+- **Exactness is a test, not an argument**: `DateTimeMathTest` walks every day of 0000–9999 (3 652 425, 0.1 s)
+  and every second of a day against `LocalDate` and plain division. Any re-derived constant goes through it.
+- **What is left on the epoch path**: the digit walk (~12 ns, S7.4) is now the larger half again, and it is the
+  same two-accumulator chain as S7.6. `/ 86 400` (one 64-bit magic division with a sign correction, the dividend is
+  a `long`) is the only division left in the conversion.
+- **Candidate, not this session**: `daysFromCivil` (civil → days, used by `toEpochSecond` on both `DateTime` and
+  `MutableDateTimeBuffer`) is still Hinnant's; Joffe's inverse (`to_rata_die` in the same file) is two divisions by
+  constants and a mul-shift for the month, off the era arithmetic. It is not on the parse path, so it needs its
+  own benchmark row before it is worth a row here.
 
 ## Dead ends — do not retry without a new reason
 

@@ -292,7 +292,7 @@ public class ITUEpochParser
         final long days = secondsSince0000 / 86_400;
         final int date = DateTimeMath.civilFromDaysSince0000((int) days);
         final int secondOfDay = (int) (secondsSince0000 - days * 86_400);
-        return new DateTime(field, DateTimeMath.packedYear(date), DateTimeMath.packedMonth(date), DateTimeMath.packedDay(date), secondOfDay / 3_600, (secondOfDay / 60) % 60, secondOfDay % 60, nano, TimezoneOffset.UTC, fractionDigits, parseLength);
+        return new DateTime(field, DateTimeMath.packedYear(date), DateTimeMath.packedMonth(date), DateTimeMath.packedDay(date), DateTimeMath.hourOfDay(secondOfDay), DateTimeMath.minuteOfHour(secondOfDay), DateTimeMath.secondOfMinute(secondOfDay), nano, TimezoneOffset.UTC, fractionDigits, parseLength);
     }
 
     private static void fill(final MutableDateTimeBuffer out, final long secondsSince0000, final int nano, final Field field, final int fractionDigits, final int parseLength)
@@ -300,7 +300,7 @@ public class ITUEpochParser
         final long days = secondsSince0000 / 86_400;
         final int date = DateTimeMath.civilFromDaysSince0000((int) days);
         final int secondOfDay = (int) (secondsSince0000 - days * 86_400);
-        out.set(field, DateTimeMath.packedYear(date), DateTimeMath.packedMonth(date), DateTimeMath.packedDay(date), secondOfDay / 3_600, (secondOfDay / 60) % 60, secondOfDay % 60, nano, fractionDigits, 0, parseLength);
+        out.set(field, DateTimeMath.packedYear(date), DateTimeMath.packedMonth(date), DateTimeMath.packedDay(date), DateTimeMath.hourOfDay(secondOfDay), DateTimeMath.minuteOfHour(secondOfDay), DateTimeMath.secondOfMinute(secondOfDay), nano, fractionDigits, 0, parseLength);
     }
 
     private static void sanityCheckInputParams(final char[] chars, final int offset, final int length, final MutableDateTimeBuffer out)

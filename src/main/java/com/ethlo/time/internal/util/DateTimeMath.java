@@ -113,6 +113,43 @@ public class DateTimeMath
         return year << 9 | month << 5 | day;
     }
 
+    /*
+     * Second of day → hour, minute, second after Ben Joffe's "fast time-of-day" V2
+     * (https://www.benjoffe.com/fast-time-of-day, perf-log S8.2). The three fields come from two independent
+     * products of the same input, so the chain is two multiplies deep instead of three divisions in series: the
+     * hour is the high word of secondOfDay * H_MUL, and the low word is the fraction of the hour elapsed, which
+     * times 60 gives the minute in its high word; the second is the same from the low word of secondOfDay * M_MUL.
+     * The "+ 1" in each constant rounds the product up so that the truncated high word is exact for inputs up to
+     * 2 255 818 seconds; ours is under 86 400. The three accessors share their products: C2 value-numbers the
+     * identical expressions once they are inlined into the same caller.
+     */
+    private static final long H_MUL = (1L << 32) / 3_600 + 1;  // 1193047
+    private static final long M_MUL = (1L << 32) / 60 + 1;     // 71582789
+
+    /**
+     * @param secondOfDay seconds since midnight, in [0, 86399]
+     */
+    public static int hourOfDay(final int secondOfDay)
+    {
+        return (int) ((secondOfDay * H_MUL) >>> 32);
+    }
+
+    /**
+     * @param secondOfDay seconds since midnight, in [0, 86399]
+     */
+    public static int minuteOfHour(final int secondOfDay)
+    {
+        return (int) (((secondOfDay * H_MUL & 0xFFFF_FFFFL) * 60) >>> 32);
+    }
+
+    /**
+     * @param secondOfDay seconds since midnight, in [0, 86399]
+     */
+    public static int secondOfMinute(final int secondOfDay)
+    {
+        return (int) (((secondOfDay * M_MUL & 0xFFFF_FFFFL) * 60) >>> 32);
+    }
+
     public static int packedYear(final int packed)
     {
         return packed >>> 9;

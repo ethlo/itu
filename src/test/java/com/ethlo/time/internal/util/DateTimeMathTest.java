@@ -69,6 +69,21 @@ class DateTimeMathTest
     }
 
     @Test
+    void timeOfDayMatchesDivisionForEverySecond()
+    {
+        for (int secondOfDay = 0; secondOfDay < 86_400; secondOfDay++)
+        {
+            final int hour = DateTimeMath.hourOfDay(secondOfDay);
+            final int minute = DateTimeMath.minuteOfHour(secondOfDay);
+            final int second = DateTimeMath.secondOfMinute(secondOfDay);
+            if (hour != secondOfDay / 3_600 || minute != secondOfDay / 60 % 60 || second != secondOfDay % 60)
+            {
+                assertEquals(String.format("%02d:%02d:%02d", secondOfDay / 3_600, secondOfDay / 60 % 60, secondOfDay % 60), String.format("%02d:%02d:%02d", hour, minute, second), "second " + secondOfDay);
+            }
+        }
+    }
+
+    @Test
     void daysSince0000EpochIsJavaTimes()
     {
         assertEquals(-EPOCH_DAY_0000, DateTimeMath.DAYS_0000_TO_1970);
