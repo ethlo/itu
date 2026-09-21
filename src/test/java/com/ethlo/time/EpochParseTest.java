@@ -149,7 +149,9 @@ public class EpochParseTest
             "253402300800|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): 253402300800|0",
             "-62167219201|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): -62167219201|0",
             "9999999999999999999|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): 9999999999999999999|0",
-            "-9999999999999999999|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): -9999999999999999999|0"
+            "-9999999999999999999|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): -9999999999999999999|0",
+            "0000000000000000000253402300800|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): 0000000000000000000253402300800|0",
+            "00000000000000000000x|Expected digit at position 21, found x: 00000000000000000000x|20"
     }, delimiter = '|', ignoreLeadingAndTrailingWhitespace = false)
     void secondsErrors(final String text, final String message, final int errorIndex)
     {
@@ -173,6 +175,31 @@ public class EpochParseTest
         assertThat(exc).hasMessage(message);
         assertThat(exc.getErrorIndex()).isEqualTo(errorIndex);
         assertSameErrorFromCharArray(text, false, exc);
+    }
+
+    /*
+     * The grammar is -?[0-9]+, so leading zeros can take a valid value past the 18-digit accumulator limit; they
+     * are not significant and must not be counted against it. The parse length is still the whole text.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "0000000000000000000|1970-01-01T00:00:00Z",
+            "-0000000000000000000|1970-01-01T00:00:00Z",
+            "00000000000000000000000001695300000|2023-09-21T12:40:00Z",
+            "-00000000000062167219200|0000-01-01T00:00:00Z",
+            "000000000000000000253402300799|9999-12-31T23:59:59Z"
+    }, delimiter = '|')
+    void surplusLeadingZerosAreNotSignificant(final String text, final String expected)
+    {
+        final DateTime result = ITU.parseEpochSecond(text);
+        assertThat(result).hasToString(expected);
+        assertThat(result.getParseLength()).isEqualTo(text.length());
+        assertSameFromCharArray(text, true, result);
+
+        final DateTime millis = ITU.parseEpochMilli(text + "000");
+        assertThat(millis.toInstant()).isEqualTo(result.toInstant());
+        assertThat(millis.getParseLength()).isEqualTo(text.length() + 3);
+        assertSameFromCharArray(text + "000", false, millis);
     }
 
     @Test

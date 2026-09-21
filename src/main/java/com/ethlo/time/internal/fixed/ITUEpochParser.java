@@ -54,7 +54,9 @@ public class ITUEpochParser
     private static final long SECONDS_0000_TO_1970 = DateTimeMath.DAYS_0000_TO_1970 * 86_400;
 
     /**
-     * Beyond this many digits the value is out of range whatever it is, and the accumulator would overflow
+     * Beyond this many significant digits the value is out of range whatever it is, and the accumulator would
+     * overflow. Leading zeros are not significant: the grammar is {@code -?[0-9]+}, so {@code 0000000000000000000}
+     * is a valid spelling of 0 and is accepted at any length
      */
     private static final int MAX_DIGITS = 18;
 
@@ -128,6 +130,12 @@ public class ITUEpochParser
         {
             throw ErrorUtil.raiseUnexpectedEndOfText(text, idx);
         }
+        // Only a text already over the limit enters the loop, so the usual 10-14 digits pay the one compare they
+        // paid before (perf-log S8.4)
+        while (length - idx > MAX_DIGITS && text.charAt(idx) == ZERO)
+        {
+            idx++;
+        }
         if (length - idx > MAX_DIGITS)
         {
             throw raiseOutOfRange(text, millis);
@@ -198,6 +206,10 @@ public class ITUEpochParser
         if (idx == length)
         {
             throw ErrorUtil.raiseUnexpectedEndOfText(new String(chars, offset, length), idx);
+        }
+        while (length - idx > MAX_DIGITS && chars[offset + idx] == ZERO)
+        {
+            idx++;
         }
         if (length - idx > MAX_DIGITS)
         {
