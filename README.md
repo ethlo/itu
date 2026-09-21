@@ -87,8 +87,8 @@ assertThat(dateTime).hasToString(text);
 <smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L76C5-L90C6)</smaller>
 
 Lenient parsing accepts anything from a year to a timestamp with nanoseconds, with or without an offset, and
- returns a `DateTime` that remembers exactly what was there: the most granular field, the number of fraction
- digits and whether there was an offset. Formatting it back gives the input.
+ returns a `DateTime` that remembers the most granular field, fraction digit count and offset presence.
+ Formatting emits a canonical representation while preserving that granularity.
 ```java
 final String text = "2012-12-27T19:07:23.123";
 final DateTime dateTime = ITU.parseLenient(text);
