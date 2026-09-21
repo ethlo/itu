@@ -18,7 +18,7 @@ packaged into the jars as `META-INF/THIRD-PARTY-LICENSES.md`. (The `THIRD-PARTY.
 ```
 Boost Software License - Version 1.0 - August 17th, 2003
 
-Copyright (c) 2025 Ben Joffe - https://www.benjoffe.com/fast-date-64
+Copyright (c) 2026 Ben Joffe - https://www.benjoffe.com/fast-date-64
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by

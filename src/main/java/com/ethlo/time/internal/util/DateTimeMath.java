@@ -53,7 +53,7 @@ public class DateTimeMath
     /*
      * Days from 0000-01-01 → year, month, day after Ben Joffe's "very fast date algorithm"
      * (https://www.benjoffe.com/fast-date-64), ported from benjoffe_fast32_v2.hpp in
-     * https://github.com/benjoffe/fast-date-benchmarks — Copyright (c) 2025 Ben Joffe, Boost Software License 1.0,
+     * https://github.com/benjoffe/fast-date-benchmarks — Copyright (c) 2026 Ben Joffe, Boost Software License 1.0,
      * reproduced in THIRD-PARTY-LICENSES.md. It is the 32-bit form whose products all fit 64 bits: four multiplications and no division, against the seven divisions of the era /
      * year-of-era / day-of-year chain it replaced (perf-log S8.1). The ideas, in the order the code uses them:
      *

@@ -75,8 +75,8 @@ class ITUParserSamples
 
     /*
     Lenient parsing accepts anything from a year to a timestamp with nanoseconds, with or without an offset, and
-    returns a `DateTime` that remembers exactly what was there: the most granular field, the number of fraction
-    digits and whether there was an offset. Formatting it back gives the input.
+    returns a `DateTime` that remembers the most granular field, fraction digit count and offset presence.
+    Formatting emits a canonical representation while preserving that granularity.
      */
     @Test
     void parseLenient()
