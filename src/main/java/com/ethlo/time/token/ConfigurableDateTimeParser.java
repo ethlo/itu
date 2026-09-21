@@ -20,8 +20,8 @@ package com.ethlo.time.token;
  * #L%
  */
 
-import static com.ethlo.time.Field.NANO;
 import static com.ethlo.time.Field.YEAR;
+import static com.ethlo.time.Field.ZONE_OFFSET;
 
 import java.text.ParsePosition;
 import java.time.format.DateTimeParseException;
@@ -35,6 +35,7 @@ import com.ethlo.time.Field;
 import com.ethlo.time.TimezoneOffset;
 import com.ethlo.time.internal.token.DigitsToken;
 import com.ethlo.time.internal.token.FractionsToken;
+import com.ethlo.time.internal.token.OptionalFractionsToken;
 import com.ethlo.time.internal.token.SeparatorToken;
 import com.ethlo.time.internal.token.SeparatorsToken;
 import com.ethlo.time.internal.token.ZoneOffsetToken;
@@ -57,6 +58,7 @@ public class ConfigurableDateTimeParser implements DateTimeParser
     private static final byte KIND_SEPARATORS = 3;
     private static final byte KIND_FRACTIONS = 4;
     private static final byte KIND_ZONE_OFFSET = 5;
+    private static final byte KIND_OPTIONAL_FRACTIONS = 6;
 
     private final DateTimeToken[] tokens;
     private final byte[] kinds;
@@ -106,6 +108,10 @@ public class ConfigurableDateTimeParser implements DateTimeParser
         if (type == ZoneOffsetToken.class)
         {
             return KIND_ZONE_OFFSET;
+        }
+        if (type == OptionalFractionsToken.class)
+        {
+            return KIND_OPTIONAL_FRACTIONS;
         }
         return KIND_OTHER;
     }
@@ -178,6 +184,11 @@ public class ConfigurableDateTimeParser implements DateTimeParser
                     value = ((ZoneOffsetToken) token).read(text, parsePosition);
                     pos = parsePosition.getIndex();
                     break;
+                case KIND_OPTIONAL_FRACTIONS:
+                    parsePosition.setIndex(pos);
+                    value = ((OptionalFractionsToken) token).read(text, parsePosition);
+                    pos = parsePosition.getIndex();
+                    break;
                 default:
                     parsePosition.setIndex(pos);
                     value = token.read(text, parsePosition);
@@ -187,18 +198,33 @@ public class ConfigurableDateTimeParser implements DateTimeParser
             final int ordinal = ordinals[i];
             if (ordinal != -1)
             {
-                values[ordinal] = value;
-                highestOrdinal = Math.max(ordinal, highestOrdinal);
-                if (kind == KIND_FRACTIONS)
+                if (kind == KIND_FRACTIONS || kind == KIND_OPTIONAL_FRACTIONS)
                 {
-                    fractionsLength = pos - index;
-                    values[ordinal] = scale(value, fractionsLength);
+                    // The optional token consumed its own separator, or nothing at all. An absent fraction must not
+                    // raise the granularity: "...:01Z" is SECOND resolution, exactly as the fixed parser reports it
+                    final int digits = kind == KIND_FRACTIONS ? pos - index : pos - index - 1;
+                    if (digits > 0)
+                    {
+                        fractionsLength = digits;
+                        values[ordinal] = scale(value, digits);
+                        highestOrdinal = Math.max(ordinal, highestOrdinal);
+                    }
+                }
+                else
+                {
+                    values[ordinal] = value;
+                    if (ordinal != ZONE_OFFSET.ordinal())
+                    {
+                        // The offset is not a granularity. Counting it used to make every layout without a
+                        // fraction report NANO, because ZONE_OFFSET orders after NANO and was clamped down to it
+                        highestOrdinal = Math.max(ordinal, highestOrdinal);
+                    }
                 }
             }
         }
         parsePosition.setIndex(pos);
 
-        return new DateTime(FIELDS[Math.min(highestOrdinal, NANO.ordinal())], values[Field.YEAR.ordinal()], values[Field.MONTH.ordinal()], values[Field.DAY.ordinal()], values[Field.HOUR.ordinal()], values[Field.MINUTE.ordinal()], values[Field.SECOND.ordinal()], values[Field.NANO.ordinal()], values[Field.ZONE_OFFSET.ordinal()] != -1 ? TimezoneOffset.ofTotalSeconds(values[Field.ZONE_OFFSET.ordinal()]) : null, fractionsLength);
+        return new DateTime(FIELDS[highestOrdinal], values[Field.YEAR.ordinal()], values[Field.MONTH.ordinal()], values[Field.DAY.ordinal()], values[Field.HOUR.ordinal()], values[Field.MINUTE.ordinal()], values[Field.SECOND.ordinal()], values[Field.NANO.ordinal()], values[Field.ZONE_OFFSET.ordinal()] != -1 ? TimezoneOffset.ofTotalSeconds(values[Field.ZONE_OFFSET.ordinal()]) : null, fractionsLength);
     }
 
     private int scale(int value, int length)
