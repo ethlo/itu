@@ -138,7 +138,7 @@ public class ITUEpochParser
         }
         if (length - idx > MAX_DIGITS)
         {
-            throw raiseOutOfRange(text, millis);
+            throw raiseTooLong(text, idx, millis);
         }
         // Same shape as the char[] walk below (perf-log S7.6 / S7.8): the loop takes the leading digits, or all
         // of them when there are fewer than eight after the sign, and the last eight go straight-line
@@ -213,7 +213,7 @@ public class ITUEpochParser
         }
         if (length - idx > MAX_DIGITS)
         {
-            throw raiseOutOfRange(new String(chars, offset, length), millis);
+            throw raiseTooLong(new String(chars, offset, length), idx, millis);
         }
         // Two independent accumulations - the leading digits in the loop, the last eight straight-line - joined at
         // the end. The multiply-add chain of a single accumulator is the serial part of the walk (perf-log S7.6).
@@ -272,6 +272,24 @@ public class ITUEpochParser
     private static DateTimeParseException raiseUnexpectedCharacter(final String text, final int idx, final char c)
     {
         return new DateTimeParseException(String.format("Expected digit at position %d, found %s: %s", idx + 1, c, text), text, idx);
+    }
+
+    /**
+     * Too many significant digits for the accumulator. The rest of the text has not been looked at yet, and a
+     * non-digit in it is the more useful error: the text is not a number at all, and the index says where it
+     * stops being one. Only a text that is all digits is out of range.
+     */
+    private static DateTimeParseException raiseTooLong(final String text, final int from, final boolean millis)
+    {
+        for (int idx = from; idx < text.length(); idx++)
+        {
+            final char c = text.charAt(idx);
+            if (c < ZERO || c > DIGIT_9)
+            {
+                return raiseUnexpectedCharacter(text, idx, c);
+            }
+        }
+        return raiseOutOfRange(text, millis);
     }
 
     private static DateTimeParseException raiseOutOfRange(final String text, final boolean millis)

@@ -151,7 +151,10 @@ public class EpochParseTest
             "9999999999999999999|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): 9999999999999999999|0",
             "-9999999999999999999|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): -9999999999999999999|0",
             "0000000000000000000253402300800|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): 0000000000000000000253402300800|0",
-            "00000000000000000000x|Expected digit at position 21, found x: 00000000000000000000x|20"
+            "00000000000000000000x|Expected digit at position 21, found x: 00000000000000000000x|20",
+            "123456789012345678x|Expected digit at position 19, found x: 123456789012345678x|18",
+            "-123456789012345678x|Expected digit at position 20, found x: -123456789012345678x|19",
+            "1234567890123456789012.5|Expected digit at position 23, found .: 1234567890123456789012.5|22"
     }, delimiter = '|', ignoreLeadingAndTrailingWhitespace = false)
     void secondsErrors(final String text, final String message, final int errorIndex)
     {
@@ -167,7 +170,8 @@ public class EpochParseTest
             "1e3|Expected digit at position 2, found e: 1e3|1",
             "253402300800000|Epoch value outside years 0000-9999 (-62167219200000 to 253402300799999 milliseconds): 253402300800000|0",
             "-62167219200001|Epoch value outside years 0000-9999 (-62167219200000 to 253402300799999 milliseconds): -62167219200001|0",
-            "1000000000000000000|Epoch value outside years 0000-9999 (-62167219200000 to 253402300799999 milliseconds): 1000000000000000000|0"
+            "1000000000000000000|Epoch value outside years 0000-9999 (-62167219200000 to 253402300799999 milliseconds): 1000000000000000000|0",
+            "123456789012345678x|Expected digit at position 19, found x: 123456789012345678x|18"
     }, delimiter = '|', ignoreLeadingAndTrailingWhitespace = false)
     void millisErrors(final String text, final String message, final int errorIndex)
     {
