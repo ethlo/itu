@@ -67,17 +67,20 @@ public class DateTimeMath
      *
      * @param daysSince0000 days since 0000-01-01, in [0, 3652424]; the caller guarantees the range
      */
-    public static int civilFromDaysSince0000(final long daysSince0000)
+    public static int civilFromDaysSince0000(final int daysSince0000)
     {
-        final long z = daysSince0000 + ERA_SHIFT;
-        final long era = z / DAYS_PER_ERA;
-        final long doe = z - era * DAYS_PER_ERA;                                  // [0, 146096]
-        final long yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;  // [0, 399]
-        final long doy = doe - (365 * yoe + yoe / 4 - yoe / 100);                // [0, 365]
-        final long mp = (5 * doy + 2) / 153;                                     // [0, 11]
-        final int d = (int) (doy - (153 * mp + 2) / 5 + 1);                      // [1, 31]
-        final int m = (int) (mp < 10 ? mp + 3 : mp - 9);                         // [1, 12]
-        final int year = (int) (yoe + era * 400 - 400 + (m <= 2 ? 1 : 0));       // the extra era shifted in above
+        // All int: the day count of ten thousand years is 22 bits. Neither this nor the non-negative rebase
+        // changed the instruction count or the time (perf-log S7.1, S7.2); they are kept for being the simpler
+        // code, not for speed. The chain of divisions is the cost, see the S7 findings
+        final int z = daysSince0000 + ERA_SHIFT;
+        final int era = z / DAYS_PER_ERA;
+        final int doe = z - era * DAYS_PER_ERA;                                  // [0, 146096]
+        final int yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;  // [0, 399]
+        final int doy = doe - (365 * yoe + yoe / 4 - yoe / 100);                // [0, 365]
+        final int mp = (5 * doy + 2) / 153;                                     // [0, 11]
+        final int d = doy - (153 * mp + 2) / 5 + 1;                             // [1, 31]
+        final int m = mp < 10 ? mp + 3 : mp - 9;                                // [1, 12]
+        final int year = yoe + era * 400 - 400 + (m <= 2 ? 1 : 0);              // the extra era shifted in above
         return year << 9 | m << 5 | d;
     }
 
