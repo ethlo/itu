@@ -20,7 +20,7 @@ package com.ethlo.time.internal.util;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 
@@ -49,7 +49,7 @@ class DateTimeMathTest
             final int expectedPacked = expected.getYear() << 9 | expected.getMonthValue() << 5 | expected.getDayOfMonth();
             if (packed != expectedPacked)
             {
-                assertEquals(expected.toString(), unpack(packed), "day " + day + " since 0000-01-01");
+                assertThat(unpack(packed)).as("day %d since 0000-01-01", day).isEqualTo(expected.toString());
             }
         }
     }
@@ -63,7 +63,7 @@ class DateTimeMathTest
             final long actual = DateTimeMath.daysFromCivil(date.getYear(), date.getMonthValue(), date.getDayOfMonth());
             if (actual != date.toEpochDay())
             {
-                assertEquals(date.toEpochDay(), actual, date.toString());
+                assertThat(actual).as(date.toString()).isEqualTo(date.toEpochDay());
             }
         }
     }
@@ -78,7 +78,7 @@ class DateTimeMathTest
             final int second = DateTimeMath.secondOfMinute(secondOfDay);
             if (hour != secondOfDay / 3_600 || minute != secondOfDay / 60 % 60 || second != secondOfDay % 60)
             {
-                assertEquals(String.format("%02d:%02d:%02d", secondOfDay / 3_600, secondOfDay / 60 % 60, secondOfDay % 60), String.format("%02d:%02d:%02d", hour, minute, second), "second " + secondOfDay);
+                assertThat(String.format("%02d:%02d:%02d", hour, minute, second)).as("second %d", secondOfDay).isEqualTo(String.format("%02d:%02d:%02d", secondOfDay / 3_600, secondOfDay / 60 % 60, secondOfDay % 60));
             }
         }
     }
@@ -86,7 +86,7 @@ class DateTimeMathTest
     @Test
     void daysSince0000EpochIsJavaTimes()
     {
-        assertEquals(-EPOCH_DAY_0000, DateTimeMath.DAYS_0000_TO_1970);
+        assertThat(DateTimeMath.DAYS_0000_TO_1970).isEqualTo(-EPOCH_DAY_0000);
     }
 
     private static String unpack(final int packed)

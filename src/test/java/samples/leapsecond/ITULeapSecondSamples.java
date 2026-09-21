@@ -61,6 +61,6 @@ class ITULeapSecondSamples
     {
         final LeapSecondException exc = assertThrows(LeapSecondException.class, () -> ITU.parseDateTime("2020-06-30T23:59:60Z"));
         assertThat(exc.isVerifiedValidLeapYearMonth()).isFalse();
-        assertThat(exc.getNearestDateTime().toString()).isEqualTo("2020-07-01T00:00Z");
+        assertThat(exc.getNearestDateTime()).hasToString("2020-07-01T00:00Z");
     }
 }

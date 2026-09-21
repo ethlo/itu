@@ -80,7 +80,7 @@ The simplest and fastest way to parse an RFC-3339 timestamp. The input must be a
 ```java
 final String text = "2012-12-27T19:07:22.123456789-03:00";
 final OffsetDateTime dateTime = ITU.parseDateTime(text);
-assertThat(dateTime.toString()).isEqualTo(text);
+assertThat(dateTime).hasToString(text);
 ```
 
 #### parseLenient
@@ -95,7 +95,7 @@ final DateTime dateTime = ITU.parseLenient(text);
 assertThat(dateTime.getMostGranularField()).isEqualTo(Field.NANO);
 assertThat(dateTime.getFractionDigits()).isEqualTo(3);
 assertThat(dateTime.getOffset()).isEmpty();
-assertThat(dateTime.toString()).isEqualTo(text);
+assertThat(dateTime).hasToString(text);
 ```
 
 #### parseLenientGranularity
@@ -105,10 +105,10 @@ The granularity is kept, so a partial date can be converted to the matching `jav
  field that was not in the input is an error rather than a silent default.
 ```java
 assertThat(ITU.parseLenient("2012").toYear().getValue()).isEqualTo(2012);
-assertThat(ITU.parseLenient("2012-12").toYearMonth().toString()).isEqualTo("2012-12");
-assertThat(ITU.parseLenient("2012-12-27").toLocalDate().toString()).isEqualTo("2012-12-27");
-assertThat(ITU.parseLenient("2012-12-27T19:07").toLocalDatetime().toString()).isEqualTo("2012-12-27T19:07");
-assertThat(ITU.parseLenient("2012-12-27T19:07:22+01:00").toOffsetDatetime().toString()).isEqualTo("2012-12-27T19:07:22+01:00");
+assertThat(ITU.parseLenient("2012-12").toYearMonth()).hasToString("2012-12");
+assertThat(ITU.parseLenient("2012-12-27").toLocalDate()).hasToString("2012-12-27");
+assertThat(ITU.parseLenient("2012-12-27T19:07").toLocalDatetime()).hasToString("2012-12-27T19:07");
+assertThat(ITU.parseLenient("2012-12-27T19:07:22+01:00").toOffsetDatetime()).hasToString("2012-12-27T19:07:22+01:00");
 final DateTime dateOnly = ITU.parseLenient("2012-12-27");
 assertThat(dateOnly.includesGranularity(Field.HOUR)).isFalse();
 assertThrows(DateTimeException.class, dateOnly::toOffsetDatetime);
@@ -121,7 +121,7 @@ When a best-effort timestamp is all that is needed, a `DateTime` of any granular
  missing month and day default to 1, missing time fields to 0, and a missing offset to UTC.
 ```java
 final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
-assertThat(instant.toString()).isEqualTo("2017-12-06T00:00:00Z");
+assertThat(instant).hasToString("2017-12-06T00:00:00Z");
 ```
 
 #### isValid
@@ -158,7 +158,7 @@ final ParseConfig config = ParseConfig.DEFAULT
                 .withDateTimeSeparators('T', '|')
                 .withFractionSeparators('.', ',');
 final DateTime result = ITU.parseLenient("1999-11-22|11:22:17,191", config);
-assertThat(result.toString()).isEqualTo("1999-11-22T11:22:17.191");
+assertThat(result).hasToString("1999-11-22T11:22:17.191");
 ```
 
 #### parsePosition
@@ -169,7 +169,7 @@ A `ParsePosition` starts the parse inside a larger text and reports where it sto
 ```java
 final ParsePosition pos = new ParsePosition(10);
 final OffsetDateTime result = ITU.parseDateTime("some-data,1999-11-22T11:22:19+05:30,some-other-data", pos);
-assertThat(result.toString()).isEqualTo("1999-11-22T11:22:19+05:30");
+assertThat(result).hasToString("1999-11-22T11:22:19+05:30");
 assertThat(pos.getIndex()).isEqualTo(35);
 ```
 
@@ -197,8 +197,8 @@ A Unix epoch count written as text, in seconds or milliseconds, parses to the sa
  string, so a field that may carry either can go through one code path. The `char[]` overloads into a
  `MutableDateTimeBuffer` exist for these too.
 ```java
-assertThat(ITU.parseEpochSecond("1695300000").toString()).isEqualTo("2023-09-21T12:40:00Z");
-assertThat(ITU.parseEpochMilli("1695300000123").toString()).isEqualTo("2023-09-21T12:40:00.123Z");
+assertThat(ITU.parseEpochSecond("1695300000")).hasToString("2023-09-21T12:40:00Z");
+assertThat(ITU.parseEpochMilli("1695300000123")).hasToString("2023-09-21T12:40:00.123Z");
 assertThat(ITU.parseEpochMilli("-1").toInstant().toEpochMilli()).isEqualTo(-1);
 ```
 
@@ -222,8 +222,8 @@ final TemporalHandler<OffsetDateTime> handler = new TemporalHandler<OffsetDateTi
                 return offsetDateTime;
             }
         };
-assertThat(ITU.parse("2017-12-06", handler).toString()).isEqualTo("2017-12-06T00:00Z");
-assertThat(ITU.parse("2017-12-06T10:15:30+02:00", handler).toString()).isEqualTo("2017-12-06T10:15:30+02:00");
+assertThat(ITU.parse("2017-12-06", handler)).hasToString("2017-12-06T00:00Z");
+assertThat(ITU.parse("2017-12-06T10:15:30+02:00", handler)).hasToString("2017-12-06T10:15:30+02:00");
 ```
 
 #### parseCustomFormat
@@ -247,7 +247,7 @@ final DateTimeParser parser = DateTimeParsers.of(
         );
 final String text = "31-12-2000 235937,123456";
 final DateTime result = parser.parse(text);
-assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
+assertThat(result).hasToString("2000-12-31T23:59:37.123456");
 ```
 
 #### parseUsingInterface
@@ -257,7 +257,7 @@ The built-in formats are available as `DateTimeParser` instances too, for code t
  parameter: RFC-3339, local date and local time.
 ```java
 final DateTimeParser rfc3339 = DateTimeParsers.rfc3339();
-assertThat(rfc3339.parse("2000-12-31T23:59:37.123456Z").toString()).isEqualTo("2000-12-31T23:59:37.123456Z");
+assertThat(rfc3339.parse("2000-12-31T23:59:37.123456Z")).hasToString("2000-12-31T23:59:37.123456Z");
 final DateTimeParser localDate = DateTimeParsers.localDate();
 assertThat(localDate.parse("2013-12-24").toLocalDate()).isEqualTo(LocalDate.of(2013, 12, 24));
 final DateTimeParser localTime = DateTimeParsers.localTime();
@@ -304,11 +304,11 @@ A `DateTime` formats to the granularity it carries, or to any coarser one. With 
  RFC-3339; without one it is the local form.
 ```java
 final DateTime local = DateTime.of(2020, 11, 27, 12, 39, 19, null);
-assertThat(local.toString()).isEqualTo("2020-11-27T12:39:19");
+assertThat(local).hasToString("2020-11-27T12:39:19");
 assertThat(local.toString(Field.MINUTE)).isEqualTo("2020-11-27T12:39");
 assertThat(local.toString(Field.DAY)).isEqualTo("2020-11-27");
 final DateTime withOffset = DateTime.of(2020, 11, 27, 12, 39, 19, 500_000_000, TimezoneOffset.ofHoursMinutes(1, 0), 1);
-assertThat(withOffset.toString()).isEqualTo("2020-11-27T12:39:19.5+01:00");
+assertThat(withOffset).hasToString("2020-11-27T12:39:19.5+01:00");
 assertThat(withOffset.toString(3)).isEqualTo("2020-11-27T12:39:19.500+01:00");
 ```
 
@@ -340,7 +340,7 @@ A second of 60 on a date that never had a leap second is still a leap-second exc
 ```java
 final LeapSecondException exc = assertThrows(LeapSecondException.class, () -> ITU.parseDateTime("2020-06-30T23:59:60Z"));
 assertThat(exc.isVerifiedValidLeapYearMonth()).isFalse();
-assertThat(exc.getNearestDateTime().toString()).isEqualTo("2020-07-01T00:00Z");
+assertThat(exc.getNearestDateTime()).hasToString("2020-07-01T00:00Z");
 ```
 
 
@@ -444,9 +444,9 @@ Durations can be built, added, subtracted and compared, and placed on the timeli
 final Duration total = Duration.ofHours(2).add(ITU.parseDuration("PT30M")).subtract(Duration.ofSeconds(1));
 assertThat(total.normalized()).isEqualTo("PT2H29M59S");
 assertThat(total.negate().normalized()).isEqualTo("-PT2H29M59S");
-assertThat(total.compareTo(Duration.ofHours(3))).isNegative();
+assertThat(total).isLessThan(Duration.ofHours(3));
 final Instant start = Instant.parse("2024-02-28T23:00:00Z");
-assertThat(total.timeline(start).toString()).isEqualTo("2024-02-29T01:29:59Z");
+assertThat(total.timeline(start)).hasToString("2024-02-29T01:29:59Z");
 ```
 
 #### parseDurationError

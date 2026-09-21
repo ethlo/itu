@@ -70,7 +70,7 @@ class ITUParserSamples
     {
         final String text = "2012-12-27T19:07:22.123456789-03:00";
         final OffsetDateTime dateTime = ITU.parseDateTime(text);
-        assertThat(dateTime.toString()).isEqualTo(text);
+        assertThat(dateTime).hasToString(text);
     }
 
     /*
@@ -86,7 +86,7 @@ class ITUParserSamples
         assertThat(dateTime.getMostGranularField()).isEqualTo(Field.NANO);
         assertThat(dateTime.getFractionDigits()).isEqualTo(3);
         assertThat(dateTime.getOffset()).isEmpty();
-        assertThat(dateTime.toString()).isEqualTo(text);
+        assertThat(dateTime).hasToString(text);
     }
 
     /*
@@ -97,10 +97,10 @@ class ITUParserSamples
     void parseLenientGranularity()
     {
         assertThat(ITU.parseLenient("2012").toYear().getValue()).isEqualTo(2012);
-        assertThat(ITU.parseLenient("2012-12").toYearMonth().toString()).isEqualTo("2012-12");
-        assertThat(ITU.parseLenient("2012-12-27").toLocalDate().toString()).isEqualTo("2012-12-27");
-        assertThat(ITU.parseLenient("2012-12-27T19:07").toLocalDatetime().toString()).isEqualTo("2012-12-27T19:07");
-        assertThat(ITU.parseLenient("2012-12-27T19:07:22+01:00").toOffsetDatetime().toString()).isEqualTo("2012-12-27T19:07:22+01:00");
+        assertThat(ITU.parseLenient("2012-12").toYearMonth()).hasToString("2012-12");
+        assertThat(ITU.parseLenient("2012-12-27").toLocalDate()).hasToString("2012-12-27");
+        assertThat(ITU.parseLenient("2012-12-27T19:07").toLocalDatetime()).hasToString("2012-12-27T19:07");
+        assertThat(ITU.parseLenient("2012-12-27T19:07:22+01:00").toOffsetDatetime()).hasToString("2012-12-27T19:07:22+01:00");
 
         final DateTime dateOnly = ITU.parseLenient("2012-12-27");
         assertThat(dateOnly.includesGranularity(Field.HOUR)).isFalse();
@@ -115,7 +115,7 @@ class ITUParserSamples
     void lenientTimestamp()
     {
         final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
-        assertThat(instant.toString()).isEqualTo("2017-12-06T00:00:00Z");
+        assertThat(instant).hasToString("2017-12-06T00:00:00Z");
     }
 
     /*
@@ -155,7 +155,7 @@ class ITUParserSamples
                 .withDateTimeSeparators('T', '|')
                 .withFractionSeparators('.', ',');
         final DateTime result = ITU.parseLenient("1999-11-22|11:22:17,191", config);
-        assertThat(result.toString()).isEqualTo("1999-11-22T11:22:17.191");
+        assertThat(result).hasToString("1999-11-22T11:22:17.191");
     }
 
     /*
@@ -167,7 +167,7 @@ class ITUParserSamples
     {
         final ParsePosition pos = new ParsePosition(10);
         final OffsetDateTime result = ITU.parseDateTime("some-data,1999-11-22T11:22:19+05:30,some-other-data", pos);
-        assertThat(result.toString()).isEqualTo("1999-11-22T11:22:19+05:30");
+        assertThat(result).hasToString("1999-11-22T11:22:19+05:30");
         assertThat(pos.getIndex()).isEqualTo(35);
     }
 
@@ -197,8 +197,8 @@ class ITUParserSamples
     @Test
     void parseEpoch()
     {
-        assertThat(ITU.parseEpochSecond("1695300000").toString()).isEqualTo("2023-09-21T12:40:00Z");
-        assertThat(ITU.parseEpochMilli("1695300000123").toString()).isEqualTo("2023-09-21T12:40:00.123Z");
+        assertThat(ITU.parseEpochSecond("1695300000")).hasToString("2023-09-21T12:40:00Z");
+        assertThat(ITU.parseEpochMilli("1695300000123")).hasToString("2023-09-21T12:40:00.123Z");
         assertThat(ITU.parseEpochMilli("-1").toInstant().toEpochMilli()).isEqualTo(-1);
     }
 
@@ -224,8 +224,8 @@ class ITUParserSamples
             }
         };
 
-        assertThat(ITU.parse("2017-12-06", handler).toString()).isEqualTo("2017-12-06T00:00Z");
-        assertThat(ITU.parse("2017-12-06T10:15:30+02:00", handler).toString()).isEqualTo("2017-12-06T10:15:30+02:00");
+        assertThat(ITU.parse("2017-12-06", handler)).hasToString("2017-12-06T00:00Z");
+        assertThat(ITU.parse("2017-12-06T10:15:30+02:00", handler)).hasToString("2017-12-06T10:15:30+02:00");
     }
 
     /*
@@ -250,7 +250,7 @@ class ITUParserSamples
         );
         final String text = "31-12-2000 235937,123456";
         final DateTime result = parser.parse(text);
-        assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
+        assertThat(result).hasToString("2000-12-31T23:59:37.123456");
     }
 
     /*
@@ -261,7 +261,7 @@ class ITUParserSamples
     void parseUsingInterface()
     {
         final DateTimeParser rfc3339 = DateTimeParsers.rfc3339();
-        assertThat(rfc3339.parse("2000-12-31T23:59:37.123456Z").toString()).isEqualTo("2000-12-31T23:59:37.123456Z");
+        assertThat(rfc3339.parse("2000-12-31T23:59:37.123456Z")).hasToString("2000-12-31T23:59:37.123456Z");
 
         final DateTimeParser localDate = DateTimeParsers.localDate();
         assertThat(localDate.parse("2013-12-24").toLocalDate()).isEqualTo(LocalDate.of(2013, 12, 24));

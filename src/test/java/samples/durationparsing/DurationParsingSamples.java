@@ -97,10 +97,10 @@ class DurationParsingSamples
         final Duration total = Duration.ofHours(2).add(ITU.parseDuration("PT30M")).subtract(Duration.ofSeconds(1));
         assertThat(total.normalized()).isEqualTo("PT2H29M59S");
         assertThat(total.negate().normalized()).isEqualTo("-PT2H29M59S");
-        assertThat(total.compareTo(Duration.ofHours(3))).isNegative();
+        assertThat(total).isLessThan(Duration.ofHours(3));
 
         final Instant start = Instant.parse("2024-02-28T23:00:00Z");
-        assertThat(total.timeline(start).toString()).isEqualTo("2024-02-29T01:29:59Z");
+        assertThat(total.timeline(start)).hasToString("2024-02-29T01:29:59Z");
     }
 
     /*

@@ -75,12 +75,12 @@ class ITUFormattingSamples
     void formatWithDateTime()
     {
         final DateTime local = DateTime.of(2020, 11, 27, 12, 39, 19, null);
-        assertThat(local.toString()).isEqualTo("2020-11-27T12:39:19");
+        assertThat(local).hasToString("2020-11-27T12:39:19");
         assertThat(local.toString(Field.MINUTE)).isEqualTo("2020-11-27T12:39");
         assertThat(local.toString(Field.DAY)).isEqualTo("2020-11-27");
 
         final DateTime withOffset = DateTime.of(2020, 11, 27, 12, 39, 19, 500_000_000, TimezoneOffset.ofHoursMinutes(1, 0), 1);
-        assertThat(withOffset.toString()).isEqualTo("2020-11-27T12:39:19.5+01:00");
+        assertThat(withOffset).hasToString("2020-11-27T12:39:19.5+01:00");
         assertThat(withOffset.toString(3)).isEqualTo("2020-11-27T12:39:19.500+01:00");
     }
 }
