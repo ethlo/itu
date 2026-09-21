@@ -336,6 +336,7 @@ non-negative and mostly fit in an int.
 | S7.0 | 2026-09-21 | —   | BASELINE buffer path, `8b7bc49` + epoch parser (String path same code: 367 / 42 · 386 / 46 · 381 / 46; 30.3 / 31.2 / 30.4 ns) | 353 / 35 | 368 / 39 | 371 / 39 | 30.0 / 31.2 / 30.8 | — | `3b8fe2b` |
 | S7.1 | 2026-09-21 | H24 | Range-check the raw value, then rebase to seconds since 0000-01-01 (always ≥ 0) and shift the era arithmetic by one era: plain `/` and multiply-subtract everywhere, no `floorDiv`/`floorMod`. String path: 363 / 38 · 380 / 43 · 375 / 43 | 348 / 32 | 367 / 37 | 362 / 36 | 30.7 / 33.3 / 31.8 | NO-GAIN (kept anyway: −3 branches, and the simpler code; not a speed-up) | |
 | S7.2 | 2026-09-21 | H25 | `civilFromDaysSince0000` in `int`: the day count is 22 bits, so the seven era/year/month divisions become 32-bit magic multiplies instead of 64-bit high multiplies. String path: 389 / 40 · 394 / 43 · 347 / 38 | 351 / 32 | 366 / 36 | 374 / 37 | 32.5 / 35.8 / 33.5 | NO-GAIN (kept anyway, as the simpler code with S7.1; not a speed-up) | |
+| S7.3 | 2026-09-21 | H26 | Non-negativity hints: no-op `&` masks on every dividend (`& Long.MAX_VALUE` on the two long ones, `& 0x3FFFFF` / `0x3FFFF` / `0x1FF` on days, doe, yoe, doy, `& 0x1FFFF` on secondOfDay) so C2's type says ≥ 0 and it omits the sign correction of each magic division. String path: 363 / 39 · 378 / 43 · 376 / 43 | 353 / 32 | 369 / 36 | 375 / 37 | 31.2 / 32.4 / 32.8 | NO-GAIN (reverted: the corrections went, the masks and the add-back magics cost the same) | — |
 
 ## Dead ends — do not retry without a new reason
 
