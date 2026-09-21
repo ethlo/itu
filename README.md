@@ -6,16 +6,19 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/598913bc1fe9405c82be73d9a4f105c8)](https://app.codacy.com/gh/ethlo/itu/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![codecov](https://codecov.io/gh/ethlo/itu/graph/badge.svg?token=V3H15LKC5V)](https://codecov.io/gh/ethlo/itu)
 
-An extremely fast parser and formatter of ISO-8601 date-times. Handle
-[RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) with ease!
-Now also supports a subset of duration strings!
+An extremely fast parser and formatter of ISO-8601 date-times. Handles
+[RFC-3339 timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime)
+with ease, and a strict subset of ISO-8601 durations.
 
 ## Features
 
- Low ceremony, high productivity with a very easy to use API.
+* Low ceremony, high productivity with a very easy to use API.
 * [Well-documented](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
-* Aim for 100% specification compliance.
-* Handling leap-seconds.
+* Aims for 100% specification compliance.
+* Parses any granularity from a year to nanoseconds, and remembers which one it got.
+* Zero-allocation parsing from `char[]` into a reusable buffer.
+* Parses Unix epoch seconds and milliseconds written as text through the same API.
+* Handles leap seconds.
 * Zero dependencies.
 * Java 8 compatible.
 * Apache 2 licensed.
@@ -59,63 +62,119 @@ Add dependency
 </dependency>
 ```
 
-Below you find some samples of usage of this library. Please check out the [javadoc](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html) for more details.
+The examples below are the tests in [`src/test/java/samples`](src/test/java/samples), extracted into this
+file by the build, so they are always current. The
+[javadoc](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html) has the details.
 
 
 
 ## Parsing
 
-This is a collection of usage examples for parsing.
-
 
 
 #### parseRfc3339
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L61C5-L70C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L64C5-L74C6)</smaller>
 
-The simplest and fastest way to parse an RFC-3339 timestamp by far!
+The simplest and fastest way to parse an RFC-3339 timestamp. The input must be a complete date-time with an
+ offset; the result is a `java.time.OffsetDateTime`.
 ```java
 final String text = "2012-12-27T19:07:22.123456789-03:00";
 final OffsetDateTime dateTime = ITU.parseDateTime(text);
-assertThat(dateTime.toString()).isEqualTo(text);
+assertThat(dateTime).hasToString(text);
 ```
 
 #### parseLenient
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L72C5-L84C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L76C5-L90C6)</smaller>
 
-Parses a date-time with flexible granularity. Works for anything from a year to a timestamp with nanoseconds, with or without timezone offset.
+Lenient parsing accepts anything from a year to a timestamp with nanoseconds, with or without an offset, and
+ returns a `DateTime` that remembers the most granular field, fraction digit count and offset presence.
+ Formatting emits a canonical representation while preserving that granularity.
 ```java
 final String text = "2012-12-27T19:07:23.123";
 final DateTime dateTime = ITU.parseLenient(text);
-final String formatted = dateTime.toString();
-assertThat(formatted).isEqualTo(text);
+assertThat(dateTime.getMostGranularField()).isEqualTo(Field.NANO);
+assertThat(dateTime.getFractionDigits()).isEqualTo(3);
+assertThat(dateTime.getOffset()).isEmpty();
+assertThat(dateTime).hasToString(text);
+```
+
+#### parseLenientGranularity
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L92C5-L108C6)</smaller>
+
+The granularity is kept, so a partial date can be converted to the matching `java.time` type, and asking for a
+ field that was not in the input is an error rather than a silent default.
+```java
+assertThat(ITU.parseLenient("2012").toYear().getValue()).isEqualTo(2012);
+assertThat(ITU.parseLenient("2012-12").toYearMonth()).hasToString("2012-12");
+assertThat(ITU.parseLenient("2012-12-27").toLocalDate()).hasToString("2012-12-27");
+assertThat(ITU.parseLenient("2012-12-27T19:07").toLocalDatetime()).hasToString("2012-12-27T19:07");
+assertThat(ITU.parseLenient("2012-12-27T19:07:22+01:00").toOffsetDatetime()).hasToString("2012-12-27T19:07:22+01:00");
+final DateTime dateOnly = ITU.parseLenient("2012-12-27");
+assertThat(dateOnly.includesGranularity(Field.HOUR)).isFalse();
+assertThrows(DateTimeException.class, dateOnly::toOffsetDatetime);
+```
+
+#### lenientTimestamp
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L110C5-L119C6)</smaller>
+
+When a best-effort timestamp is all that is needed, a `DateTime` of any granularity converts to an `Instant`:
+ missing month and day default to 1, missing time fields to 0, and a missing offset to UTC.
+```java
+final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
+assertThat(instant).hasToString("2017-12-06T00:00:00Z");
+```
+
+#### isValid
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L121C5-L132C6)</smaller>
+
+Checking validity without parsing, and without exceptions. The single-argument form checks for a full RFC-3339
+ date-time; the varargs form accepts any of the listed granularities.
+```java
+assertThat(ITU.isValid("2012-12-27T19:07:22Z")).isTrue();
+assertThat(ITU.isValid("2012-12-27")).isFalse();
+assertThat(ITU.isValid("2012-12-27", TemporalType.LOCAL_DATE, TemporalType.OFFSET_DATE_TIME)).isTrue();
+assertThat(ITU.isValid("2012-13-27", TemporalType.LOCAL_DATE)).isFalse();
+```
+
+#### parseError
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L134C5-L144C6)</smaller>
+
+Errors are `java.time.format.DateTimeParseException` with the input and the 0-based index of the offending
+ character, and the message names the 1-based position and what was expected.
+```java
+final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ITU.parseDateTime("2012-12-27T19:07:22.123456789"));
+assertThat(exc.getErrorIndex()).isEqualTo(29);
+assertThat(exc.getMessage()).isEqualTo("No timezone information: 2012-12-27T19:07:22.123456789");
 ```
 
 #### parseLenientWithCustomSeparators
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L86C5-L98C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L146C5-L159C6)</smaller>
 
-In case you encounter the need for a somewhat different time-separator or fraction separator
- you can use the `ParseConfig` to set up you preferred delimiters.
+`ParseConfig` widens what is accepted: the characters allowed between date and time and before the fraction,
+ and whether text after the date-time is an error. `ParseConfig.DEFAULT` accepts `T`, `t` and space as the
+ date-time separator; `ParseConfig.STRICT` only `T`.
 ```java
 final ParseConfig config = ParseConfig.DEFAULT
                 .withDateTimeSeparators('T', '|')
                 .withFractionSeparators('.', ',');
 final DateTime result = ITU.parseLenient("1999-11-22|11:22:17,191", config);
-assertThat(result.toString()).isEqualTo("1999-11-22T11:22:17.191");
+assertThat(result).hasToString("1999-11-22T11:22:17.191");
 ```
 
 #### parsePosition
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L100C5-L110C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L161C5-L172C6)</smaller>
 
-This allows you to track where to start reading. Note that the check for trailing junk is disabled when using `ParsePosition`.
+A `ParsePosition` starts the parse inside a larger text and reports where it stopped. Text after the
+ date-time is not an error in this mode, since the position tells you where to continue.
 ```java
 final ParsePosition pos = new ParsePosition(10);
 final OffsetDateTime result = ITU.parseDateTime("some-data,1999-11-22T11:22:19+05:30,some-other-data", pos);
-assertThat(result.toString()).isEqualTo("1999-11-22T11:22:19+05:30");
+assertThat(result).hasToString("1999-11-22T11:22:19+05:30");
 assertThat(pos.getIndex()).isEqualTo(35);
 ```
 
 #### parseIntoBuffer
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L112C5-L127C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L174C5-L190C6)</smaller>
 
 When the text is already available as characters, parse into a reusable buffer: nothing is allocated, and the
  fields are read straight off the buffer. This is the fastest way to parse. The window `[offset, offset + length)`
@@ -128,12 +187,26 @@ assertThat(consumed).isEqualTo(35);
 assertThat(buffer.getYear()).isEqualTo(2012);
 assertThat(buffer.getNano()).isEqualTo(123456789);
 assertThat(buffer.getOffsetTotalSeconds()).isEqualTo(-3 * 3600);
+assertThat(buffer.toEpochMilli()).isEqualTo(1356646042123L);
 ```
 
-#### explicitGranularity
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L129C5-L152C6)</smaller>
+#### parseEpoch
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L192C5-L203C6)</smaller>
 
-This is useful if you need to handle different granularity with different logic or interpolation.
+A Unix epoch count written as text, in seconds or milliseconds, parses to the same `DateTime` as an RFC-3339
+ string, so a field that may carry either can go through one code path. The `char[]` overloads into a
+ `MutableDateTimeBuffer` exist for these too.
+```java
+assertThat(ITU.parseEpochSecond("1695300000")).hasToString("2023-09-21T12:40:00Z");
+assertThat(ITU.parseEpochMilli("1695300000123")).hasToString("2023-09-21T12:40:00.123Z");
+assertThat(ITU.parseEpochMilli("-1").toInstant().toEpochMilli()).isEqualTo(-1);
+```
+
+#### handleByGranularity
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L205C5-L229C6)</smaller>
+
+To handle each granularity differently, a `TemporalHandler` receives the parsed value as the matching
+ `java.time` type. `TemporalConsumer` is the same idea without a return value.
 ```java
 final TemporalHandler<OffsetDateTime> handler = new TemporalHandler<OffsetDateTime>()
         {
@@ -149,25 +222,15 @@ final TemporalHandler<OffsetDateTime> handler = new TemporalHandler<OffsetDateTi
                 return offsetDateTime;
             }
         };
-final OffsetDateTime result = ITU.parse("2017-12-06", handler);
-assertThat(result.toString()).isEqualTo("2017-12-06T00:00Z");
-```
-
-#### lenientTimestamp
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L154C5-L164C6)</smaller>
-
-In some real world scenarios, it is useful to parse a best-effort timestamp. To ease usage, we can easily convert a raw `DateTime` instance into `Instant`.
-
- Note the limitations and the assumption of UTC time-zone, as mentioned in the javadoc.
-```java
-final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
-assertThat(instant.toString()).isEqualTo("2017-12-06T00:00:00Z");
+assertThat(ITU.parse("2017-12-06", handler)).hasToString("2017-12-06T00:00Z");
+assertThat(ITU.parse("2017-12-06T10:15:30+02:00", handler)).hasToString("2017-12-06T10:15:30+02:00");
 ```
 
 #### parseCustomFormat
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L166C5-L188C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L231C5-L254C6)</smaller>
 
-In case the format is not supported directly, you can build your own parser.
+A format that is not RFC-3339 can be described as a sequence of tokens. The parser produced is a
+ `DateTimeParser`, the same interface the built-in ones implement.
 ```java
 final DateTimeParser parser = DateTimeParsers.of(
                 digits(DAY, 2),
@@ -184,40 +247,21 @@ final DateTimeParser parser = DateTimeParsers.of(
         );
 final String text = "31-12-2000 235937,123456";
 final DateTime result = parser.parse(text);
-assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
+assertThat(result).hasToString("2000-12-31T23:59:37.123456");
 ```
 
-#### parseUsingInterfaceRfc33939
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L190C5-L200C6)</smaller>
+#### parseUsingInterface
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L256C5-L271C6)</smaller>
 
-`DateTimerParser` interface for RFC-3339.
+The built-in formats are available as `DateTimeParser` instances too, for code that takes a parser as a
+ parameter: RFC-3339, local date and local time.
 ```java
-final DateTimeParser parser = DateTimeParsers.rfc3339();
-final String text = "2000-12-31 23:59:37.123456";
-final DateTime result = parser.parse(text);
-assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
-```
-
-#### parseUsingInterfaceLocalTime
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L202C5-L212C6)</smaller>
-
-`DateTimerParser` interface for local time.
-```java
-final DateTimeParser parser = DateTimeParsers.localTime();
-final String text = "23:59:37.123456";
-final LocalTime result = parser.parse(text).toLocalTime();
-assertThat(result.toString()).isEqualTo(text);
-```
-
-#### parseUsingInterfaceLocalDate
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L214C5-L224C6)</smaller>
-
-`DateTimerParser` interface for local date.
-```java
-final DateTimeParser parser = DateTimeParsers.localDate();
-final String text = "2013-12-24";
-final LocalDate result = parser.parse(text).toLocalDate();
-assertThat(result.toString()).isEqualTo(text);
+final DateTimeParser rfc3339 = DateTimeParsers.rfc3339();
+assertThat(rfc3339.parse("2000-12-31T23:59:37.123456Z")).hasToString("2000-12-31T23:59:37.123456Z");
+final DateTimeParser localDate = DateTimeParsers.localDate();
+assertThat(localDate.parse("2013-12-24").toLocalDate()).isEqualTo(LocalDate.of(2013, 12, 24));
+final DateTimeParser localTime = DateTimeParsers.localTime();
+assertThat(localTime.parse("23:59:37.123456").toLocalTime()).isEqualTo(LocalTime.of(23, 59, 37, 123456000));
 ```
 
 
@@ -225,92 +269,107 @@ assertThat(result.toString()).isEqualTo(text);
 
 ## Formatting
 
-This is a collection of usage examples for formatting.
-
 
 
 #### formatRfc3339WithUTC
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L43C5-L54C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L42C5-L54C6)</smaller>
 
-The simplest and fastest way to format an RFC-3339 timestamp by far!
+The simplest and fastest way to format an RFC-3339 timestamp: in UTC, with the fraction digits chosen by the
+ method name. Milliseconds is the most common choice for interchange.
 ```java
 final OffsetDateTime input = OffsetDateTime.of(2012, 12, 27, 19, 7, 22, 123456789, ZoneOffset.ofHoursMinutes(-3, 0));
-assertThat(ITU.formatUtcNano(input)).isEqualTo("2012-12-27T22:07:22.123456789Z");
-assertThat(ITU.formatUtcMicro(input)).isEqualTo("2012-12-27T22:07:22.123456Z");
-assertThat(ITU.formatUtcMilli(input)).isEqualTo("2012-12-27T22:07:22.123Z");
 assertThat(ITU.formatUtc(input)).isEqualTo("2012-12-27T22:07:22Z");
+assertThat(ITU.formatUtcMilli(input)).isEqualTo("2012-12-27T22:07:22.123Z");
+assertThat(ITU.formatUtcMicro(input)).isEqualTo("2012-12-27T22:07:22.123456Z");
+assertThat(ITU.formatUtcNano(input)).isEqualTo("2012-12-27T22:07:22.123456789Z");
+```
+
+#### formatWithOffsetAndPrecision
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L56C5-L68C6)</smaller>
+
+`format` keeps the offset of the input instead of converting to UTC. Like `formatUtc` it defaults to whole
+ seconds; both take the number of fraction digits as a parameter, and `formatUtc` can also stop at a given field.
+```java
+final OffsetDateTime input = OffsetDateTime.of(2012, 12, 27, 19, 7, 22, 123456789, ZoneOffset.ofHoursMinutes(-3, 0));
+assertThat(ITU.format(input)).isEqualTo("2012-12-27T19:07:22-03:00");
+assertThat(ITU.format(input, 9)).isEqualTo("2012-12-27T19:07:22.123456789-03:00");
+assertThat(ITU.formatUtc(input, 6)).isEqualTo("2012-12-27T22:07:22.123456Z");
+assertThat(ITU.formatUtc(input, Field.MINUTE)).isEqualTo("2012-12-27T22:07Z");
 ```
 
 #### formatWithDateTime
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L56C5-L65C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L70C5-L85C6)</smaller>
 
-Format with `DateTime`.
+A `DateTime` formats to the granularity it carries, or to any coarser one. With an offset the result is
+ RFC-3339; without one it is the local form.
 ```java
-final DateTime input = DateTime.of(2020, 11, 27, 12, 39, 19, null);
-assertThat(input.toString(Field.MINUTE)).isEqualTo("2020-11-27T12:39");
-assertThat(input.toString(Field.SECOND)).isEqualTo("2020-11-27T12:39:19");
+final DateTime local = DateTime.of(2020, 11, 27, 12, 39, 19, null);
+assertThat(local).hasToString("2020-11-27T12:39:19");
+assertThat(local.toString(Field.MINUTE)).isEqualTo("2020-11-27T12:39");
+assertThat(local.toString(Field.DAY)).isEqualTo("2020-11-27");
+final DateTime withOffset = DateTime.of(2020, 11, 27, 12, 39, 19, 500_000_000, TimezoneOffset.ofHoursMinutes(1, 0), 1);
+assertThat(withOffset).hasToString("2020-11-27T12:39:19.5+01:00");
+assertThat(withOffset.toString(3)).isEqualTo("2020-11-27T12:39:19.500+01:00");
 ```
 
 
 
 
-## Leap-second handling
+## Leap seconds
 
 
 
 #### parseLeapSecond
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/leapsecond/ITULeapSecondSamples.java#L40C5-L57C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/leapsecond/ITULeapSecondSamples.java#L41C5-L53C6)</smaller>
 
-Parse a valid leap-second (i.e. it is on a date that would allow for it, and it is also in the list of known actual leap-seconds).
+`java.time` cannot represent second 60, so a leap second is reported as a `LeapSecondException` rather than
+ silently changed. The exception tells you whether the leap second is a real one (on the list of announced leap
+ seconds) and gives the nearest representable date-time, which is the next minute.
 ```java
-try
-        {
-            ITU.parseDateTime("1990-12-31T15:59:60-08:00");
-        }
-        catch (LeapSecondException exc)
-        {
-            // The following helper methods are available let you decide how to progress
-            assertThat(exc.getSecondsInMinute()).isEqualTo(60);
-            assertThat(exc.getNearestDateTime()).isEqualTo(OffsetDateTime.of(1990, 12, 31, 16, 0, 0, 0, ZoneOffset.ofHours(-8)));
-            assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
-        }
+final LeapSecondException exc = assertThrows(LeapSecondException.class, () -> ITU.parseDateTime("1990-12-31T15:59:60-08:00"));
+assertThat(exc.getSecondsInMinute()).isEqualTo(60);
+assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
+assertThat(exc.getNearestDateTime()).isEqualTo(OffsetDateTime.of(1990, 12, 31, 16, 0, 0, 0, ZoneOffset.ofHours(-8)));
+```
+
+#### parseUnknownLeapSecond
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/leapsecond/ITULeapSecondSamples.java#L55C5-L65C6)</smaller>
+
+A second of 60 on a date that never had a leap second is still a leap-second exception, since the syntax is
+ valid, but `isVerifiedValidLeapYearMonth` is false so you can choose to reject it.
+```java
+final LeapSecondException exc = assertThrows(LeapSecondException.class, () -> ITU.parseDateTime("2020-06-30T23:59:60Z"));
+assertThat(exc.isVerifiedValidLeapYearMonth()).isFalse();
+assertThat(exc.getNearestDateTime()).hasToString("2020-07-01T00:00Z");
 ```
 
 
-## Duration Parser
+## Durations
 
-Parses a duration string, a strict subset of ISO 8601 durations.
+`ITU.parseDuration` parses a strict subset of ISO-8601 durations into a `Duration` of `long` seconds and
+`int` nanoseconds.
 
-### Supported Units
-This method supports time-based durations with the following units:
+### Supported units
 
 - **Weeks** (`W`)
 - **Days** (`D`)
 - **Hours** (`H`)
 - **Minutes** (`M`)
-- **Seconds** (`S`), including fractional seconds up to nanosecond precision
+- **Seconds** (`S`), with a fraction of up to nine digits
 
-#### Not Allowed Units
-The following units are **explicitly not allowed** to avoid ambiguity:
+**Years** (`Y`) and **months** (`M` in the date part) are rejected: their length depends on the calendar, so
+a duration containing them is not a fixed amount of time.
 
-- **Years** (`Y`)
-- **Months** (`M` in the date section)
+### Negative durations
 
-### Negative Durations
-Negative durations are supported and must be prefixed with `-P`, as specified in ISO 8601.  
-The parsed duration will be represented using:
+A negative duration is prefixed `-P`, as ISO-8601 specifies. The sign is carried by the seconds and the
+nanosecond part is never negative, as in `java.time.Duration`.
 
-- A **`long`** for total seconds
-- An **`int`** for nanosecond precision
+### Normalized output
 
-The nanosecond component is always positive, with the sign absorbed by the seconds field,  
-following Java and ISO 8601 conventions.
-
-### Normalized Output
-
-`Duration.normalized()` renders using the largest units possible, so a duration of 3,000,000 seconds and
-117,392,763 nanoseconds becomes `P4W6DT17H20M0.117392763S`. Negative durations carry a single leading `-P`,
-as ISO 8601 specifies, rather than signing each component.
+`Duration.normalized()` renders using the largest units possible, so 3,000,000 seconds and 117,392,763
+nanoseconds becomes `P4W6DT17H20M0.117392763S`. A negative duration gets a single leading `-P` rather than a
+sign on each component.
 
 `normalized(DurationUnit)` caps the largest unit emitted; anything above the cap stays folded into it:
 
@@ -322,41 +381,83 @@ as ISO 8601 specifies, rather than signing each component.
 | `DurationUnit.MINUTES` | `PT50000M0.117392763S` |
 | `DurationUnit.SECONDS` | `PT3000000.117392763S` |
 
-Note that `java.time.Duration.parse` does not accept the week designator, so it cannot read back the default
-rendering once a duration reaches a full week. Days and every smaller unit are accepted, including the
-leading `-P` form, so a cap of `DurationUnit.DAYS` or lower keeps the output readable by the Java Time API.
+`java.time.Duration.parse` does not accept the week designator, so it cannot read back the default rendering
+once a duration reaches a full week. Days and every smaller unit are accepted, including the leading `-P`
+form, so a cap of `DurationUnit.DAYS` or lower keeps the output readable by the JDK.
+
+
 
 ### Examples
 
-#### Valid Input
-- `P2DT3H4M5.678901234S` → 2 days, 3 hours, 4 minutes, 5.678901234 seconds
-- `PT5M30S` → 5 minutes, 30 seconds
-- `-PT2.5S` → Negative 2.5 seconds
-- `-P1D` → Negative 1 day
-
-#### Invalid Input
-- `P1Y2M3DT4H` → Contains `Y` and `M`
-- `PT` → Missing time values after `T`
-- `P-1D` → Incorrect negative placement
 
 
+#### parseDuration
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L42C5-L51C6)</smaller>
 
-#### simple
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L32C5-L37C6)</smaller>
-
-
+A duration parses to seconds and a nanosecond part, exact to the nanosecond.
 ```java
-final Duration duration = ITU.parseDuration("P4W");
-assertThat(duration.getSeconds()).isEqualTo(2_419_200L);
+final Duration duration = ITU.parseDuration("P2DT3H4M5.678901234S");
+assertThat(duration.getSeconds()).isEqualTo(2 * 86_400 + 3 * 3_600 + 4 * 60 + 5);
+assertThat(duration.getNanos()).isEqualTo(678_901_234);
 ```
 
-#### fullNotNormalizedToNormalized
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L39C5-L44C6)</smaller>
+#### parseNegativeDuration
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L53C5-L64C6)</smaller>
 
+A negative duration is written with the sign in front of `P`. The sign lives in the seconds and the nanosecond
+ part is never negative, as in `java.time.Duration`, so `-PT0.5S` is -1 second plus 500 million nanoseconds.
+```java
+final Duration duration = ITU.parseDuration("-PT0.5S");
+assertThat(duration.getSeconds()).isEqualTo(-1);
+assertThat(duration.getNanos()).isEqualTo(500_000_000);
+assertThat(duration.normalized()).isEqualTo("-PT0.5S");
+```
 
+#### normalized
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L66C5-L76C6)</smaller>
+
+`normalized()` renders with the largest units possible, so overflowing components are carried: 28 hours
+ become a day and 4 hours. Trailing zero fractions are dropped.
 ```java
 final Duration duration = ITU.parseDuration("P4W10DT28H122M1.123456S");
 assertThat(duration.normalized()).isEqualTo("P5W4DT6H2M1.123456S");
+assertThat(ITU.parseDuration("PT90M").normalized()).isEqualTo("PT1H30M");
+```
+
+#### normalizedWithMaximumUnit
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L78C5-L89C6)</smaller>
+
+`java.time.Duration.parse` does not accept weeks, so cap the largest unit at days (or lower) when the output
+ has to be read back by the JDK.
+```java
+final Duration duration = ITU.parseDuration("P5W4DT6H2M1.123456S");
+assertThat(duration.normalized(DurationUnit.DAYS)).isEqualTo("P39DT6H2M1.123456S");
+assertThat(duration.normalized(DurationUnit.HOURS)).isEqualTo("PT942H2M1.123456S");
+assertThat(java.time.Duration.parse(duration.normalized(DurationUnit.DAYS)).getSeconds()).isEqualTo(duration.getSeconds());
+```
+
+#### arithmetic
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L91C5-L104C6)</smaller>
+
+Durations can be built, added, subtracted and compared, and placed on the timeline from an `Instant`.
+```java
+final Duration total = Duration.ofHours(2).add(ITU.parseDuration("PT30M")).subtract(Duration.ofSeconds(1));
+assertThat(total.normalized()).isEqualTo("PT2H29M59S");
+assertThat(total.negate().normalized()).isEqualTo("-PT2H29M59S");
+assertThat(total).isLessThan(Duration.ofHours(3));
+final Instant start = Instant.parse("2024-02-28T23:00:00Z");
+assertThat(total.timeline(start)).hasToString("2024-02-29T01:29:59Z");
+```
+
+#### parseDurationError
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L106C5-L116C6)</smaller>
+
+Years and months are rejected because their length depends on the calendar. As for date-times, the error
+ is a `DateTimeParseException` with the 0-based index of the offending character.
+```java
+final DateTimeParseException exc = assertThrows(DateTimeParseException.class, () -> ITU.parseDuration("P1Y2M"));
+assertThat(exc.getErrorIndex()).isEqualTo(2);
+assertThat(exc.getMessage()).isEqualTo("Invalid unit: Y: P1Y2M");
 ```
 
 
@@ -364,7 +465,7 @@ assertThat(duration.normalized()).isEqualTo("P5W4DT6H2M1.123456S");
 
 ### Why this little project?
 
-There are an endless amount of APIs with non-standard date/time exchange, and the goal of this project is to make it a
+There is an endless amount of APIs with non-standard date/time exchange, and the goal of this project is to make it a
 breeze to do the right thing!
 
 ### Why the performance focus?
@@ -384,7 +485,7 @@ databases and search engines, to importing/exporting data on less powerful devic
 ### What is RFC-3339?
 
 [RFC-3339](https://www.ietf.org/rfc/rfc3339.txt) is a subset/profile defined by [W3C](https://www.w3.org/) of the
-formats defined in [ISO-8601](http://www.iso.org/iso/home/standards/iso8601.htm), to simplify date and time exhange in
+formats defined in [ISO-8601](http://www.iso.org/iso/home/standards/iso8601.htm), to simplify date and time exchange in
 modern Internet protocols.
 
 Typical formats include:
@@ -422,7 +523,7 @@ well.
 
 ### Leap second parsing
 
-Since Java's `java.time` classes do not support storing leap seconds, ITU will throw a `LeapSecondException` if one is
-encountered to signal that this is a leap second. The exception can then be queried for the second-value. Storing such
-values is not possible in a `java.time.OffsetDateTime`, the `60` is therefore abandoned and the date-time will use `59`
-instead of `60`.
+Since `java.time` cannot store a leap second, ITU throws a `LeapSecondException` when it parses one, so that the
+caller decides what to do. The exception carries the second value (`60`), whether the date is a known leap second,
+and the nearest representable `OffsetDateTime`, which is the start of the next minute. See the
+[leap-second example](#parseleapsecond) above.

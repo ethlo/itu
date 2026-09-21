@@ -91,6 +91,8 @@ public final class CharArrayDifferential
             assertThat((int) (Integer) charArrayOutcome).isEqualTo(expected.getParseLength());
             assertThat(buffer.toDateTime()).isEqualTo(expected);
             assertThat(buffer.toString()).isEqualTo(expected.toString());
+            assertThat(buffer.toEpochSecond()).isEqualTo(expected.toInstant().getEpochSecond());
+            assertThat(buffer.toEpochMilli()).isEqualTo(expected.toInstant().toEpochMilli());
         }
         else
         {

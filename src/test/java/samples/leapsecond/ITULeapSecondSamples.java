@@ -21,6 +21,7 @@ package samples.leapsecond;
  */
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -32,27 +33,34 @@ import com.ethlo.time.LeapSecondException;
 
 /*
 
-## Leap-second handling
+## Leap seconds
 
  */
 class ITULeapSecondSamples
 {
     /*
-    Parse a valid leap-second (i.e. it is on a date that would allow for it, and it is also in the list of known actual leap-seconds).
+    `java.time` cannot represent second 60, so a leap second is reported as a `LeapSecondException` rather than
+    silently changed. The exception tells you whether the leap second is a real one (on the list of announced leap
+    seconds) and gives the nearest representable date-time, which is the next minute.
      */
     @Test
     void parseLeapSecond()
     {
-        try
-        {
-            ITU.parseDateTime("1990-12-31T15:59:60-08:00");
-        }
-        catch (LeapSecondException exc)
-        {
-            // The following helper methods are available let you decide how to progress
-            assertThat(exc.getSecondsInMinute()).isEqualTo(60);
-            assertThat(exc.getNearestDateTime()).isEqualTo(OffsetDateTime.of(1990, 12, 31, 16, 0, 0, 0, ZoneOffset.ofHours(-8)));
-            assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
-        }
+        final LeapSecondException exc = assertThrows(LeapSecondException.class, () -> ITU.parseDateTime("1990-12-31T15:59:60-08:00"));
+        assertThat(exc.getSecondsInMinute()).isEqualTo(60);
+        assertThat(exc.isVerifiedValidLeapYearMonth()).isTrue();
+        assertThat(exc.getNearestDateTime()).isEqualTo(OffsetDateTime.of(1990, 12, 31, 16, 0, 0, 0, ZoneOffset.ofHours(-8)));
+    }
+
+    /*
+    A second of 60 on a date that never had a leap second is still a leap-second exception, since the syntax is
+    valid, but `isVerifiedValidLeapYearMonth` is false so you can choose to reject it.
+     */
+    @Test
+    void parseUnknownLeapSecond()
+    {
+        final LeapSecondException exc = assertThrows(LeapSecondException.class, () -> ITU.parseDateTime("2020-06-30T23:59:60Z"));
+        assertThat(exc.isVerifiedValidLeapYearMonth()).isFalse();
+        assertThat(exc.getNearestDateTime()).hasToString("2020-07-01T00:00Z");
     }
 }

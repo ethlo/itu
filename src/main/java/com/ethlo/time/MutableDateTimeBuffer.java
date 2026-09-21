@@ -23,6 +23,8 @@ package com.ethlo.time;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
+import com.ethlo.time.internal.util.DateTimeMath;
+
 /**
  * A reusable, mutable target for {@link ITU#parseLenient(char[], int, int, MutableDateTimeBuffer)}. Parsing into a
  * buffer allocates nothing: the fields are plain {@code int}s and the timezone offset is kept as total seconds
@@ -33,7 +35,8 @@ import java.time.ZoneOffset;
  * thread or per parser.
  * <p>
  * The allocating bridges {@link #toDateTime()} and {@link #toOffsetDateTime()} are explicit; nothing in this class
- * allocates unless one of them is called.
+ * allocates unless one of them is called. {@link #toEpochSecond()} and {@link #toEpochMilli()} give the point in
+ * time as a primitive without either.
  */
 public final class MutableDateTimeBuffer
 {
@@ -198,6 +201,31 @@ public final class MutableDateTimeBuffer
     public DateTime toDateTime()
     {
         return new DateTime(getMostGranularField(), year, month, day, hour, minute, second, nano, hasOffset() ? TimezoneOffset.ofTotalSeconds(offsetTotalSeconds) : null, fractionDigits, parseLength);
+    }
+
+    /**
+     * The seconds since 1970-01-01T00:00:00Z, resolved the way {@link DateTime#toInstant()} resolves missing
+     * fields: 1 for month and day, 0 for time fields, and UTC when the text carried no offset. Allocates nothing.
+     *
+     * @return The epoch second
+     */
+    public long toEpochSecond()
+    {
+        final long days = DateTimeMath.daysFromCivil(year, month != 0 ? month : 1, day != 0 ? day : 1);
+        final long offset = offsetTotalSeconds != NO_OFFSET ? offsetTotalSeconds : 0;
+        return days * 86_400 + hour * 3_600L + minute * 60L + second - offset;
+    }
+
+    /**
+     * The milliseconds since 1970-01-01T00:00:00Z, with the fraction truncated, resolved as by
+     * {@link #toEpochSecond()}. Allocates nothing.
+     *
+     * @return The epoch millisecond
+     */
+    public long toEpochMilli()
+    {
+        // nano is never negative, so this is the floor for dates before 1970 too, as Instant.toEpochMilli() gives
+        return toEpochSecond() * 1_000 + nano / 1_000_000;
     }
 
     /**

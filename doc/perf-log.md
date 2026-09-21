@@ -313,6 +313,129 @@ entry instead of the `ZoneOffset.UTC` constant costs C2 the folding it does arou
   remaining gap to the buffer path (15.1 vs 13.0 on A) is `charAt`'s coder and bounds checks plus the `DateTime`
   and `TimezoneOffset` allocations; (3) `ITU.isValid(String, TemporalType...)` still parses and catches.
 
+## Session S7 — 2026-09-21 · i9-13900H (20 threads) · JDK 25.0.4 (OpenJDK, Ubuntu 26.04) · governor: powersave
+
+**Scope.** `parseEpochMilli` — epoch-millis text into civil fields — new on this branch and at 30 ns for both the
+String and the buffer path, against 9–15 ns for the date-time string itself. The rows are the epoch-millis text of
+A / B / C: **A** = `1672594714987` (13 digits), **B** = `97195464121123`, **C** = `34854580921000` (14 digits).
+Gate: `perf/instr.sh 'candidates\.itu_epoch.*'` — one run covers both rows, the buffer row
+(`itu_epoch_buffer`) is the gate, the String row (`itu_epoch`) is reported with it. `--thorough` at the end.
+
+What the S7.0 listing showed (`dis-E0.txt`, input B, buffer path; the method is 58 bytecodes, so it is inlined
+into the JMH stub and that is the nmethod to print): the digit loop is unrolled ×4 and cheap — `movzwl`,
+`lea -0x30`, `cmp $0xa`, two `lea`s for the ×10 — but every digit also runs the `MAX_DIGITS` guard (`cmp $0x12`,
+`cmovg`). The conversion is a chain of 64-bit divisions by constants — 1000, 86400, then Hinnant's 146097, 1460,
+36524, 146096, 365, 153, 5 — each `movabs magic; imul; sar` plus, because the dividend may be negative, a
+`mov; sar $0x3f; sub` sign correction, and `floorDiv`/`floorMod` add a `test`/`cmp` pair each. The buffer stores
+and the `civilFromDays` unpack are a handful of instructions. So roughly a third is the digits and two thirds the
+arithmetic, and the arithmetic is all sign handling and 64-bit magic multiplies on values that are provably
+non-negative and mostly fit in an int.
+
+| id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
+|------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
+| S7.0 | 2026-09-21 | —   | BASELINE buffer path, `8b7bc49` + epoch parser (String path same code: 367 / 42 · 386 / 46 · 381 / 46; 30.3 / 31.2 / 30.4 ns) | 353 / 35 | 368 / 39 | 371 / 39 | 30.0 / 31.2 / 30.8 | — | `3b8fe2b` |
+| S7.1 | 2026-09-21 | H24 | Range-check the raw value, then rebase to seconds since 0000-01-01 (always ≥ 0) and shift the era arithmetic by one era: plain `/` and multiply-subtract everywhere, no `floorDiv`/`floorMod`. String path: 363 / 38 · 380 / 43 · 375 / 43 | 348 / 32 | 367 / 37 | 362 / 36 | 30.7 / 33.3 / 31.8 | NO-GAIN (kept anyway: −3 branches, and the simpler code; not a speed-up) | |
+| S7.2 | 2026-09-21 | H25 | `civilFromDaysSince0000` in `int`: the day count is 22 bits, so the seven era/year/month divisions become 32-bit magic multiplies instead of 64-bit high multiplies. String path: 389 / 40 · 394 / 43 · 347 / 38 | 351 / 32 | 366 / 36 | 374 / 37 | 32.5 / 35.8 / 33.5 | NO-GAIN (kept anyway, as the simpler code with S7.1; not a speed-up) | |
+| S7.3 | 2026-09-21 | H26 | Non-negativity hints: no-op `&` masks on every dividend (`& Long.MAX_VALUE` on the two long ones, `& 0x3FFFFF` / `0x3FFFF` / `0x1FF` on days, doe, yoe, doy, `& 0x1FFFF` on secondOfDay) so C2's type says ≥ 0 and it omits the sign correction of each magic division. String path: 363 / 39 · 378 / 43 · 376 / 43 | 353 / 32 | 369 / 36 | 375 / 37 | 31.2 / 32.4 / 32.8 | NO-GAIN (reverted: the corrections went, the masks and the add-back magics cost the same) | — |
+| S7.4 | 2026-09-21 | —   | DIAGNOSTIC, not a candidate: conversion removed, the parsed long stored as-is — what the digit walk and the stores cost by themselves | 209 / 30 | 224 / 34 | 225 / 34 | 11.5 / 12.3 / 12.4 | (conversion = ~145 instr, ~19 ns) | — |
+| S7.5 | 2026-09-21 | H27 | Millis: one long division by 86 400 000 for the days; the 27-bit remainder splits into second and millisecond in int, off the civil chain — instead of `/ 1000` then `/ 86 400` in series. String path: 366 / 39 · 374 / 42 · 369 / 42 | 353 / 33 | 367 / 36 | 364 / 36 | 30.2 / 31.7 / 31.4 | NO-GAIN (reverted; retried as S7.9) | — |
+| S7.6 | 2026-09-21 | H28 | Buffer digit walk: the `MAX_DIGITS` guard hoisted to one length check, and two independent accumulators — leading digits in the loop, the last eight straight-line — joined by one multiply-add, halving the serial `×10 +` chain | 398 / 40 | 409 / 42 | 409 / 42 | 25.1 / 25.7 / 25.7 | KEPT (+45 instr, −5 ns: the walk is latency-bound, the count is not the gate here) | |
+| S7.7 | 2026-09-21 | H28 | S7.6 plus a straight-line block of four digits in front of the eight when the text has twelve or more, so the loop is left with 1–6 digits and the chain is two multiply-adds | 403 / 38 | 424 / 42 | 423 / 42 | 25.1 / 26.3 / 26.4 | NO-GAIN (reverted to S7.6: after the split the walk is no longer the critical path) | — |
+| S7.8 | 2026-09-21 | H28 | S7.6's split walk ported to the String path (`parseLong(String)`); this row's numbers are the String path, buffer path unchanged (394 / 40 · 410 / 42 · 407 / 42; 24.8 / 25.5 / 26.0) | 409 / 48 | 417 / 49 | 408 / 49 | 26.7 / 27.3 / 26.9 | KEPT (from 32.0 / 33.1 / 33.0 in the S7.5 run) | |
+| S7.9 | 2026-09-21 | H27 | S7.5 retried on top of S7.8 (single division by 86 400 000), now that the walk is off the critical path. Same-run reference without it: 397 / 40 · 417 / 43 · 415 / 43; 25.9 / 27.9 / 26.8 | 402 / 40 | 414 / 42 | 417 / 42 | 25.8 / 27.6 / 27.2 | NO-GAIN (reverted) | — |
+| S7.t | 2026-09-21 | —   | **`--thorough` confirmation**, `bench.sh --thorough --gc 'candidates\.itu_epoch.*'`, S7.0 code rebuilt and run in the same session (`20260921-104110-…-s7-baseline`) against the kept code (`…-104408-…-s7-final`): buffer 29.3 ±0.4 / 30.8 ±0.4 / 30.7 ±0.4 → **24.8 ±0.4 / 25.7 ±0.4 / 25.9 ±0.5**; String 29.7 ±0.4 / 31.0 ±0.5 / 30.1 ±0.5 → **26.6 ±0.6 / 27.9 ±0.7 / 27.1 ±0.5**; 0 / 56 B/op unchanged | | | | −15% / −17% / −16% (buffer), −10% / −10% / −10% (String) | KEPT | |
+
+H24–H26 (no gain): three attempts at making the divisions cheaper *as instructions* — no sign handling (rebase
+so that nothing is negative), 32-bit instead of 64-bit magic multiplies, and no-op `&` masks so that C2's type
+system sees each dividend as non-negative — all landed within ±5 instructions of each other and within noise in
+time. The masks did what they were meant to (the `sar $0x3f; sub` pairs are gone from the listing) but a mask is
+an instruction too, and the magics for 1460 and 36524 need an add-back step that a sign correction did not. The
+count was never the issue: S7.4 shows the conversion is ~145 instructions in ~19 ns, an IPC of under 2 on a core
+that does 4+ on the digit walk, so it is a dependency chain — `/ 1000` → `/ 86400` → era → doe → yoe → doy → mp
+→ d → pack → store, every step a 3–5 cycle multiply that waits for the one before.
+
+H27 (no gain, twice): one division by 86 400 000 instead of `/ 1000` then `/ 86 400` takes one 64-bit multiply
+out of that chain, in theory 4–5 cycles. Not measurable, before or after the walk was shortened.
+
+H28 (kept): the digit walk *is* a chain — `value * 10 + d` fourteen times, and C2's ×4 unroll changes nothing
+about that — and it sat in front of the conversion chain. Two accumulators (a loop for the leading digits, the
+last eight straight-line) joined by one multiply-add cost 45 more instructions and took 5 ns off. Going further
+(S7.7, a four-digit block in front of the eight) gained nothing more: the walk is now shorter than the
+conversion, so the conversion is the critical path and the next nanosecond has to come from it.
+
+### S7 findings
+
+- **Session result** (`--thorough`, same-session baseline): buffer path 29.3 / 30.8 / 30.7 → 24.8 / 25.7 / 25.9 ns
+  (−15% / −17% / −16%), String path 29.7 / 31.0 / 30.1 → 26.6 / 27.9 / 27.1 (−10% each); one row (S7.6 / S7.8)
+  did all of it. Instructions went *up* (359 → 397 on A) and the time went down, so for this code the
+  instruction count is not the gate the way it is for the date-time parsers: both halves are latency-bound
+  chains, and the gate is the length of the longest one.
+- **The epoch argument, measured**: epoch-millis text → civil fields is 25–26 ns against 8–13 ns for the
+  date-time string on the same path. Turning the number into a date costs about twice what parsing the date
+  does, and `Long.parseLong` alone (12 ns) is not the like-for-like comparison. The date-time string carries its
+  fields; the epoch count has to compute them.
+- **Where the rest is**: ~12 ns is the digit walk (S7.4, equal to `Long.parseLong`, and now split in two), the
+  remaining ~13 ns is the Hinnant chain — seven dependent divisions. That chain is the algorithm's shape, not C2's
+  codegen, and the only way to shorten it is a different algorithm.
+- **Next session, not this one**: Ben Joffe's "very fast 64-bit date algorithm" (<https://www.benjoffe.com/fast-date-64>,
+  BSL-1.0) does days → civil in four multiplications with no division at all, by counting years backwards from a
+  far-future epoch so the leap rule becomes a Julian-style correction, and reading day-of-year and month out of the
+  fraction bits of one fixed-point product ("year-modulus-bitshift"). As published it needs 64×64→128 products
+  (`Math.multiplyHigh`, JDK 9 — this library builds for 8). The day count here is 22 bits, so the same fixed-point
+  scheme should fit 64-bit products with re-derived constants, and the proof of exactness is a brute-force loop over
+  the 3 652 425 days against `daysFromCivil` — cheap enough to be a unit test. Expected to take most of the ~13 ns
+  chain down to a handful of multiplies. Gate as S7: ns and the `--thorough` pair, instruction count reported.
+
+## Session S8 — 2026-09-21 · i9-13900H (20 threads) · JDK 25.0.4 (OpenJDK, Ubuntu 26.04) · governor: powersave
+
+**Scope.** The conversion chain of `civilFromDaysSince0000` — the ~13 ns the S7 findings left as "a different
+algorithm". Candidate: Ben Joffe's backwards-counting algorithm (<https://www.benjoffe.com/fast-date-64>, BSL-1.0),
+in its 32-bit form (`benjoffe_fast32_v2.hpp`, range option A: ±284 449 years, 32×32→64 products throughout), which
+Java 8 can express with `long` multiplies and one shift each — no `Math.multiplyHigh`. Four multiplications
+(century, year, year-part, day) replace Hinnant's seven divisions, and `(yrs & 3) * 2` sits off the critical path.
+The day count's 1970 → 0000 rebase folds into `D_SHIFT`. Same inputs, gate and command as S7
+(`perf/instr.sh 'candidates\.itu_epoch.*'`, buffer row is the gate). Correctness: a new exhaustive test over all
+3 652 425 days of 0000–9999 against `LocalDate.ofEpochDay` and `daysFromCivil`.
+
+| id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
+|------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
+| S8.0 | 2026-09-21 | —   | BASELINE buffer path, `3f16012` (S7 kept code). String path same run: 410 / 47 · 429 / 49 · 425 / 49; 27.4 / 28.0 / 28.5 ns | 401 / 40 | 412 / 42 | 410 / 42 | 26.2 / 27.3 / 27.1 | — | `3f16012` |
+| S8.1 | 2026-09-21 | H29 | `civilFromDaysSince0000` as Joffe fast32 v2: reverse day count, mul-shift century + Julian map, one signed multiply for year and year-part, year-modulo-bitshift for month/day. Expect the conversion's ~145 instr / ~19 ns (S7.4) to lose most of the seven-division chain: −5 to −8 ns. String path: 358 / 46 · 371 / 48 · 366 / 47; 20.5 / 21.4 / 21.0 ns | 349 / 39 | 361 / 41 | 361 / 41 | 19.4 / 20.3 / 20.2 | KEPT (−52 instr, −6.8 / −7.0 / −6.9 ns, −26%; `--thorough` pair below) | |
+| S8.t1 | 2026-09-21 | —   | **`--thorough` confirmation of S8.1**, `bench.sh --thorough --gc 'candidates\.itu_epoch.*'`, S8.0 code rebuilt and run in the same session (`20260921-112709-…-s8-baseline`) against S8.1 (`…-112959-…-s8-joffe`): buffer 25.9 ±0.4 / 26.9 ±0.4 / 26.9 ±0.5 → **19.1 ±0.2 / 20.2 ±0.3 / 20.2 ±0.3**; String 27.3 ±0.7 / 27.9 ±0.5 / 27.9 ±0.5 → **20.5 ±0.5 / 20.9 ±0.3 / 20.9 ±0.3**; 0 / 56 B/op unchanged | | | | −26% / −25% / −25% (buffer), −25% / −25% / −25% (String) | KEPT | |
+| S8.2 | 2026-09-21 | H30 | Time of day after Joffe's "fast time-of-day" V2 (<https://www.benjoffe.com/fast-time-of-day>): two independent products of `secondOfDay` (by 2^32/3600+1 and 2^32/60+1), hour in the high word, minute and second from the low words × 60 — four multiplies in two 2-deep chains, against `/ 3600`, `/ 60 % 60`, `% 60` with sign corrections (three magic divisions in a chain plus two multiply-subtracts). Expect −1 to −2 ns. String path: 329 / 42 · 342 / 44 · 344 / 45; 18.4 / 19.0 / 18.9 ns | 327 / 39 | 336 / 41 | 340 / 41 | 17.3 / 18.5 / 18.2 | KEPT (−22 instr, −2.1 / −1.8 / −2.0 ns; `--thorough` pair below) | |
+| S8.t2 | 2026-09-21 | —   | **`--thorough` confirmation of S8.2**, S8.1 code rebuilt and run in the same session (`20260921-114025-…-s8-1-ref`) against S8.2 (`…-114314-…-s8-2-tod`): buffer 19.2 ±0.3 / 20.2 ±0.3 / 20.3 ±0.3 → **17.4 ±0.2 / 18.5 ±0.3 / 18.6 ±0.3**; String 20.5 ±0.3 / 20.9 ±0.3 / 20.9 ±0.3 → **18.6 ±0.3 / 19.1 ±0.3 / 18.9 ±0.3**; 0 / 56 B/op unchanged | | | | −9% / −9% / −8% (buffer), −9% / −9% / −10% (String) | KEPT | |
+| S8.3 | 2026-09-21 | —   | Review follow-up, not a candidate: both `parseLong` walks as one loop to a computed bound (`tailStart` or `length`) plus a trailing `if` for the eight-digit block, instead of two branches each with its own loop (Sonar cognitive complexity); and a `boolean millis` parameter for the out-of-range message. Same-session reference (`d3ecb44`): 328 / 39 · 341 / 41 · 339 / 41; String 333 / 43 · 348 / 45 · 341 / 45 | 331 / 39 | 344 / 41 | 343 / 41 | (ns not comparable: machine state) | NEUTRAL (+3 instr, inside JIT variance; kept for the simpler shape) | |
+| S8.4 | 2026-09-21 | —   | Review follow-up, not a candidate: surplus leading zeros are skipped before the 18-digit guard (`while (length - idx > MAX_DIGITS && c == '0') idx++`), so `0000000000000000000` parses as 0 instead of failing as out of range; a text within the limit never enters the loop. Same-session reference (`17c945f`): 328 / 39 · 345 / 41 · 343 / 41; String 325 / 42 · 342 / 45 · 343 / 45 | 329 / 39 | 343 / 41 | 344 / 41 | 17.6 / 18.9 / 19.0 (ref 17.5 / 19.0 / 18.8) | NEUTRAL (±3 instr) | |
+
+H29 (kept): the S7 diagnosis was right — the conversion was a latency chain, and the only lever was a shorter
+algorithm. Joffe's form takes 52 instructions and 6.8 ns off the buffer path, a quarter of the whole parse, with
+the same 22-bit input. The Java 8 port needed no `multiplyHigh`: the 32-bit variant's products are 32×32→64
+throughout, so each "free" high word is one `long` multiply and one shift, and the single signed product (year
+and year fraction from one multiply) works unchanged because Java's `long` is two's complement and `>>` is
+arithmetic. The rebase to 0000-01-01 folded into `D_SHIFT`, so the caller's day count is used as-is.
+
+H30 (kept): the same shape for the time of day — two independent products, each field read out of a high word —
+takes another 22 instructions and 2 ns. Three accessors share the products through C2's value numbering once
+inlined; no packed return needed.
+
+### S8 findings
+
+- **Session result** (`--thorough`, same-session references): buffer path 25.9 / 26.9 / 26.9 → **17.4 / 18.5 /
+  18.6 ns** (−33% / −31% / −31%), String path 27.3 / 27.9 / 27.9 → **18.6 / 19.1 / 18.9** (−32%). The epoch text is
+  now ~5 ns from the date-time string on the same path (S7 measured it at 2×).
+- **Instruction count and time moved together this time** (401 → 327 instr, 26.2 → 17.3 ns on A): both
+  algorithms are shorter *and* shallower. The conversion is now four multiplies for the date and four for the time,
+  in two chains each.
+- **Exactness is a test, not an argument**: `DateTimeMathTest` walks every day of 0000–9999 (3 652 425, 0.1 s)
+  and every second of a day against `LocalDate` and plain division. Any re-derived constant goes through it.
+- **What is left on the epoch path**: the digit walk (~12 ns, S7.4) is now the larger half again, and it is the
+  same two-accumulator chain as S7.6. `/ 86 400` (one 64-bit magic division with a sign correction, the dividend is
+  a `long`) is the only division left in the conversion.
+- **Candidate, not this session**: `daysFromCivil` (civil → days, used by `toEpochSecond` on both `DateTime` and
+  `MutableDateTimeBuffer`) is still Hinnant's; Joffe's inverse (`to_rata_die` in the same file) is two divisions by
+  constants and a mul-shift for the month, off the era arithmetic. It is not on the parse path, so it needs its
+  own benchmark row before it is worth a row here.
+
 ## Dead ends — do not retry without a new reason
 
 - (S2.1) Expecting a large win from "zero allocation" alone on this parser: the objects were cheap TLAB bumps. Zero
@@ -323,6 +446,12 @@ entry instead of the `ZoneOffset.UTC` constant costs C2 the folding it does arou
 - (S4.4) Replacing predictable `cmp/jcc` chains with OR-combined arithmetic (`(a - x) | (b - y) < 0`) or a
   lookup table to "save branches": +10–18 instructions. Macro-fused compare-and-branch is the cheapest form of a
   predictable range check on x86; only an unpredictable branch is worth removing.
+- (S7.3) Giving C2 a non-negative type for a dividend with a no-op `&` mask to drop the sign correction of a
+  magic division: it works (the `sar $0x3f; sub` goes) and it buys nothing — the mask is an instruction and the
+  chain is latency-bound anyway. Do not cast, rebase or mask for the instruction count on the conversion path;
+  only shortening the dependency chain moves it (S7.6 vs S7.1–S7.3, S7.5).
+- (S7.7) Splitting the epoch digit walk beyond two accumulators: the second split is invisible because the
+  conversion chain is longer than the walk once the first split is in.
 - (S4.2) Expecting C2 to emit an unsigned compare for `x + MIN_VALUE <= 9 + MIN_VALUE` or
   `Integer.compareUnsigned(x, 9) <= 0`: it does not (`lea`/`cmp $0x80000009`/signed jump). `(c ^ '0') <= 9` is the
   form that works for chars.

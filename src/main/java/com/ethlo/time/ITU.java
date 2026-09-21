@@ -30,6 +30,7 @@ import java.time.YearMonth;
 
 import com.ethlo.time.internal.ItuDurationParser;
 import com.ethlo.time.internal.fixed.ITUCharArrayParser;
+import com.ethlo.time.internal.fixed.ITUEpochParser;
 import com.ethlo.time.internal.fixed.ITUFormatter;
 import com.ethlo.time.internal.fixed.ITUParser;
 import com.ethlo.time.internal.fixed.ITUValidator;
@@ -91,7 +92,6 @@ public class ITU
      *     <li>{@code PT} → Missing time values after `T`</li>
      *     <li>{@code P-1D} → Incorrect negative placement</li>
      * </ul>
-     * <p>
      *
      * @param text the duration string to parse
      * @return a {@link Duration} instance representing the parsed duration
@@ -190,6 +190,66 @@ public class ITU
     public static int parseLenient(final char[] chars, final int offset, final int length, final ParseConfig parseConfig, final MutableDateTimeBuffer buffer)
     {
         return ITUCharArrayParser.parseLenient(chars, offset, length, parseConfig, buffer);
+    }
+
+    /**
+     * Parse a Unix epoch count in seconds written as a decimal integer ({@code -?[0-9]+}), such as
+     * {@code 1695300000}, into a date-time at UTC with {@link Field#SECOND} granularity. The value must fall in
+     * years 0000-9999.
+     *
+     * @param text The epoch seconds
+     * @return The date-time at UTC
+     */
+    public static DateTime parseEpochSecond(final String text)
+    {
+        return ITUEpochParser.parseEpochSecond(text);
+    }
+
+    /**
+     * Parse a Unix epoch count in milliseconds written as a decimal integer ({@code -?[0-9]+}), such as
+     * {@code 1695300000123}, into a date-time at UTC with three fraction digits. The value must fall in
+     * years 0000-9999.
+     *
+     * @param text The epoch milliseconds
+     * @return The date-time at UTC
+     */
+    public static DateTime parseEpochMilli(final String text)
+    {
+        return ITUEpochParser.parseEpochMilli(text);
+    }
+
+    /**
+     * As {@link #parseEpochSecond(String)}, reading a window of a char array into a reusable
+     * {@link MutableDateTimeBuffer}. Nothing is allocated on success. The result, or the exception with its message
+     * and error index, is what {@code parseEpochSecond(new String(chars, offset, length))} would give; nothing
+     * outside the window is read, and on failure the buffer is left untouched.
+     *
+     * @param chars  The characters to parse from
+     * @param offset The index of the first character of the number
+     * @param length The number of characters to consider
+     * @param buffer The buffer to write the date-time into
+     * @return The number of characters consumed, always {@code length}
+     */
+    public static int parseEpochSecond(final char[] chars, final int offset, final int length, final MutableDateTimeBuffer buffer)
+    {
+        return ITUEpochParser.parseEpochSecond(chars, offset, length, buffer);
+    }
+
+    /**
+     * As {@link #parseEpochMilli(String)}, reading a window of a char array into a reusable
+     * {@link MutableDateTimeBuffer}. Nothing is allocated on success. The result, or the exception with its message
+     * and error index, is what {@code parseEpochMilli(new String(chars, offset, length))} would give; nothing
+     * outside the window is read, and on failure the buffer is left untouched.
+     *
+     * @param chars  The characters to parse from
+     * @param offset The index of the first character of the number
+     * @param length The number of characters to consider
+     * @param buffer The buffer to write the date-time into
+     * @return The number of characters consumed, always {@code length}
+     */
+    public static int parseEpochMilli(final char[] chars, final int offset, final int length, final MutableDateTimeBuffer buffer)
+    {
+        return ITUEpochParser.parseEpochMilli(chars, offset, length, buffer);
     }
 
     /**
