@@ -333,7 +333,8 @@ non-negative and mostly fit in an int.
 
 | id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
 |------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
-| S7.0 | 2026-09-21 | —   | BASELINE buffer path, `8b7bc49` + epoch parser (String path same code: 367 / 42 · 386 / 46 · 381 / 46; 30.3 / 31.2 / 30.4 ns) | 353 / 35 | 368 / 39 | 371 / 39 | 30.0 / 31.2 / 30.8 | — | |
+| S7.0 | 2026-09-21 | —   | BASELINE buffer path, `8b7bc49` + epoch parser (String path same code: 367 / 42 · 386 / 46 · 381 / 46; 30.3 / 31.2 / 30.4 ns) | 353 / 35 | 368 / 39 | 371 / 39 | 30.0 / 31.2 / 30.8 | — | `3b8fe2b` |
+| S7.1 | 2026-09-21 | H24 | Range-check the raw value, then rebase to seconds since 0000-01-01 (always ≥ 0) and shift the era arithmetic by one era: plain `/` and multiply-subtract everywhere, no `floorDiv`/`floorMod`. String path: 363 / 38 · 380 / 43 · 375 / 43 | 348 / 32 | 367 / 37 | 362 / 36 | 30.7 / 33.3 / 31.8 | NO-GAIN (kept anyway: −3 branches, and the simpler code; not a speed-up) | |
 
 ## Dead ends — do not retry without a new reason
 

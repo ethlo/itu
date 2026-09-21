@@ -46,24 +46,38 @@ public class DateTimeMath
     }
 
     /**
-     * The inverse of {@link #daysFromCivil(int, int, int)}: the civil date of a day count since 1970-01-01, packed
-     * into one int so that no object is needed to return three values. Layout: {@code year << 9 | month << 5 | day};
-     * unpack with {@link #packedYear(int)}, {@link #packedMonth(int)} and {@link #packedDay(int)}.
-     * <p>
-     * The caller must keep {@code days} within years [0, 9999]: the packing has no room for a sign.
+     * Days from 0000-01-01 to 1970-01-01, the epoch of {@link #daysFromCivil(int, int, int)}
      */
-    public static int civilFromDays(final long days)
+    public static final long DAYS_0000_TO_1970 = -daysFromCivil(0, 1, 1);
+
+    private static final int DAYS_PER_ERA = 146_097;
+
+    /**
+     * From 0000-01-01 to the first day of the era arithmetic below (0000-03-01), plus one whole era so that the
+     * dividend is never negative for any day of years 0000-9999
+     */
+    private static final int ERA_SHIFT = DAYS_PER_ERA - 60;
+
+    /**
+     * The inverse of {@link #daysFromCivil(int, int, int)} for the years 0000-9999, taking the day count from
+     * 0000-01-01 rather than 1970 so that every intermediate value is non-negative: a division by a constant then
+     * needs no sign correction, and no {@code floorDiv}. The result is packed into one int so that no object is
+     * needed to return three values. Layout: {@code year << 9 | month << 5 | day}; unpack with
+     * {@link #packedYear(int)}, {@link #packedMonth(int)} and {@link #packedDay(int)}.
+     *
+     * @param daysSince0000 days since 0000-01-01, in [0, 3652424]; the caller guarantees the range
+     */
+    public static int civilFromDaysSince0000(final long daysSince0000)
     {
-        final long z = days + 719468;
-        final long era = (z >= 0 ? z : z - 146096) / 146097;
-        final long doe = z - era * 146097;                                  // [0, 146096]
+        final long z = daysSince0000 + ERA_SHIFT;
+        final long era = z / DAYS_PER_ERA;
+        final long doe = z - era * DAYS_PER_ERA;                                  // [0, 146096]
         final long yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;  // [0, 399]
-        final long y = yoe + era * 400;
-        final long doy = doe - (365 * yoe + yoe / 4 - yoe / 100);          // [0, 365]
-        final long mp = (5 * doy + 2) / 153;                                // [0, 11]
-        final int d = (int) (doy - (153 * mp + 2) / 5 + 1);                // [1, 31]
-        final int m = (int) (mp < 10 ? mp + 3 : mp - 9);                    // [1, 12]
-        final int year = (int) (m <= 2 ? y + 1 : y);
+        final long doy = doe - (365 * yoe + yoe / 4 - yoe / 100);                // [0, 365]
+        final long mp = (5 * doy + 2) / 153;                                     // [0, 11]
+        final int d = (int) (doy - (153 * mp + 2) / 5 + 1);                      // [1, 31]
+        final int m = (int) (mp < 10 ? mp + 3 : mp - 9);                         // [1, 12]
+        final int year = (int) (yoe + era * 400 - 400 + (m <= 2 ? 1 : 0));       // the extra era shifted in above
         return year << 9 | m << 5 | d;
     }
 

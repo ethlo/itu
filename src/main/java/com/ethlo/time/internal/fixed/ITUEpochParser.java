@@ -44,6 +44,14 @@ public class ITUEpochParser
 {
     public static final long MIN_EPOCH_SECOND = DateTimeMath.daysFromCivil(0, 1, 1) * 86_400;
     public static final long MAX_EPOCH_SECOND = DateTimeMath.daysFromCivil(9999, 12, 31) * 86_400 + 86_399;
+    private static final long MIN_EPOCH_MILLI = MIN_EPOCH_SECOND * 1_000;
+    private static final long MAX_EPOCH_MILLI = MAX_EPOCH_SECOND * 1_000 + 999;
+
+    /**
+     * Seconds from 0000-01-01T00:00:00Z to the epoch. The conversion works on seconds since year 0 so that every
+     * value it divides is non-negative (perf-log S7.1)
+     */
+    private static final long SECONDS_0000_TO_1970 = DateTimeMath.DAYS_0000_TO_1970 * 86_400;
 
     /**
      * Beyond this many digits the value is out of range whatever it is, and the accumulator would overflow
@@ -59,24 +67,34 @@ public class ITUEpochParser
     public static DateTime parseEpochSecond(final String text)
     {
         final long seconds = parseLong(text);
-        assertInRange(seconds, text);
-        return toDateTime(seconds, 0, Field.SECOND, 0, text.length());
+        if (seconds < MIN_EPOCH_SECOND || seconds > MAX_EPOCH_SECOND)
+        {
+            throw raiseOutOfRange(text);
+        }
+        return toDateTime(seconds + SECONDS_0000_TO_1970, 0, Field.SECOND, 0, text.length());
     }
 
     public static DateTime parseEpochMilli(final String text)
     {
         final long millis = parseLong(text);
-        final long seconds = Math.floorDiv(millis, 1_000L);
-        assertInRange(seconds, text);
-        return toDateTime(seconds, (int) Math.floorMod(millis, 1_000L) * 1_000_000, Field.NANO, MILLI_FRACTION_DIGITS, text.length());
+        if (millis < MIN_EPOCH_MILLI || millis > MAX_EPOCH_MILLI)
+        {
+            throw raiseOutOfRange(text);
+        }
+        final long millisSince0000 = millis - MIN_EPOCH_MILLI;
+        final long seconds = millisSince0000 / 1_000;
+        return toDateTime(seconds, (int) (millisSince0000 - seconds * 1_000) * 1_000_000, Field.NANO, MILLI_FRACTION_DIGITS, text.length());
     }
 
     public static int parseEpochSecond(final char[] chars, final int offset, final int length, final MutableDateTimeBuffer out)
     {
         sanityCheckInputParams(chars, offset, length, out);
         final long seconds = parseLong(chars, offset, length);
-        assertInRange(seconds, chars, offset, length);
-        fill(out, seconds, 0, Field.SECOND, 0, length);
+        if (seconds < MIN_EPOCH_SECOND || seconds > MAX_EPOCH_SECOND)
+        {
+            throw raiseOutOfRange(new String(chars, offset, length));
+        }
+        fill(out, seconds + SECONDS_0000_TO_1970, 0, Field.SECOND, 0, length);
         return length;
     }
 
@@ -84,26 +102,14 @@ public class ITUEpochParser
     {
         sanityCheckInputParams(chars, offset, length, out);
         final long millis = parseLong(chars, offset, length);
-        final long seconds = Math.floorDiv(millis, 1_000L);
-        assertInRange(seconds, chars, offset, length);
-        fill(out, seconds, (int) Math.floorMod(millis, 1_000L) * 1_000_000, Field.NANO, MILLI_FRACTION_DIGITS, length);
-        return length;
-    }
-
-    private static void assertInRange(final long seconds, final String text)
-    {
-        if (seconds < MIN_EPOCH_SECOND || seconds > MAX_EPOCH_SECOND)
-        {
-            throw raiseOutOfRange(text);
-        }
-    }
-
-    private static void assertInRange(final long seconds, final char[] chars, final int offset, final int length)
-    {
-        if (seconds < MIN_EPOCH_SECOND || seconds > MAX_EPOCH_SECOND)
+        if (millis < MIN_EPOCH_MILLI || millis > MAX_EPOCH_MILLI)
         {
             throw raiseOutOfRange(new String(chars, offset, length));
         }
+        final long millisSince0000 = millis - MIN_EPOCH_MILLI;
+        final long seconds = millisSince0000 / 1_000;
+        fill(out, seconds, (int) (millisSince0000 - seconds * 1_000) * 1_000_000, Field.NANO, MILLI_FRACTION_DIGITS, length);
+        return length;
     }
 
     private static long parseLong(final String text)
@@ -179,17 +185,22 @@ public class ITUEpochParser
         return new DateTimeParseException(String.format("Epoch value outside years 0000-9999 (%d to %d seconds): %s", MIN_EPOCH_SECOND, MAX_EPOCH_SECOND, text), text, 0);
     }
 
-    private static DateTime toDateTime(final long seconds, final int nano, final Field field, final int fractionDigits, final int parseLength)
+    /**
+     * @param secondsSince0000 seconds since 0000-01-01T00:00:00Z, non-negative by the range check above
+     */
+    private static DateTime toDateTime(final long secondsSince0000, final int nano, final Field field, final int fractionDigits, final int parseLength)
     {
-        final int date = DateTimeMath.civilFromDays(Math.floorDiv(seconds, 86_400L));
-        final int secondOfDay = (int) Math.floorMod(seconds, 86_400L);
+        final long days = secondsSince0000 / 86_400;
+        final int date = DateTimeMath.civilFromDaysSince0000(days);
+        final int secondOfDay = (int) (secondsSince0000 - days * 86_400);
         return new DateTime(field, DateTimeMath.packedYear(date), DateTimeMath.packedMonth(date), DateTimeMath.packedDay(date), secondOfDay / 3_600, (secondOfDay / 60) % 60, secondOfDay % 60, nano, TimezoneOffset.UTC, fractionDigits, parseLength);
     }
 
-    private static void fill(final MutableDateTimeBuffer out, final long seconds, final int nano, final Field field, final int fractionDigits, final int parseLength)
+    private static void fill(final MutableDateTimeBuffer out, final long secondsSince0000, final int nano, final Field field, final int fractionDigits, final int parseLength)
     {
-        final int date = DateTimeMath.civilFromDays(Math.floorDiv(seconds, 86_400L));
-        final int secondOfDay = (int) Math.floorMod(seconds, 86_400L);
+        final long days = secondsSince0000 / 86_400;
+        final int date = DateTimeMath.civilFromDaysSince0000(days);
+        final int secondOfDay = (int) (secondsSince0000 - days * 86_400);
         out.set(field, DateTimeMath.packedYear(date), DateTimeMath.packedMonth(date), DateTimeMath.packedDay(date), secondOfDay / 3_600, (secondOfDay / 60) % 60, secondOfDay % 60, nano, fractionDigits, 0, parseLength);
     }
 
