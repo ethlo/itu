@@ -67,7 +67,7 @@ public class EpochParseTest
         final Random random = new Random(42);
         for (int i = 0; i < 2_000; i++)
         {
-            seconds.add(ITUEpochParser.MIN_EPOCH_SECOND + (long) (random.nextDouble() * (ITUEpochParser.MAX_EPOCH_SECOND - ITUEpochParser.MIN_EPOCH_SECOND)));
+            seconds.add(ITUEpochParser.MIN_EPOCH_SECOND + Math.floorMod(random.nextLong(), ITUEpochParser.MAX_EPOCH_SECOND - ITUEpochParser.MIN_EPOCH_SECOND + 1));
         }
         return seconds;
     }
@@ -80,10 +80,10 @@ public class EpochParseTest
         final DateTime result = ITU.parseEpochSecond(text);
         assertThat(result.toInstant()).isEqualTo(Instant.ofEpochSecond(seconds));
         assertThat(result.getMostGranularField()).isEqualTo(Field.SECOND);
-        assertThat(result.getFractionDigits()).isEqualTo(0);
+        assertThat(result.getFractionDigits()).isZero();
         assertThat(result.getOffset()).contains(TimezoneOffset.UTC);
         assertThat(result.getParseLength()).isEqualTo(text.length());
-        assertThat(result.toString()).isEqualTo(ITU.formatUtc(Instant.ofEpochSecond(seconds).atOffset(ZoneOffset.UTC)));
+        assertThat(result).hasToString(ITU.formatUtc(Instant.ofEpochSecond(seconds).atOffset(ZoneOffset.UTC)));
         assertSameFromCharArray(text, true, result);
     }
 
@@ -106,7 +106,7 @@ public class EpochParseTest
             assertThat(result.getFractionDigits()).isEqualTo(3);
             assertThat(result.getOffset()).contains(TimezoneOffset.UTC);
             assertThat(result.getParseLength()).isEqualTo(text.length());
-            assertThat(result.toString()).isEqualTo(ITU.formatUtcMilli(Instant.ofEpochMilli(millis).atOffset(ZoneOffset.UTC)));
+            assertThat(result).hasToString(ITU.formatUtcMilli(Instant.ofEpochMilli(millis).atOffset(ZoneOffset.UTC)));
             assertSameFromCharArray(text, false, result);
         }
     }
@@ -114,15 +114,15 @@ public class EpochParseTest
     @Test
     void negativeMillisFloorTowardsTheEarlierSecond()
     {
-        assertThat(ITU.parseEpochMilli("-1").toString()).isEqualTo("1969-12-31T23:59:59.999Z");
-        assertThat(ITU.parseEpochMilli("-1000").toString()).isEqualTo("1969-12-31T23:59:59.000Z");
-        assertThat(ITU.parseEpochMilli("-1001").toString()).isEqualTo("1969-12-31T23:59:58.999Z");
+        assertThat(ITU.parseEpochMilli("-1")).hasToString("1969-12-31T23:59:59.999Z");
+        assertThat(ITU.parseEpochMilli("-1000")).hasToString("1969-12-31T23:59:59.000Z");
+        assertThat(ITU.parseEpochMilli("-1001")).hasToString("1969-12-31T23:59:58.999Z");
     }
 
     @Test
     void wholeSecondMillisKeepThreeFractionDigits()
     {
-        assertThat(ITU.parseEpochMilli("1695300000000").toString()).isEqualTo("2023-09-21T12:40:00.000Z");
+        assertThat(ITU.parseEpochMilli("1695300000000")).hasToString("2023-09-21T12:40:00.000Z");
     }
 
     @Test
@@ -163,9 +163,9 @@ public class EpochParseTest
     @CsvSource(value = {
             "''|Unexpected end of input: |0",
             "1e3|Expected digit at position 2, found e: 1e3|1",
-            "253402300800000|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): 253402300800000|0",
-            "-62167219200001|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): -62167219200001|0",
-            "1000000000000000000|Epoch value outside years 0000-9999 (-62167219200 to 253402300799 seconds): 1000000000000000000|0"
+            "253402300800000|Epoch value outside years 0000-9999 (-62167219200000 to 253402300799999 milliseconds): 253402300800000|0",
+            "-62167219200001|Epoch value outside years 0000-9999 (-62167219200000 to 253402300799999 milliseconds): -62167219200001|0",
+            "1000000000000000000|Epoch value outside years 0000-9999 (-62167219200000 to 253402300799999 milliseconds): 1000000000000000000|0"
     }, delimiter = '|', ignoreLeadingAndTrailingWhitespace = false)
     void millisErrors(final String text, final String message, final int errorIndex)
     {
@@ -178,8 +178,8 @@ public class EpochParseTest
     @Test
     void edgeOfRangeMillisAreAccepted()
     {
-        assertThat(ITU.parseEpochMilli("253402300799999").toString()).isEqualTo("9999-12-31T23:59:59.999Z");
-        assertThat(ITU.parseEpochMilli("-62167219200000").toString()).isEqualTo("0000-01-01T00:00:00.000Z");
+        assertThat(ITU.parseEpochMilli("253402300799999")).hasToString("9999-12-31T23:59:59.999Z");
+        assertThat(ITU.parseEpochMilli("-62167219200000")).hasToString("0000-01-01T00:00:00.000Z");
     }
 
     @Test
@@ -206,17 +206,22 @@ public class EpochParseTest
         assertThrows(IndexOutOfBoundsException.class, () -> ITU.parseEpochMilli(chars, 1, 3, buffer));
     }
 
+    private static int parseFromChars(final boolean seconds, final char[] chars, final int offset, final int length, final MutableDateTimeBuffer buffer)
+    {
+        return seconds ? ITU.parseEpochSecond(chars, offset, length, buffer) : ITU.parseEpochMilli(chars, offset, length, buffer);
+    }
+
     private static void assertSameFromCharArray(final String text, final boolean seconds, final DateTime expected)
     {
         final MutableDateTimeBuffer buffer = new MutableDateTimeBuffer();
         for (final char[] chars : new char[][]{text.toCharArray(), (JUNK_BEFORE + text + JUNK_AFTER).toCharArray()})
         {
             final int offset = chars.length == text.length() ? 0 : JUNK_BEFORE.length();
-            final int consumed = seconds ? ITU.parseEpochSecond(chars, offset, text.length(), buffer) : ITU.parseEpochMilli(chars, offset, text.length(), buffer);
+            final int consumed = parseFromChars(seconds, chars, offset, text.length(), buffer);
             assertThat(consumed).isEqualTo(text.length());
             assertThat(buffer.toDateTime()).as(text).isEqualTo(expected);
             assertThat(buffer.getFractionDigits()).isEqualTo(expected.getFractionDigits());
-            assertThat(buffer.getOffsetTotalSeconds()).isEqualTo(0);
+            assertThat(buffer.getOffsetTotalSeconds()).isZero();
         }
     }
 
@@ -225,16 +230,7 @@ public class EpochParseTest
         final MutableDateTimeBuffer buffer = new MutableDateTimeBuffer();
         final char[] chars = (JUNK_BEFORE + text + JUNK_AFTER).toCharArray();
         final int offset = JUNK_BEFORE.length();
-        final DateTimeParseException actual = assertThrows(DateTimeParseException.class, () -> {
-            if (seconds)
-            {
-                ITU.parseEpochSecond(chars, offset, text.length(), buffer);
-            }
-            else
-            {
-                ITU.parseEpochMilli(chars, offset, text.length(), buffer);
-            }
-        });
+        final DateTimeParseException actual = assertThrows(DateTimeParseException.class, () -> parseFromChars(seconds, chars, offset, text.length(), buffer));
         assertThat(actual).hasMessage(expected.getMessage());
         assertThat(actual.getErrorIndex()).isEqualTo(expected.getErrorIndex());
         assertThat(actual.getParsedString()).isEqualTo(text);

@@ -66,20 +66,20 @@ public class ITUEpochParser
 
     public static DateTime parseEpochSecond(final String text)
     {
-        final long seconds = parseLong(text);
+        final long seconds = parseLong(text, false);
         if (seconds < MIN_EPOCH_SECOND || seconds > MAX_EPOCH_SECOND)
         {
-            throw raiseOutOfRange(text);
+            throw raiseOutOfRange(text, false);
         }
         return toDateTime(seconds + SECONDS_0000_TO_1970, 0, Field.SECOND, 0, text.length());
     }
 
     public static DateTime parseEpochMilli(final String text)
     {
-        final long millis = parseLong(text);
+        final long millis = parseLong(text, true);
         if (millis < MIN_EPOCH_MILLI || millis > MAX_EPOCH_MILLI)
         {
-            throw raiseOutOfRange(text);
+            throw raiseOutOfRange(text, true);
         }
         final long millisSince0000 = millis - MIN_EPOCH_MILLI;
         final long seconds = millisSince0000 / 1_000;
@@ -89,10 +89,10 @@ public class ITUEpochParser
     public static int parseEpochSecond(final char[] chars, final int offset, final int length, final MutableDateTimeBuffer out)
     {
         sanityCheckInputParams(chars, offset, length, out);
-        final long seconds = parseLong(chars, offset, length);
+        final long seconds = parseLong(chars, offset, length, false);
         if (seconds < MIN_EPOCH_SECOND || seconds > MAX_EPOCH_SECOND)
         {
-            throw raiseOutOfRange(new String(chars, offset, length));
+            throw raiseOutOfRange(new String(chars, offset, length), false);
         }
         fill(out, seconds + SECONDS_0000_TO_1970, 0, Field.SECOND, 0, length);
         return length;
@@ -101,10 +101,10 @@ public class ITUEpochParser
     public static int parseEpochMilli(final char[] chars, final int offset, final int length, final MutableDateTimeBuffer out)
     {
         sanityCheckInputParams(chars, offset, length, out);
-        final long millis = parseLong(chars, offset, length);
+        final long millis = parseLong(chars, offset, length, true);
         if (millis < MIN_EPOCH_MILLI || millis > MAX_EPOCH_MILLI)
         {
-            throw raiseOutOfRange(new String(chars, offset, length));
+            throw raiseOutOfRange(new String(chars, offset, length), true);
         }
         final long millisSince0000 = millis - MIN_EPOCH_MILLI;
         final long seconds = millisSince0000 / 1_000;
@@ -112,7 +112,10 @@ public class ITUEpochParser
         return length;
     }
 
-    private static long parseLong(final String text)
+    /**
+     * @param millis Which unit the caller is parsing, for the out-of-range message only
+     */
+    private static long parseLong(final String text, final boolean millis)
     {
         final int length = text.length();
         if (length == 0)
@@ -127,22 +130,24 @@ public class ITUEpochParser
         }
         if (length - idx > MAX_DIGITS)
         {
-            throw raiseOutOfRange(text);
+            throw raiseOutOfRange(text, millis);
         }
-        // Same shape as the char[] walk below (perf-log S7.6 / S7.8)
+        // Same shape as the char[] walk below (perf-log S7.6 / S7.8): the loop takes the leading digits, or all
+        // of them when there are fewer than eight after the sign, and the last eight go straight-line
         final int tailStart = length - 8;
+        final int loopEnd = tailStart > idx ? tailStart : length;
         long value = 0;
-        if (tailStart > idx)
+        for (; idx < loopEnd; idx++)
         {
-            for (; idx < tailStart; idx++)
+            final int d = text.charAt(idx) ^ ZERO;
+            if (d > 9)
             {
-                final int d = text.charAt(idx) ^ ZERO;
-                if (d > 9)
-                {
-                    throw raiseUnexpectedCharacter(text, idx, text.charAt(idx));
-                }
-                value = value * 10 + d;
+                throw raiseUnexpectedCharacter(text, idx, text.charAt(idx));
             }
+            value = value * 10 + d;
+        }
+        if (loopEnd == tailStart)
+        {
             final int d0 = text.charAt(tailStart) ^ ZERO;
             final int d1 = text.charAt(tailStart + 1) ^ ZERO;
             final int d2 = text.charAt(tailStart + 2) ^ ZERO;
@@ -158,18 +163,6 @@ public class ITUEpochParser
             final int hi = (d0 * 10 + d1) * 100 + (d2 * 10 + d3);
             final int lo = (d4 * 10 + d5) * 100 + (d6 * 10 + d7);
             value = value * 100_000_000 + (hi * 10_000L + lo);
-        }
-        else
-        {
-            for (; idx < length; idx++)
-            {
-                final int d = text.charAt(idx) ^ ZERO;
-                if (d > 9)
-                {
-                    throw raiseUnexpectedCharacter(text, idx, text.charAt(idx));
-                }
-                value = value * 10 + d;
-            }
         }
         return negative ? -value : value;
     }
@@ -194,7 +187,7 @@ public class ITUEpochParser
      * As {@link #parseLong(String)} over a window. Error messages and indices are relative to the window, as the
      * date-time {@code char[]} path reports them.
      */
-    private static long parseLong(final char[] chars, final int offset, final int length)
+    private static long parseLong(final char[] chars, final int offset, final int length, final boolean millis)
     {
         if (length == 0)
         {
@@ -208,23 +201,25 @@ public class ITUEpochParser
         }
         if (length - idx > MAX_DIGITS)
         {
-            throw raiseOutOfRange(new String(chars, offset, length));
+            throw raiseOutOfRange(new String(chars, offset, length), millis);
         }
         // Two independent accumulations - the leading digits in the loop, the last eight straight-line - joined at
-        // the end. The multiply-add chain of a single accumulator is the serial part of the walk (perf-log S7.6)
+        // the end. The multiply-add chain of a single accumulator is the serial part of the walk (perf-log S7.6).
+        // With fewer than eight digits after the sign the loop takes them all and the straight-line block is skipped
         final int tailStart = length - 8;
+        final int loopEnd = tailStart > idx ? tailStart : length;
         long value = 0;
-        if (tailStart > idx)
+        for (; idx < loopEnd; idx++)
         {
-            for (; idx < tailStart; idx++)
+            final int d = chars[offset + idx] ^ ZERO;
+            if (d > 9)
             {
-                final int d = chars[offset + idx] ^ ZERO;
-                if (d > 9)
-                {
-                    throw raiseUnexpectedCharacter(new String(chars, offset, length), idx, chars[offset + idx]);
-                }
-                value = value * 10 + d;
+                throw raiseUnexpectedCharacter(new String(chars, offset, length), idx, chars[offset + idx]);
             }
+            value = value * 10 + d;
+        }
+        if (loopEnd == tailStart)
+        {
             final int base = offset + tailStart;
             final int d0 = chars[base] ^ ZERO;
             final int d1 = chars[base + 1] ^ ZERO;
@@ -242,18 +237,6 @@ public class ITUEpochParser
             final int hi = (d0 * 10 + d1) * 100 + (d2 * 10 + d3);
             final int lo = (d4 * 10 + d5) * 100 + (d6 * 10 + d7);
             value = value * 100_000_000 + (hi * 10_000L + lo);
-        }
-        else
-        {
-            for (; idx < length; idx++)
-            {
-                final int d = chars[offset + idx] ^ ZERO;
-                if (d > 9)
-                {
-                    throw raiseUnexpectedCharacter(new String(chars, offset, length), idx, chars[offset + idx]);
-                }
-                value = value * 10 + d;
-            }
         }
         return negative ? -value : value;
     }
@@ -279,9 +262,12 @@ public class ITUEpochParser
         return new DateTimeParseException(String.format("Expected digit at position %d, found %s: %s", idx + 1, c, text), text, idx);
     }
 
-    private static DateTimeParseException raiseOutOfRange(final String text)
+    private static DateTimeParseException raiseOutOfRange(final String text, final boolean millis)
     {
-        return new DateTimeParseException(String.format("Epoch value outside years 0000-9999 (%d to %d seconds): %s", MIN_EPOCH_SECOND, MAX_EPOCH_SECOND, text), text, 0);
+        final long min = millis ? MIN_EPOCH_MILLI : MIN_EPOCH_SECOND;
+        final long max = millis ? MAX_EPOCH_MILLI : MAX_EPOCH_SECOND;
+        final String unit = millis ? "milliseconds" : "seconds";
+        return new DateTimeParseException(String.format("Epoch value outside years 0000-9999 (%d to %d %s): %s", min, max, unit, text), text, 0);
     }
 
     /**
