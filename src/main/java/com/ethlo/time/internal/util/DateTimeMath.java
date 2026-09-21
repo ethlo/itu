@@ -57,7 +57,7 @@ public class DateTimeMath
         final int cen = yrs / 100;
         final int yearDays = yrs * 365 + (yrs >>> 2) - cen + (cen >>> 2);
         final int monthDays = (979 * month + (bump ? MONTH_SHIFT_JAN : MONTH_SHIFT_MAR)) >>> 5;
-        return yearDays + monthDays + day - EPOCH_SHIFT;
+        return (long) yearDays + monthDays + day - EPOCH_SHIFT;
     }
 
     /**
