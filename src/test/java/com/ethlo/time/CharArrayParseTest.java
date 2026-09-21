@@ -23,6 +23,7 @@ package com.ethlo.time;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -245,6 +246,37 @@ public class CharArrayParseTest
         parse("2017-05-01", buffer);
         final DateTimeFormatException noTime = assertThrows(DateTimeFormatException.class, buffer::toOffsetDateTime);
         assertThat(noTime).hasMessage("No MINUTE field found");
+    }
+
+    /**
+     * The epoch accessors resolve missing fields exactly as DateTime.toInstant() does, and the millisecond value is
+     * the floor for dates before 1970, matching Instant.toEpochMilli()
+     */
+    @Test
+    void epochMatchesInstant()
+    {
+        final MutableDateTimeBuffer buffer = new MutableDateTimeBuffer();
+        for (final String text : Arrays.asList(
+                "1969-12-31T23:59:59.999+00:00",
+                "1969-12-31T23:59:59.001Z",
+                "1963-06-19T08:30:06.28123+01:00",
+                "2017-05-01T16:23:12.987654321-03:30",
+                "2017-05-01T16:23:12",
+                "2017-05-01T16:23",
+                "2017-05",
+                "2017"))
+        {
+            parse(text, buffer);
+            final Instant expected = buffer.toDateTime().toInstant();
+            assertThat(buffer.toEpochSecond()).as(text).isEqualTo(expected.getEpochSecond());
+            assertThat(buffer.toEpochMilli()).as(text).isEqualTo(expected.toEpochMilli());
+        }
+
+        parse("1969-12-31T23:59:59.999Z", buffer);
+        assertThat(buffer.toEpochSecond()).isEqualTo(-1);
+        assertThat(buffer.toEpochMilli()).isEqualTo(-1);
+        parse("1970-01-01T01:00:00.001+01:00", buffer);
+        assertThat(buffer.toEpochMilli()).isEqualTo(1);
     }
 
     /**
