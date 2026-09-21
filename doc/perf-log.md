@@ -313,6 +313,28 @@ entry instead of the `ZoneOffset.UTC` constant costs C2 the folding it does arou
   remaining gap to the buffer path (15.1 vs 13.0 on A) is `charAt`'s coder and bounds checks plus the `DateTime`
   and `TimezoneOffset` allocations; (3) `ITU.isValid(String, TemporalType...)` still parses and catches.
 
+## Session S7 — 2026-09-21 · i9-13900H (20 threads) · JDK 25.0.4 (OpenJDK, Ubuntu 26.04) · governor: powersave
+
+**Scope.** `parseEpochMilli` — epoch-millis text into civil fields — new on this branch and at 30 ns for both the
+String and the buffer path, against 9–15 ns for the date-time string itself. The rows are the epoch-millis text of
+A / B / C: **A** = `1672594714987` (13 digits), **B** = `97195464121123`, **C** = `34854580921000` (14 digits).
+Gate: `perf/instr.sh 'candidates\.itu_epoch.*'` — one run covers both rows, the buffer row
+(`itu_epoch_buffer`) is the gate, the String row (`itu_epoch`) is reported with it. `--thorough` at the end.
+
+What the S7.0 listing showed (`dis-E0.txt`, input B, buffer path; the method is 58 bytecodes, so it is inlined
+into the JMH stub and that is the nmethod to print): the digit loop is unrolled ×4 and cheap — `movzwl`,
+`lea -0x30`, `cmp $0xa`, two `lea`s for the ×10 — but every digit also runs the `MAX_DIGITS` guard (`cmp $0x12`,
+`cmovg`). The conversion is a chain of 64-bit divisions by constants — 1000, 86400, then Hinnant's 146097, 1460,
+36524, 146096, 365, 153, 5 — each `movabs magic; imul; sar` plus, because the dividend may be negative, a
+`mov; sar $0x3f; sub` sign correction, and `floorDiv`/`floorMod` add a `test`/`cmp` pair each. The buffer stores
+and the `civilFromDays` unpack are a handful of instructions. So roughly a third is the digits and two thirds the
+arithmetic, and the arithmetic is all sign handling and 64-bit magic multiplies on values that are provably
+non-negative and mostly fit in an int.
+
+| id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
+|------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
+| S7.0 | 2026-09-21 | —   | BASELINE buffer path, `8b7bc49` + epoch parser (String path same code: 367 / 42 · 386 / 46 · 381 / 46; 30.3 / 31.2 / 30.4 ns) | 353 / 35 | 368 / 39 | 371 / 39 | 30.0 / 31.2 / 30.8 | — | |
+
 ## Dead ends — do not retry without a new reason
 
 - (S2.1) Expecting a large win from "zero allocation" alone on this parser: the objects were cheap TLAB bumps. Zero
