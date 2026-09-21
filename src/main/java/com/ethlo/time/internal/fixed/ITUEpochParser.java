@@ -158,21 +158,72 @@ public class ITUEpochParser
         {
             throw ErrorUtil.raiseUnexpectedEndOfText(new String(chars, offset, length), idx);
         }
+        if (length - idx > MAX_DIGITS)
+        {
+            throw raiseOutOfRange(new String(chars, offset, length));
+        }
+        // Two independent accumulations - the leading digits in the loop, the last eight straight-line - joined at
+        // the end. The multiply-add chain of a single accumulator is the serial part of the walk (perf-log S7.6)
+        final int tailStart = length - 8;
         long value = 0;
-        for (; idx < length; idx++)
+        if (tailStart > idx)
+        {
+            for (; idx < tailStart; idx++)
+            {
+                final int d = chars[offset + idx] ^ ZERO;
+                if (d > 9)
+                {
+                    throw raiseUnexpectedCharacter(new String(chars, offset, length), idx, chars[offset + idx]);
+                }
+                value = value * 10 + d;
+            }
+            final int base = offset + tailStart;
+            final int d0 = chars[base] ^ ZERO;
+            final int d1 = chars[base + 1] ^ ZERO;
+            final int d2 = chars[base + 2] ^ ZERO;
+            final int d3 = chars[base + 3] ^ ZERO;
+            final int d4 = chars[base + 4] ^ ZERO;
+            final int d5 = chars[base + 5] ^ ZERO;
+            final int d6 = chars[base + 6] ^ ZERO;
+            final int d7 = chars[base + 7] ^ ZERO;
+            // Eight compares, as parse4 does: OR-ing the digit values would let 8|4 = 12 fail and ':' (10) pass
+            if (d0 > 9 || d1 > 9 || d2 > 9 || d3 > 9 || d4 > 9 || d5 > 9 || d6 > 9 || d7 > 9)
+            {
+                throw raiseUnexpectedCharacter(new String(chars, offset, length), tailStart, chars, offset, length);
+            }
+            final int hi = (d0 * 10 + d1) * 100 + (d2 * 10 + d3);
+            final int lo = (d4 * 10 + d5) * 100 + (d6 * 10 + d7);
+            value = value * 100_000_000 + (hi * 10_000L + lo);
+        }
+        else
+        {
+            for (; idx < length; idx++)
+            {
+                final int d = chars[offset + idx] ^ ZERO;
+                if (d > 9)
+                {
+                    throw raiseUnexpectedCharacter(new String(chars, offset, length), idx, chars[offset + idx]);
+                }
+                value = value * 10 + d;
+            }
+        }
+        return negative ? -value : value;
+    }
+
+    /**
+     * The straight-line block found a non-digit somewhere in its eight characters; find which for the message
+     */
+    private static DateTimeParseException raiseUnexpectedCharacter(final String text, final int from, final char[] chars, final int offset, final int length)
+    {
+        for (int idx = from; idx < length; idx++)
         {
             final char c = chars[offset + idx];
             if (c < ZERO || c > DIGIT_9)
             {
-                throw raiseUnexpectedCharacter(new String(chars, offset, length), idx, c);
+                return raiseUnexpectedCharacter(text, idx, c);
             }
-            if (idx - (negative ? 1 : 0) >= MAX_DIGITS)
-            {
-                throw raiseOutOfRange(new String(chars, offset, length));
-            }
-            value = value * 10 + (c - ZERO);
         }
-        return negative ? -value : value;
+        throw new IllegalStateException("No non-digit found: " + text);
     }
 
     private static DateTimeParseException raiseUnexpectedCharacter(final String text, final int idx, final char c)
