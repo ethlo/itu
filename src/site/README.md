@@ -6,16 +6,19 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/598913bc1fe9405c82be73d9a4f105c8)](https://app.codacy.com/gh/ethlo/itu/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![codecov](https://codecov.io/gh/ethlo/itu/graph/badge.svg?token=V3H15LKC5V)](https://codecov.io/gh/ethlo/itu)
 
-An extremely fast parser and formatter of ISO-8601 date-times. Handle
-[RFC-3339 Timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime) with ease!
-Now also supports a subset of duration strings!
+An extremely fast parser and formatter of ISO-8601 date-times. Handles
+[RFC-3339 timestamps](https://www.ietf.org/rfc/rfc3339.txt) and W3C [Date and Time Formats](https://www.w3.org/TR/NOTE-datetime)
+with ease, and a strict subset of ISO-8601 durations.
 
 ## Features
 
- Low ceremony, high productivity with a very easy to use API.
+* Low ceremony, high productivity with a very easy to use API.
 * [Well-documented](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
-* Aim for 100% specification compliance.
-* Handling leap-seconds.
+* Aims for 100% specification compliance.
+* Parses any granularity from a year to nanoseconds, and remembers which one it got.
+* Zero-allocation parsing from `char[]` into a reusable buffer.
+* Parses Unix epoch seconds and milliseconds written as text through the same API.
+* Handles leap seconds.
 * Zero dependencies.
 * Java 8 compatible.
 * Apache 2 licensed.
@@ -59,7 +62,9 @@ Add dependency
 </dependency>
 ```
 
-Below you find some samples of usage of this library. Please check out the [javadoc](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html) for more details.
+The examples below are the tests in [`src/test/java/samples`](src/test/java/samples), extracted into this
+file by the build, so they are always current. The
+[javadoc](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html) has the details.
 
 ${src/test/java/samples/parsing}
 
@@ -67,40 +72,32 @@ ${src/test/java/samples/formatting}
 
 ${src/test/java/samples/leapsecond}
 
-## Duration Parser
+## Durations
 
-Parses a duration string, a strict subset of ISO 8601 durations.
+`ITU.parseDuration` parses a strict subset of ISO-8601 durations into a `Duration` of `long` seconds and
+`int` nanoseconds.
 
-### Supported Units
-This method supports time-based durations with the following units:
+### Supported units
 
 - **Weeks** (`W`)
 - **Days** (`D`)
 - **Hours** (`H`)
 - **Minutes** (`M`)
-- **Seconds** (`S`), including fractional seconds up to nanosecond precision
+- **Seconds** (`S`), with a fraction of up to nine digits
 
-#### Not Allowed Units
-The following units are **explicitly not allowed** to avoid ambiguity:
+**Years** (`Y`) and **months** (`M` in the date part) are rejected: their length depends on the calendar, so
+a duration containing them is not a fixed amount of time.
 
-- **Years** (`Y`)
-- **Months** (`M` in the date section)
+### Negative durations
 
-### Negative Durations
-Negative durations are supported and must be prefixed with `-P`, as specified in ISO 8601.  
-The parsed duration will be represented using:
+A negative duration is prefixed `-P`, as ISO-8601 specifies. The sign is carried by the seconds and the
+nanosecond part is never negative, as in `java.time.Duration`.
 
-- A **`long`** for total seconds
-- An **`int`** for nanosecond precision
+### Normalized output
 
-The nanosecond component is always positive, with the sign absorbed by the seconds field,  
-following Java and ISO 8601 conventions.
-
-### Normalized Output
-
-`Duration.normalized()` renders using the largest units possible, so a duration of 3,000,000 seconds and
-117,392,763 nanoseconds becomes `P4W6DT17H20M0.117392763S`. Negative durations carry a single leading `-P`,
-as ISO 8601 specifies, rather than signing each component.
+`Duration.normalized()` renders using the largest units possible, so 3,000,000 seconds and 117,392,763
+nanoseconds becomes `P4W6DT17H20M0.117392763S`. A negative duration gets a single leading `-P` rather than a
+sign on each component.
 
 `normalized(DurationUnit)` caps the largest unit emitted; anything above the cap stays folded into it:
 
@@ -112,22 +109,9 @@ as ISO 8601 specifies, rather than signing each component.
 | `DurationUnit.MINUTES` | `PT50000M0.117392763S` |
 | `DurationUnit.SECONDS` | `PT3000000.117392763S` |
 
-Note that `java.time.Duration.parse` does not accept the week designator, so it cannot read back the default
-rendering once a duration reaches a full week. Days and every smaller unit are accepted, including the
-leading `-P` form, so a cap of `DurationUnit.DAYS` or lower keeps the output readable by the Java Time API.
-
-### Examples
-
-#### Valid Input
-- `P2DT3H4M5.678901234S` → 2 days, 3 hours, 4 minutes, 5.678901234 seconds
-- `PT5M30S` → 5 minutes, 30 seconds
-- `-PT2.5S` → Negative 2.5 seconds
-- `-P1D` → Negative 1 day
-
-#### Invalid Input
-- `P1Y2M3DT4H` → Contains `Y` and `M`
-- `PT` → Missing time values after `T`
-- `P-1D` → Incorrect negative placement
+`java.time.Duration.parse` does not accept the week designator, so it cannot read back the default rendering
+once a duration reaches a full week. Days and every smaller unit are accepted, including the leading `-P`
+form, so a cap of `DurationUnit.DAYS` or lower keeps the output readable by the JDK.
 
 ${src/test/java/samples/durationparsing}
 
@@ -135,7 +119,7 @@ ${src/test/java/samples/durationparsing}
 
 ### Why this little project?
 
-There are an endless amount of APIs with non-standard date/time exchange, and the goal of this project is to make it a
+There is an endless amount of APIs with non-standard date/time exchange, and the goal of this project is to make it a
 breeze to do the right thing!
 
 ### Why the performance focus?
@@ -155,7 +139,7 @@ databases and search engines, to importing/exporting data on less powerful devic
 ### What is RFC-3339?
 
 [RFC-3339](https://www.ietf.org/rfc/rfc3339.txt) is a subset/profile defined by [W3C](https://www.w3.org/) of the
-formats defined in [ISO-8601](http://www.iso.org/iso/home/standards/iso8601.htm), to simplify date and time exhange in
+formats defined in [ISO-8601](http://www.iso.org/iso/home/standards/iso8601.htm), to simplify date and time exchange in
 modern Internet protocols.
 
 Typical formats include:
@@ -193,7 +177,7 @@ well.
 
 ### Leap second parsing
 
-Since Java's `java.time` classes do not support storing leap seconds, ITU will throw a `LeapSecondException` if one is
-encountered to signal that this is a leap second. The exception can then be queried for the second-value. Storing such
-values is not possible in a `java.time.OffsetDateTime`, the `60` is therefore abandoned and the date-time will use `59`
-instead of `60`.
+Since `java.time` cannot store a leap second, ITU throws a `LeapSecondException` when it parses one, so that the
+caller decides what to do. The exception carries the second value (`60`), whether the date is a known leap second,
+and the nearest representable `OffsetDateTime`, which is the start of the next minute. See the
+[leap-second example](#parseleapsecond) above.
