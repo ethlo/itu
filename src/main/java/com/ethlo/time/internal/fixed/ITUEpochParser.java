@@ -1,0 +1,219 @@
+package com.ethlo.time.internal.fixed;
+
+/*-
+ * #%L
+ * Internet Time Utility
+ * %%
+ * Copyright (C) 2017 - 2026 Morten Haraldsen @ethlo
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.DIGIT_9;
+import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
+
+import java.time.format.DateTimeParseException;
+
+import com.ethlo.time.DateTime;
+import com.ethlo.time.Field;
+import com.ethlo.time.MutableDateTimeBuffer;
+import com.ethlo.time.TimezoneOffset;
+import com.ethlo.time.internal.util.DateTimeMath;
+import com.ethlo.time.internal.util.ErrorUtil;
+
+/**
+ * Parses a Unix epoch count written as a decimal integer ({@code -?[0-9]+}) into civil fields at UTC. The digits
+ * are walked here rather than by {@link Long#parseLong(String)} so that a bad character fails with the same kind
+ * of exception and error index as the date-time parsers, and so that the {@code char[]} window path never copies.
+ * <p>
+ * The value must land in years [0, 9999], the range the rest of the library represents; the bounds are derived
+ * from {@link DateTimeMath#daysFromCivil(int, int, int)} so that the two cannot drift.
+ */
+public class ITUEpochParser
+{
+    public static final long MIN_EPOCH_SECOND = DateTimeMath.daysFromCivil(0, 1, 1) * 86_400;
+    public static final long MAX_EPOCH_SECOND = DateTimeMath.daysFromCivil(9999, 12, 31) * 86_400 + 86_399;
+
+    /**
+     * Beyond this many digits the value is out of range whatever it is, and the accumulator would overflow
+     */
+    private static final int MAX_DIGITS = 18;
+
+    private static final int MILLI_FRACTION_DIGITS = 3;
+
+    private ITUEpochParser()
+    {
+    }
+
+    public static DateTime parseEpochSecond(final String text)
+    {
+        final long seconds = parseLong(text);
+        assertInRange(seconds, text);
+        return toDateTime(seconds, 0, Field.SECOND, 0, text.length());
+    }
+
+    public static DateTime parseEpochMilli(final String text)
+    {
+        final long millis = parseLong(text);
+        final long seconds = Math.floorDiv(millis, 1_000L);
+        assertInRange(seconds, text);
+        return toDateTime(seconds, (int) Math.floorMod(millis, 1_000L) * 1_000_000, Field.NANO, MILLI_FRACTION_DIGITS, text.length());
+    }
+
+    public static int parseEpochSecond(final char[] chars, final int offset, final int length, final MutableDateTimeBuffer out)
+    {
+        sanityCheckInputParams(chars, offset, length, out);
+        final long seconds = parseLong(chars, offset, length);
+        assertInRange(seconds, chars, offset, length);
+        fill(out, seconds, 0, Field.SECOND, 0, length);
+        return length;
+    }
+
+    public static int parseEpochMilli(final char[] chars, final int offset, final int length, final MutableDateTimeBuffer out)
+    {
+        sanityCheckInputParams(chars, offset, length, out);
+        final long millis = parseLong(chars, offset, length);
+        final long seconds = Math.floorDiv(millis, 1_000L);
+        assertInRange(seconds, chars, offset, length);
+        fill(out, seconds, (int) Math.floorMod(millis, 1_000L) * 1_000_000, Field.NANO, MILLI_FRACTION_DIGITS, length);
+        return length;
+    }
+
+    private static void assertInRange(final long seconds, final String text)
+    {
+        if (seconds < MIN_EPOCH_SECOND || seconds > MAX_EPOCH_SECOND)
+        {
+            throw raiseOutOfRange(text);
+        }
+    }
+
+    private static void assertInRange(final long seconds, final char[] chars, final int offset, final int length)
+    {
+        if (seconds < MIN_EPOCH_SECOND || seconds > MAX_EPOCH_SECOND)
+        {
+            throw raiseOutOfRange(new String(chars, offset, length));
+        }
+    }
+
+    private static long parseLong(final String text)
+    {
+        final int length = text.length();
+        if (length == 0)
+        {
+            throw ErrorUtil.raiseUnexpectedEndOfText(text, 0);
+        }
+        final boolean negative = text.charAt(0) == '-';
+        int idx = negative ? 1 : 0;
+        if (idx == length)
+        {
+            throw ErrorUtil.raiseUnexpectedEndOfText(text, idx);
+        }
+        long value = 0;
+        for (; idx < length; idx++)
+        {
+            final char c = text.charAt(idx);
+            if (c < ZERO || c > DIGIT_9)
+            {
+                throw raiseUnexpectedCharacter(text, idx, c);
+            }
+            if (idx - (negative ? 1 : 0) >= MAX_DIGITS)
+            {
+                throw raiseOutOfRange(text);
+            }
+            value = value * 10 + (c - ZERO);
+        }
+        return negative ? -value : value;
+    }
+
+    /**
+     * As {@link #parseLong(String)} over a window. Error messages and indices are relative to the window, as the
+     * date-time {@code char[]} path reports them.
+     */
+    private static long parseLong(final char[] chars, final int offset, final int length)
+    {
+        if (length == 0)
+        {
+            throw ErrorUtil.raiseUnexpectedEndOfText("", 0);
+        }
+        final boolean negative = chars[offset] == '-';
+        int idx = negative ? 1 : 0;
+        if (idx == length)
+        {
+            throw ErrorUtil.raiseUnexpectedEndOfText(new String(chars, offset, length), idx);
+        }
+        long value = 0;
+        for (; idx < length; idx++)
+        {
+            final char c = chars[offset + idx];
+            if (c < ZERO || c > DIGIT_9)
+            {
+                throw raiseUnexpectedCharacter(new String(chars, offset, length), idx, c);
+            }
+            if (idx - (negative ? 1 : 0) >= MAX_DIGITS)
+            {
+                throw raiseOutOfRange(new String(chars, offset, length));
+            }
+            value = value * 10 + (c - ZERO);
+        }
+        return negative ? -value : value;
+    }
+
+    private static DateTimeParseException raiseUnexpectedCharacter(final String text, final int idx, final char c)
+    {
+        return new DateTimeParseException(String.format("Expected digit at position %d, found %s: %s", idx + 1, c, text), text, idx);
+    }
+
+    private static DateTimeParseException raiseOutOfRange(final String text)
+    {
+        return new DateTimeParseException(String.format("Epoch value outside years 0000-9999 (%d to %d seconds): %s", MIN_EPOCH_SECOND, MAX_EPOCH_SECOND, text), text, 0);
+    }
+
+    private static DateTime toDateTime(final long seconds, final int nano, final Field field, final int fractionDigits, final int parseLength)
+    {
+        final int date = DateTimeMath.civilFromDays(Math.floorDiv(seconds, 86_400L));
+        final int secondOfDay = (int) Math.floorMod(seconds, 86_400L);
+        return new DateTime(field, DateTimeMath.packedYear(date), DateTimeMath.packedMonth(date), DateTimeMath.packedDay(date), secondOfDay / 3_600, (secondOfDay / 60) % 60, secondOfDay % 60, nano, TimezoneOffset.UTC, fractionDigits, parseLength);
+    }
+
+    private static void fill(final MutableDateTimeBuffer out, final long seconds, final int nano, final Field field, final int fractionDigits, final int parseLength)
+    {
+        final int date = DateTimeMath.civilFromDays(Math.floorDiv(seconds, 86_400L));
+        final int secondOfDay = (int) Math.floorMod(seconds, 86_400L);
+        out.set(field, DateTimeMath.packedYear(date), DateTimeMath.packedMonth(date), DateTimeMath.packedDay(date), secondOfDay / 3_600, (secondOfDay / 60) % 60, secondOfDay % 60, nano, fractionDigits, 0, parseLength);
+    }
+
+    private static void sanityCheckInputParams(final char[] chars, final int offset, final int length, final MutableDateTimeBuffer out)
+    {
+        if (chars == null)
+        {
+            throw new NullPointerException("chars cannot be null");
+        }
+        if (out == null)
+        {
+            throw new NullPointerException("buffer cannot be null");
+        }
+        if (offset < 0)
+        {
+            throw new IndexOutOfBoundsException(String.format("offset cannot be negative, was %d", offset));
+        }
+        if (length < 0)
+        {
+            throw new IndexOutOfBoundsException(String.format("length cannot be negative, was %d", length));
+        }
+        if (offset + length > chars.length)
+        {
+            throw new IndexOutOfBoundsException(String.format("offset %d plus length %d exceeds the array length of %d", offset, length, chars.length));
+        }
+    }
+}

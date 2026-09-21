@@ -164,8 +164,20 @@ final Instant instant = ITU.parseLenient("2017-12-06").toInstant();
 assertThat(instant.toString()).isEqualTo("2017-12-06T00:00:00Z");
 ```
 
+#### parseEpoch
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L166C5-L177C6)</smaller>
+
+A Unix epoch count as text, in seconds or milliseconds, parses to the same `DateTime` as an RFC-3339 string,
+ so a field that carries either can go through one code path. There are `char[]` window overloads into a
+ `MutableDateTimeBuffer` for the zero-allocation path as well.
+```java
+assertThat(ITU.parseEpochSecond("1695300000").toString()).isEqualTo("2023-09-21T12:40:00Z");
+assertThat(ITU.parseEpochMilli("1695300000123").toString()).isEqualTo("2023-09-21T12:40:00.123Z");
+assertThat(ITU.parseEpochMilli("-1").toInstant().toEpochMilli()).isEqualTo(-1);
+```
+
 #### parseCustomFormat
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L166C5-L188C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L179C5-L201C6)</smaller>
 
 In case the format is not supported directly, you can build your own parser.
 ```java
@@ -188,7 +200,7 @@ assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
 ```
 
 #### parseUsingInterfaceRfc33939
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L190C5-L200C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L203C5-L213C6)</smaller>
 
 `DateTimerParser` interface for RFC-3339.
 ```java
@@ -199,7 +211,7 @@ assertThat(result.toString()).isEqualTo("2000-12-31T23:59:37.123456");
 ```
 
 #### parseUsingInterfaceLocalTime
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L202C5-L212C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L215C5-L225C6)</smaller>
 
 `DateTimerParser` interface for local time.
 ```java
@@ -210,7 +222,7 @@ assertThat(result.toString()).isEqualTo(text);
 ```
 
 #### parseUsingInterfaceLocalDate
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L214C5-L224C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/parsing/ITUParserSamples.java#L227C5-L237C6)</smaller>
 
 `DateTimerParser` interface for local date.
 ```java

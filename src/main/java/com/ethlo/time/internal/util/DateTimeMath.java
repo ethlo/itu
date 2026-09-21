@@ -44,4 +44,41 @@ public class DateTimeMath
         final long doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;         // [0, 146096]
         return era * 146097 + doe - 719468;
     }
+
+    /**
+     * The inverse of {@link #daysFromCivil(int, int, int)}: the civil date of a day count since 1970-01-01, packed
+     * into one int so that no object is needed to return three values. Layout: {@code year << 9 | month << 5 | day};
+     * unpack with {@link #packedYear(int)}, {@link #packedMonth(int)} and {@link #packedDay(int)}.
+     * <p>
+     * The caller must keep {@code days} within years [0, 9999]: the packing has no room for a sign.
+     */
+    public static int civilFromDays(final long days)
+    {
+        final long z = days + 719468;
+        final long era = (z >= 0 ? z : z - 146096) / 146097;
+        final long doe = z - era * 146097;                                  // [0, 146096]
+        final long yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;  // [0, 399]
+        final long y = yoe + era * 400;
+        final long doy = doe - (365 * yoe + yoe / 4 - yoe / 100);          // [0, 365]
+        final long mp = (5 * doy + 2) / 153;                                // [0, 11]
+        final int d = (int) (doy - (153 * mp + 2) / 5 + 1);                // [1, 31]
+        final int m = (int) (mp < 10 ? mp + 3 : mp - 9);                    // [1, 12]
+        final int year = (int) (m <= 2 ? y + 1 : y);
+        return year << 9 | m << 5 | d;
+    }
+
+    public static int packedYear(final int packed)
+    {
+        return packed >>> 9;
+    }
+
+    public static int packedMonth(final int packed)
+    {
+        return (packed >>> 5) & 0xF;
+    }
+
+    public static int packedDay(final int packed)
+    {
+        return packed & 0x1F;
+    }
 }

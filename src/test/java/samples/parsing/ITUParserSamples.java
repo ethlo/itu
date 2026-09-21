@@ -164,6 +164,19 @@ class ITUParserSamples
     }
 
     /*
+     A Unix epoch count as text, in seconds or milliseconds, parses to the same `DateTime` as an RFC-3339 string,
+     so a field that carries either can go through one code path. There are `char[]` window overloads into a
+     `MutableDateTimeBuffer` for the zero-allocation path as well.
+     */
+    @Test
+    void parseEpoch()
+    {
+        assertThat(ITU.parseEpochSecond("1695300000").toString()).isEqualTo("2023-09-21T12:40:00Z");
+        assertThat(ITU.parseEpochMilli("1695300000123").toString()).isEqualTo("2023-09-21T12:40:00.123Z");
+        assertThat(ITU.parseEpochMilli("-1").toInstant().toEpochMilli()).isEqualTo(-1);
+    }
+
+    /*
      In case the format is not supported directly, you can build your own parser.
      */
     @Test
