@@ -436,6 +436,26 @@ inlined; no packed return needed.
   constants and a mul-shift for the month, off the era arithmetic. It is not on the parse path, so it needs its
   own benchmark row before it is worth a row here.
 
+## Session S9 — 2026-09-21 · i9-13900H (20 threads) · JDK 25.0.4 (OpenJDK, Ubuntu 26.04) · governor: powersave
+
+**Machine note.** This session ran on battery: the ns column is inflated (parse-only 25 ns where S6 measured 13 on
+mains) and is not comparable to any other session. The instruction counts are unaffected (parse-only 363 / 258 /
+223 against S6's 363 / 261 / 224) and are the gate; the `--thorough` ns pair is deferred until on mains power.
+
+**Scope.** `DateTimeMath.daysFromCivil` — civil → days, the other direction from S8. Not on the parse path, but the
+throughput harness in date-time-wars (`throughput.sh`, 1 GB CSV) showed the buffer parser's share of a pipeline is
+31–35 ns against 8–13 ns in the JMH parse row, and the pipeline's next call after the parse is `toEpochSecond()`,
+which is this function: Hinnant's era arithmetic with four `long` magic divisions (400, 5, 4, 100). Candidate:
+Joffe's inverse (`to_rata_die` in `benjoffe_fast32_v2.hpp`, BSL-1.0, already carried in THIRD-PARTY-LICENSES.md):
+`int` throughout, one division by 100, the rest shifts and one multiply, with the month table folded into
+`(979 * month + shift) / 32`. Gate: a new JMH method `parseLenientToEpochSecond` on the buffer row
+(`perf/instr.sh 'candidates\.itu_buffer\..*'`), the parse-only method reported beside it as the floor.
+
+| id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
+|------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
+| S9.0 | 2026-09-21 | —   | BASELINE `parseLenientToEpochSecond`, `c598d3e` (parse-only same run: 363 / 73 · 258 / 52 · 223 / 47, so the conversion is 65 / 66 / 66 instr) | 428 / 78 | 324 / 57 | 289 / 52 | (battery) | — | `c598d3e` |
+| S9.1 | 2026-09-21 | H31 | `daysFromCivil` as Joffe's inverse: year rebased by one era so nothing is negative, `cen = yrs / 100` the only division, `yrs * 365 + yrs / 4 - cen + cen / 4` for the years and `(979 * month + shift) / 32` for the months, all `int`. Expect −3 to −5 ns on the pair. Parse-only same run: 363 / 73 · 259 / 52 · 223 / 47, so the conversion is now 45 / 46 / 46 instr (−20, −30%) | 408 / 77 | 304 / 56 | 269 / 51 | (battery; −3.5 / −4.1 / −3.6 vs S9.0 in the same state, indicative only) | KEPT on instructions; `--thorough` pair pending mains power | |
+
 ## Dead ends — do not retry without a new reason
 
 - (S2.1) Expecting a large win from "zero allocation" alone on this parser: the objects were cheap TLAB bumps. Zero

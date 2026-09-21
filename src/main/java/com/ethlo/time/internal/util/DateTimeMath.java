@@ -21,28 +21,43 @@ package com.ethlo.time.internal.util;
  */
 
 /**
- * CREDIT: <a href="https://howardhinnant.github.io/date_algorithms.html">Public domain math for converting between epoch and date-time</a>
+ * Calendar arithmetic. Both directions follow Ben Joffe's algorithms (Boost Software License 1.0, see
+ * THIRD-PARTY-LICENSES.md); the credit for the shape of the problem goes to
+ * <a href="https://howardhinnant.github.io/date_algorithms.html">Howard Hinnant's public domain date algorithms</a>,
+ * which this class used until perf-log S8/S9.
  */
 public class DateTimeMath
 {
-    public static long daysFromCivil(int y, final int m, final int d)
+    /*
+     * Civil date → days since 1970-01-01, the inverse of civilFromDaysSince0000, after the to_rata_die of
+     * benjoffe_fast32_v2.hpp (https://www.benjoffe.com/fast-date#inverse, perf-log S9.1). The year is counted from
+     * March so that the leap day is the last day of the year; the days of the whole years are
+     * 365 * y + y / 4 - y / 100 + y / 400, written as yrs / 4 - cen + cen / 4 with cen = yrs / 100 so that there is
+     * one division by 100 and the rest are shifts; and the days of the whole months, the 0 31 61 92 122 153 184
+     * 214 245 275 306 337 sequence from March, are (979 * month + shift) / 32, a linear fit that rounds down to the
+     * right value for every month, with shift selecting January/February (12 months on) from the rest. Hinnant's
+     * form did the same with four long magic divisions (400, 5, 4, 100).
+     *
+     * Everything is int and non-negative: the year is rebased by one 400-year era so that year 0 in
+     * January/February (yrs = -1) does not go below zero, and the era's 146 097 days are taken back out in
+     * EPOCH_SHIFT. Valid for years [0, 5 000 000]; DateTimeMathTest checks every day of 0000-9999 against
+     * LocalDate.
+     */
+    private static final int MONTH_SHIFT_MAR = -2_919;
+    private static final int MONTH_SHIFT_JAN = 8_829;
+    /**
+     * The days the formula yields for 1970-01-01 (with the extra era), so that this date is day 0
+     */
+    private static final int EPOCH_SHIFT = 865_566;
+
+    public static long daysFromCivil(final int year, final int month, final int day)
     {
-        // Returns number of days since civil 1970-01-01.  Negative values indicate
-        //    days prior to 1970-01-01.
-        // Preconditions:  y-m-d represents a date in the civil (Gregorian) calendar
-        //                 m is in [1, 12]
-        //                 d is in [1, last_day_of_month(y, m)]
-        //                 y is "approximately" in
-        //                   [numeric_limits<Int>::min()/366, numeric_limits<Int>::max()/366]
-        //                 Exact range of validity is:
-        //                 [civil_from_days(numeric_limits<Int>::min()),
-        //                  civil_from_days(numeric_limits<Int>::max()-719468)]
-        y -= m <= 2 ? 1 : 0;
-        final long era = (y >= 0 ? y : y - 399) / 400;
-        final long yoe = y - era * 400;      // [0, 399]
-        final long doy = (153L * (m > 2 ? m - 3 : m + 9) + 2) / 5 + d - 1;  // [0, 365]
-        final long doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;         // [0, 146096]
-        return era * 146097 + doe - 719468;
+        final boolean bump = month <= 2;
+        final int yrs = year + 400 - (bump ? 1 : 0);
+        final int cen = yrs / 100;
+        final int yearDays = yrs * 365 + (yrs >>> 2) - cen + (cen >>> 2);
+        final int monthDays = (979 * month + (bump ? MONTH_SHIFT_JAN : MONTH_SHIFT_MAR)) >>> 5;
+        return yearDays + monthDays + day - EPOCH_SHIFT;
     }
 
     /**

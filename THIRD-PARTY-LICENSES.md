@@ -12,6 +12,7 @@ packaged into the jars as `META-INF/THIRD-PARTY-LICENSES.md`. (The `THIRD-PARTY.
 - `civilFromDaysSince0000` follows the "very fast 64-bit date algorithm" in its 32-bit form,
   <https://www.benjoffe.com/fast-date-64>, ported from `benjoffe_fast32_v2.hpp` in
   <https://github.com/benjoffe/fast-date-benchmarks>.
+- `daysFromCivil` follows the inverse in the same file (`to_rata_die`, <https://www.benjoffe.com/fast-date#inverse>).
 - `hourOfDay`, `minuteOfHour` and `secondOfMinute` follow the "fast time-of-day" article,
   <https://www.benjoffe.com/fast-time-of-day>.
 
@@ -45,5 +46,5 @@ DEALINGS IN THE SOFTWARE.
 
 ## Howard Hinnant's date algorithms — public domain
 
-`DateTimeMath.daysFromCivil` is from <https://howardhinnant.github.io/date_algorithms.html>, which its author
-has placed in the public domain. No notice is required; it is credited in the source.
+Both conversions were Hinnant's (<https://howardhinnant.github.io/date_algorithms.html>, public domain) before
+ITU 1.16.0, and the class still credits them. No notice is required.
