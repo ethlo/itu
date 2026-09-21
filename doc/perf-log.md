@@ -341,6 +341,7 @@ non-negative and mostly fit in an int.
 | S7.5 | 2026-09-21 | H27 | Millis: one long division by 86 400 000 for the days; the 27-bit remainder splits into second and millisecond in int, off the civil chain — instead of `/ 1000` then `/ 86 400` in series. String path: 366 / 39 · 374 / 42 · 369 / 42 | 353 / 33 | 367 / 36 | 364 / 36 | 30.2 / 31.7 / 31.4 | NO-GAIN (reverted; retried as S7.9) | — |
 | S7.6 | 2026-09-21 | H28 | Buffer digit walk: the `MAX_DIGITS` guard hoisted to one length check, and two independent accumulators — leading digits in the loop, the last eight straight-line — joined by one multiply-add, halving the serial `×10 +` chain | 398 / 40 | 409 / 42 | 409 / 42 | 25.1 / 25.7 / 25.7 | KEPT (+45 instr, −5 ns: the walk is latency-bound, the count is not the gate here) | |
 | S7.7 | 2026-09-21 | H28 | S7.6 plus a straight-line block of four digits in front of the eight when the text has twelve or more, so the loop is left with 1–6 digits and the chain is two multiply-adds | 403 / 38 | 424 / 42 | 423 / 42 | 25.1 / 26.3 / 26.4 | NO-GAIN (reverted to S7.6: after the split the walk is no longer the critical path) | — |
+| S7.8 | 2026-09-21 | H28 | S7.6's split walk ported to the String path (`parseLong(String)`); this row's numbers are the String path, buffer path unchanged (394 / 40 · 410 / 42 · 407 / 42; 24.8 / 25.5 / 26.0) | 409 / 48 | 417 / 49 | 408 / 49 | 26.7 / 27.3 / 26.9 | KEPT (from 32.0 / 33.1 / 33.0 in the S7.5 run) | |
 
 ## Dead ends — do not retry without a new reason
 

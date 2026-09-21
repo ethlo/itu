@@ -125,21 +125,69 @@ public class ITUEpochParser
         {
             throw ErrorUtil.raiseUnexpectedEndOfText(text, idx);
         }
+        if (length - idx > MAX_DIGITS)
+        {
+            throw raiseOutOfRange(text);
+        }
+        // Same shape as the char[] walk below (perf-log S7.6 / S7.8)
+        final int tailStart = length - 8;
         long value = 0;
-        for (; idx < length; idx++)
+        if (tailStart > idx)
+        {
+            for (; idx < tailStart; idx++)
+            {
+                final int d = text.charAt(idx) ^ ZERO;
+                if (d > 9)
+                {
+                    throw raiseUnexpectedCharacter(text, idx, text.charAt(idx));
+                }
+                value = value * 10 + d;
+            }
+            final int d0 = text.charAt(tailStart) ^ ZERO;
+            final int d1 = text.charAt(tailStart + 1) ^ ZERO;
+            final int d2 = text.charAt(tailStart + 2) ^ ZERO;
+            final int d3 = text.charAt(tailStart + 3) ^ ZERO;
+            final int d4 = text.charAt(tailStart + 4) ^ ZERO;
+            final int d5 = text.charAt(tailStart + 5) ^ ZERO;
+            final int d6 = text.charAt(tailStart + 6) ^ ZERO;
+            final int d7 = text.charAt(tailStart + 7) ^ ZERO;
+            if (d0 > 9 || d1 > 9 || d2 > 9 || d3 > 9 || d4 > 9 || d5 > 9 || d6 > 9 || d7 > 9)
+            {
+                throw raiseUnexpectedCharacter(text, tailStart);
+            }
+            final int hi = (d0 * 10 + d1) * 100 + (d2 * 10 + d3);
+            final int lo = (d4 * 10 + d5) * 100 + (d6 * 10 + d7);
+            value = value * 100_000_000 + (hi * 10_000L + lo);
+        }
+        else
+        {
+            for (; idx < length; idx++)
+            {
+                final int d = text.charAt(idx) ^ ZERO;
+                if (d > 9)
+                {
+                    throw raiseUnexpectedCharacter(text, idx, text.charAt(idx));
+                }
+                value = value * 10 + d;
+            }
+        }
+        return negative ? -value : value;
+    }
+
+    /**
+     * The straight-line block found a non-digit somewhere in its eight characters; find which for the message
+     */
+    private static DateTimeParseException raiseUnexpectedCharacter(final String text, final int from)
+    {
+        for (int idx = from; idx < text.length(); idx++)
         {
             final char c = text.charAt(idx);
             if (c < ZERO || c > DIGIT_9)
             {
-                throw raiseUnexpectedCharacter(text, idx, c);
+                return raiseUnexpectedCharacter(text, idx, c);
             }
-            if (idx - (negative ? 1 : 0) >= MAX_DIGITS)
-            {
-                throw raiseOutOfRange(text);
-            }
-            value = value * 10 + (c - ZERO);
         }
-        return negative ? -value : value;
+        throw new IllegalStateException("No non-digit found: " + text);
     }
 
     /**
