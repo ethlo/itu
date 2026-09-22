@@ -23,6 +23,7 @@ package com.ethlo.time.internal.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
@@ -42,15 +43,15 @@ class DigitWriterTest
         {
             LimitedCharArrayIntegerUtil.write2(buf, 1, v);
             LimitedCharArrayIntegerUtil.write2(bytes, 1, v);
-            assertThat(new String(buf, 1, 2)).isEqualTo(String.format("%02d", v));
-            assertThat(new String(bytes, 1, 2, StandardCharsets.ISO_8859_1)).isEqualTo(String.format("%02d", v));
+            assertThat(new String(buf, 1, 2)).isEqualTo(String.format(Locale.ROOT, "%02d", v));
+            assertThat(new String(bytes, 1, 2, StandardCharsets.ISO_8859_1)).isEqualTo(String.format(Locale.ROOT, "%02d", v));
         }
         for (int v = 0; v < 10_000; v++)
         {
             LimitedCharArrayIntegerUtil.write4(buf, 0, v);
             LimitedCharArrayIntegerUtil.write4(bytes, 0, v);
-            assertThat(new String(buf, 0, 4)).isEqualTo(String.format("%04d", v));
-            assertThat(new String(bytes, 0, 4, StandardCharsets.ISO_8859_1)).isEqualTo(String.format("%04d", v));
+            assertThat(new String(buf, 0, 4)).isEqualTo(String.format(Locale.ROOT, "%04d", v));
+            assertThat(new String(bytes, 0, 4, StandardCharsets.ISO_8859_1)).isEqualTo(String.format(Locale.ROOT, "%04d", v));
         }
     }
 

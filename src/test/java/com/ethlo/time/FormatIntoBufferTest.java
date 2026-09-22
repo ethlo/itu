@@ -30,6 +30,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
@@ -108,8 +109,8 @@ class FormatIntoBufferTest
     private static String render(final OffsetDateTime dateTime)
     {
         final int total = dateTime.getOffset().getTotalSeconds();
-        final String tz = total == 0 ? "Z" : String.format("%s%02d:%02d", total < 0 ? "-" : "+", Math.abs(total) / 3600, Math.abs(total) / 60 % 60);
-        return String.format("%04d-%02d-%02dT%02d:%02d:%02d.%09d%s", dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond(), dateTime.getNano(), tz);
+        final String tz = total == 0 ? "Z" : String.format(Locale.ROOT, "%s%02d:%02d", total < 0 ? "-" : "+", Math.abs(total) / 3600, Math.abs(total) / 60 % 60);
+        return String.format(Locale.ROOT, "%04d-%02d-%02dT%02d:%02d:%02d.%09d%s", dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond(), dateTime.getNano(), tz);
     }
 
     @Test

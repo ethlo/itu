@@ -110,7 +110,7 @@ public class ITUFormatter
     private static void check(final int fractionDigits, final int capacity, final int offset, final int totalSeconds)
     {
         assertFractionDigits(fractionDigits);
-        if (offset < 0 || offset + MAX_LENGTH > capacity)
+        if (offset < 0 || offset > capacity - MAX_LENGTH)
         {
             throw new IndexOutOfBoundsException("The buffer must have room for " + MAX_LENGTH + " characters from offset " + offset + ", has " + (capacity - offset));
         }

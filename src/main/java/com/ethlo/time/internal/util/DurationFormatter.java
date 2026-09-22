@@ -78,7 +78,7 @@ public class DurationFormatter
     private static void check(final DurationUnit maxUnit, final int capacity, final int offset)
     {
         Objects.requireNonNull(maxUnit, "maxUnit cannot be null");
-        if (offset < 0 || offset + MAX_LENGTH > capacity)
+        if (offset < 0 || offset > capacity - MAX_LENGTH)
         {
             throw new IndexOutOfBoundsException("The buffer must have room for " + MAX_LENGTH + " characters from offset " + offset + ", has " + (capacity - offset));
         }
