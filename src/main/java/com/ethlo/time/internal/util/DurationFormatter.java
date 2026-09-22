@@ -63,6 +63,7 @@ public class DurationFormatter
 
     public static String normalizeDuration(final Duration duration, final DurationUnit maxUnit)
     {
+        Objects.requireNonNull(maxUnit, "maxUnit cannot be null");
         if (duration.getSeconds() == 0 && duration.getNanos() == 0)
         {
             return "PT0S";
