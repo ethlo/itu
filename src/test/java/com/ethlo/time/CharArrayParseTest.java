@@ -320,7 +320,7 @@ public class CharArrayParseTest
     {
         final char[] chars = VALID.toCharArray();
         final MutableDateTimeBuffer buffer = new MutableDateTimeBuffer();
-        assertThrows(NullPointerException.class, () -> ITU.parseLenient(null, 0, 4, buffer));
+        assertThrows(NullPointerException.class, () -> ITU.parseLenient((char[]) null, 0, 4, buffer));
         assertThrows(NullPointerException.class, () -> ITU.parseLenient(chars, 0, chars.length, null));
         assertThrows(IndexOutOfBoundsException.class, () -> ITU.parseLenient(chars, -1, 4, buffer));
         assertThrows(IndexOutOfBoundsException.class, () -> ITU.parseLenient(chars, 0, -1, buffer));

@@ -23,6 +23,7 @@ package com.ethlo.time;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
+import java.nio.charset.StandardCharsets;
 import java.time.DateTimeException;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
@@ -55,6 +56,58 @@ public final class CharArrayDifferential
         // The window is embedded in an array with a sentinel on each side
         final String padded = JUNK_BEFORE + input + JUNK_AFTER;
         assertSameAsStringPath(input, padded.toCharArray(), JUNK_BEFORE.length(), input.length(), config);
+
+        // The byte[] path over the same two windows. The bytes are the ISO-8859-1 form, so a corpus input with a
+        // non-ASCII character (the error cases have some) is one byte per char and must be reported identically
+        assertSameAsBytePath(input, input.getBytes(StandardCharsets.ISO_8859_1), 0, input.length(), config);
+        assertSameAsBytePath(input, padded.getBytes(StandardCharsets.ISO_8859_1), JUNK_BEFORE.length(), input.length(), config);
+    }
+
+    private static void assertSameAsBytePath(final String input, final byte[] bytes, final int offset, final int length, final ParseConfig config)
+    {
+        final byte[] snapshot = bytes.clone();
+        final char[] chars = new String(bytes, StandardCharsets.ISO_8859_1).toCharArray();
+        final MutableDateTimeBuffer expected = new MutableDateTimeBuffer();
+        final MutableDateTimeBuffer actual = new MutableDateTimeBuffer();
+        final Object charOutcome = charArrayPath(chars, offset, length, config, expected);
+        final Object byteOutcome = byteArrayPath(bytes, offset, length, config, actual);
+        assertThat(bytes).overridingErrorMessage("Input array must not be modified: %s", input).isEqualTo(snapshot);
+        if (charOutcome instanceof Integer)
+        {
+            assertThat(byteOutcome).overridingErrorMessage("char[] path parsed '%s', byte[] path gave %s", input, byteOutcome).isEqualTo(charOutcome);
+            assertThat(actual.toString()).isEqualTo(expected.toString());
+            assertThat(actual.getParseLength()).isEqualTo(expected.getParseLength());
+            assertThat(actual.getFractionDigits()).isEqualTo(expected.getFractionDigits());
+            assertThat(actual.hasOffset()).isEqualTo(expected.hasOffset());
+        }
+        else
+        {
+            if (!(byteOutcome instanceof Throwable))
+            {
+                fail("char[] path failed on '%s' with %s, but byte[] path succeeded with %s", input, charOutcome, actual);
+            }
+            final Throwable e = (Throwable) charOutcome;
+            final Throwable a = (Throwable) byteOutcome;
+            assertThat(a).overridingErrorMessage("Different exception for '%s': char[] path %s, byte[] path %s", input, e, a)
+                    .isInstanceOf(e.getClass())
+                    .hasMessage(e.getMessage());
+            if (e instanceof DateTimeParseException)
+            {
+                assertThat(((DateTimeParseException) a).getErrorIndex()).isEqualTo(((DateTimeParseException) e).getErrorIndex());
+            }
+        }
+    }
+
+    private static Object byteArrayPath(final byte[] bytes, final int offset, final int length, final ParseConfig config, final MutableDateTimeBuffer buffer)
+    {
+        try
+        {
+            return ITU.parseLenient(bytes, offset, length, config, buffer);
+        }
+        catch (DateTimeException exc)
+        {
+            return exc;
+        }
     }
 
     private static void assertSameAsStringPath(final String input, final char[] chars, final int offset, final int length, final ParseConfig config)

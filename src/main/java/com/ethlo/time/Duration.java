@@ -34,6 +34,11 @@ public class Duration implements Comparable<Duration>
 {
     public static final Duration ZERO = new Duration(0, 0);
 
+    /**
+     * The most characters {@link #normalized(char[], int)} can write
+     */
+    public static final int MAX_NORMALIZED_LENGTH = DurationFormatter.MAX_LENGTH;
+
     public static final int NANOS_PER_SECOND = 1_000_000_000;
     public static final long SECONDS_PER_MINUTE = 60;
     public static final long SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
@@ -207,6 +212,46 @@ public class Duration implements Comparable<Duration>
     public String normalized(final DurationUnit maxUnit)
     {
         return DurationFormatter.normalizeDuration(this, maxUnit);
+    }
+
+    /**
+     * Writes {@link #normalized()} into {@code dst} from {@code offset}, allocating nothing. The buffer must have
+     * room for {@link #MAX_NORMALIZED_LENGTH} characters from {@code offset}; that window is the writer's scratch,
+     * and the first {@code length} characters of it are the result. Nothing outside the window is touched.
+     *
+     * @param dst    The buffer to write into
+     * @param offset The index to write from
+     * @return The number of characters written
+     * @throws IndexOutOfBoundsException if the buffer cannot hold the longest possible output from {@code offset}
+     */
+    public int normalized(final char[] dst, final int offset)
+    {
+        return DurationFormatter.write(this, DurationUnit.WEEKS, dst, offset);
+    }
+
+    /**
+     * {@link #normalized(char[], int)} with the largest unit capped, as {@link #normalized(DurationUnit)}.
+     */
+    public int normalized(final DurationUnit maxUnit, final char[] dst, final int offset)
+    {
+        return DurationFormatter.write(this, maxUnit, dst, offset);
+    }
+
+    /**
+     * {@link #normalized(char[], int)} into a {@code byte[]}; the output is ASCII, so the bytes are the text in
+     * any ASCII-compatible encoding.
+     */
+    public int normalized(final byte[] dst, final int offset)
+    {
+        return DurationFormatter.write(this, DurationUnit.WEEKS, dst, offset);
+    }
+
+    /**
+     * {@link #normalized(byte[], int)} with the largest unit capped, as {@link #normalized(DurationUnit)}.
+     */
+    public int normalized(final DurationUnit maxUnit, final byte[] dst, final int offset)
+    {
+        return DurationFormatter.write(this, maxUnit, dst, offset);
     }
 
     /**

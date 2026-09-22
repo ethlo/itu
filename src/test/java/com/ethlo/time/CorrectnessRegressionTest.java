@@ -227,6 +227,30 @@ class CorrectnessRegressionTest
             final OffsetDateTime offsetDateTime = OffsetDateTime.of(year, 1, 2, 3, 4, 5, 0, ZoneOffset.UTC);
             assertThat(ITU.formatUtc(offsetDateTime)).isEqualTo(String.format(Locale.ROOT, "%04d-01-02T03:04:05Z", year));
         }
+
+        /**
+         * The offset-adjusting path used the library's own calendar arithmetic, whose int math wraps for years
+         * far beyond 9999, so that for example year 11759222 was rendered as year 0000 instead of being rejected
+         */
+        @ParameterizedTest
+        @ValueSource(ints = {11759222, 11759231, 999999999, -999999999})
+        void rejectsUnrepresentableYearWhenAdjustingOffset(int year)
+        {
+            final OffsetDateTime offsetDateTime = OffsetDateTime.of(year, 1, 2, 3, 4, 5, 0, ZoneOffset.ofHours(1));
+            assertThatThrownBy(() -> ITU.formatUtc(offsetDateTime))
+                    .isInstanceOf(DateTimeFormatException.class)
+                    .hasMessageContaining("The year must be in the range 0 to 9999");
+        }
+
+        /**
+         * An offset adjustment can move a year just outside 0000-9999 back into range
+         */
+        @Test
+        void acceptsBoundaryCrossingYear()
+        {
+            assertThat(ITU.formatUtc(OffsetDateTime.of(10000, 1, 1, 0, 0, 0, 0, ZoneOffset.ofHours(18)))).isEqualTo("9999-12-31T06:00:00Z");
+            assertThat(ITU.formatUtc(OffsetDateTime.of(-1, 12, 31, 23, 0, 0, 0, ZoneOffset.ofHours(-1)))).isEqualTo("0000-01-01T00:00:00Z");
+        }
     }
 
     @Nested

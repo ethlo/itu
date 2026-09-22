@@ -22,6 +22,7 @@ package samples.formatting;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -65,6 +66,24 @@ class ITUFormattingSamples
         assertThat(ITU.format(input, 9)).isEqualTo("2012-12-27T19:07:22.123456789-03:00");
         assertThat(ITU.formatUtc(input, 6)).isEqualTo("2012-12-27T22:07:22.123456Z");
         assertThat(ITU.formatUtc(input, Field.MINUTE)).isEqualTo("2012-12-27T22:07Z");
+    }
+
+    /*
+    When the text is going into a buffer anyway - a socket, a file, a JSON generator - format straight into it and
+    allocate nothing. The buffer needs room for `ITU.MAX_FORMAT_LENGTH` characters from the offset; the result is
+    the first `length` of them. There are `char[]` and `byte[]` variants, and the output is ASCII, so the bytes are
+    the text in UTF-8 or any other ASCII-compatible encoding.
+     */
+    @Test
+    void formatIntoBuffer()
+    {
+        final OffsetDateTime input = OffsetDateTime.of(2012, 12, 27, 19, 7, 22, 123456789, ZoneOffset.ofHoursMinutes(-3, 0));
+        final byte[] bytes = new byte[ITU.MAX_FORMAT_LENGTH];
+        final int length = ITU.formatUtc(input, 3, bytes, 0);
+        assertThat(new String(bytes, 0, length, StandardCharsets.US_ASCII)).isEqualTo("2012-12-27T22:07:22.123Z");
+
+        final char[] chars = new char[ITU.MAX_FORMAT_LENGTH];
+        assertThat(new String(chars, 0, ITU.format(input, 0, chars, 0))).isEqualTo("2012-12-27T19:07:22-03:00");
     }
 
     /*

@@ -20,6 +20,8 @@ package com.ethlo.time.internal.util;
  * #L%
  */
 
+import java.nio.charset.StandardCharsets;
+
 import com.ethlo.time.internal.DateTimeFormatException;
 
 public final class LimitedCharArrayIntegerUtil
@@ -132,6 +134,64 @@ public final class LimitedCharArrayIntegerUtil
      * path re-parses the window as a String so the error message and index are identical to the String path,
      * with the index relative to {@code windowStart}.
      */
+    /**
+     * {@link #parse2(char[], int, int, int)} over bytes read as ISO-8859-1. The {@code & 0xFF} is not optional:
+     * a byte is signed, and without it a non-ASCII byte XORed with '0' is negative and passes {@code <= 9}.
+     */
+    public static int parse2(final byte[] s, final int start, final int windowStart, final int windowEnd)
+    {
+        if (start + 2 <= windowEnd)
+        {
+            final int d0 = (s[start] & 0xFF) ^ ZERO;
+            final int d1 = (s[start + 1] & 0xFF) ^ ZERO;
+            if (d0 <= 9 && d1 <= 9)
+            {
+                return d0 * 10 + d1;
+            }
+        }
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart, StandardCharsets.ISO_8859_1), start - windowStart, start - windowStart + 2);
+    }
+
+    public static int parse4(final byte[] s, final int start, final int windowStart, final int windowEnd)
+    {
+        if (start + 4 <= windowEnd)
+        {
+            final int d0 = (s[start] & 0xFF) ^ ZERO;
+            final int d1 = (s[start + 1] & 0xFF) ^ ZERO;
+            final int d2 = (s[start + 2] & 0xFF) ^ ZERO;
+            final int d3 = (s[start + 3] & 0xFF) ^ ZERO;
+            if (d0 <= 9 && d1 <= 9 && d2 <= 9 && d3 <= 9)
+            {
+                return d0 * 1000 + d1 * 100 + d2 * 10 + d3;
+            }
+        }
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart, StandardCharsets.ISO_8859_1), start - windowStart, start - windowStart + 4);
+    }
+
+    public static int parse2In(final byte[] s, final int base, final int rel, final int windowStart, final int windowEnd)
+    {
+        final int d0 = (s[base + rel] & 0xFF) ^ ZERO;
+        final int d1 = (s[base + rel + 1] & 0xFF) ^ ZERO;
+        if (d0 <= 9 && d1 <= 9)
+        {
+            return d0 * 10 + d1;
+        }
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart, StandardCharsets.ISO_8859_1), base + rel - windowStart, base + rel - windowStart + 2);
+    }
+
+    public static int parse4In(final byte[] s, final int base, final int rel, final int windowStart, final int windowEnd)
+    {
+        final int d0 = (s[base + rel] & 0xFF) ^ ZERO;
+        final int d1 = (s[base + rel + 1] & 0xFF) ^ ZERO;
+        final int d2 = (s[base + rel + 2] & 0xFF) ^ ZERO;
+        final int d3 = (s[base + rel + 3] & 0xFF) ^ ZERO;
+        if (d0 <= 9 && d1 <= 9 && d2 <= 9 && d3 <= 9)
+        {
+            return d0 * 1000 + d1 * 100 + d2 * 10 + d3;
+        }
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart, StandardCharsets.ISO_8859_1), base + rel - windowStart, base + rel - windowStart + 4);
+    }
+
     public static int parse2(final char[] s, final int start, final int windowStart, final int windowEnd)
     {
         if (start + 2 <= windowEnd)
@@ -278,6 +338,169 @@ public final class LimitedCharArrayIntegerUtil
      * @param fractionDigits The number of fraction digits to keep, 1 - 9
      * @return The scaled value, which is guaranteed to fit in <code>fractionDigits</code> digits
      */
+    /**
+     * "00".."99" as consecutive pairs, so a two-digit field is two loads and two stores with no division and no
+     * call. {@link #toString(int, char[], int, int)} copies from the four-digit table with
+     * {@code System.arraycopy}, which for two characters is call overhead rather than a copy (perf-log S10.1).
+     */
+    private static final int PAIR_MASK = 0xFF;
+    /**
+     * Sized to the mask, not to 100 entries: with the index masked to [0, 255] C2 can prove both loads in range
+     * and drops the two bounds checks per pair that a 200-entry table costs (perf-log S10.5)
+     */
+    private static final char[] PAIRS = new char[(PAIR_MASK + 1) << 1];
+
+    static
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            PAIRS[i << 1] = (char) ('0' + i / 10);
+            PAIRS[(i << 1) + 1] = (char) ('0' + i % 10);
+        }
+    }
+
+    /**
+     * Writes a value in [0, 99] as two digits. The caller guarantees the range; a calendar field read from
+     * {@code java.time} is in it by construction.
+     */
+    public static void write2(final char[] buf, final int offset, final int value)
+    {
+        final int index = (value & PAIR_MASK) << 1;
+        buf[offset] = PAIRS[index];
+        buf[offset + 1] = PAIRS[index + 1];
+    }
+
+    /**
+     * Writes a value in [0, 9999] as four digits: two pairs, one division.
+     */
+    public static void write4(final char[] buf, final int offset, final int value)
+    {
+        final int hi = value / 100;
+        write2(buf, offset, hi);
+        write2(buf, offset + 2, value - hi * 100);
+    }
+
+    /**
+     * Writes a value in [0, 999] as three digits: one digit and a pair.
+     */
+    private static void write3(final char[] buf, final int offset, final int value)
+    {
+        final int hi = value / 100;
+        buf[offset] = (char) ('0' + hi);
+        write2(buf, offset + 1, value - hi * 100);
+    }
+
+    private static final byte[] PAIRS_BYTES = new byte[PAIRS.length];
+
+    static
+    {
+        for (int i = 0; i < PAIRS.length; i++)
+        {
+            PAIRS_BYTES[i] = (byte) PAIRS[i];
+        }
+    }
+
+    /**
+     * {@link #write2(char[], int, int)} into a Latin-1 {@code byte[]}, for formatting straight into a byte
+     * destination. Not for a {@code String} result: {@code String(char[], int, int)} compresses with a SIMD
+     * intrinsic and beats the {@code Charset} constructor over a {@code byte[]} (perf-log S10.2).
+     */
+    public static void write2(final byte[] buf, final int offset, final int value)
+    {
+        final int index = (value & PAIR_MASK) << 1;
+        buf[offset] = PAIRS_BYTES[index];
+        buf[offset + 1] = PAIRS_BYTES[index + 1];
+    }
+
+    public static void write4(final byte[] buf, final int offset, final int value)
+    {
+        final int hi = value / 100;
+        write2(buf, offset, hi);
+        write2(buf, offset + 2, value - hi * 100);
+    }
+
+    private static void write3(final byte[] buf, final int offset, final int value)
+    {
+        final int hi = value / 100;
+        buf[offset] = (byte) ('0' + hi);
+        write2(buf, offset + 1, value - hi * 100);
+    }
+
+    /**
+     * {@link #writeFraction(char[], int, int, int)} into a Latin-1 {@code byte[]}.
+     */
+    public static void writeFraction(final byte[] buf, final int offset, final int nano, final int fractionDigits)
+    {
+        switch (fractionDigits)
+        {
+            case 3:
+                write3(buf, offset, nano / 1_000_000);
+                return;
+            case 6:
+            {
+                final int micros = nano / 1_000;
+                final int millis = micros / 1_000;
+                write3(buf, offset, millis);
+                write3(buf, offset + 3, micros - millis * 1_000);
+                return;
+            }
+            case 9:
+            {
+                final int millis = nano / 1_000_000;
+                final int rest = nano - millis * 1_000_000;
+                final int micros = rest / 1_000;
+                write3(buf, offset, millis);
+                write3(buf, offset + 3, micros);
+                write3(buf, offset + 6, rest - micros * 1_000);
+                return;
+            }
+            default:
+            {
+                int value = scaleNanos(nano, fractionDigits);
+                for (int i = offset + fractionDigits - 1; i >= offset; i--)
+                {
+                    buf[i] = (byte) ('0' + value % RADIX);
+                    value /= RADIX;
+                }
+            }
+        }
+    }
+
+    /**
+     * Writes the first {@code fractionDigits} digits of a nanosecond value, in [0, 999 999 999], truncating the
+     * rest. Three, six and nine digits are written as groups of three with one division each; any other count
+     * goes through the general path.
+     */
+    public static void writeFraction(final char[] buf, final int offset, final int nano, final int fractionDigits)
+    {
+        switch (fractionDigits)
+        {
+            case 3:
+                write3(buf, offset, nano / 1_000_000);
+                return;
+            case 6:
+            {
+                final int micros = nano / 1_000;
+                final int millis = micros / 1_000;
+                write3(buf, offset, millis);
+                write3(buf, offset + 3, micros - millis * 1_000);
+                return;
+            }
+            case 9:
+            {
+                final int millis = nano / 1_000_000;
+                final int rest = nano - millis * 1_000_000;
+                final int micros = rest / 1_000;
+                write3(buf, offset, millis);
+                write3(buf, offset + 3, micros);
+                write3(buf, offset + 6, rest - micros * 1_000);
+                return;
+            }
+            default:
+                toString(scaleNanos(nano, fractionDigits), buf, offset, fractionDigits);
+        }
+    }
+
     public static int scaleNanos(final int nano, final int fractionDigits)
     {
         return nano / POW10[MAX_WIDTH - fractionDigits];

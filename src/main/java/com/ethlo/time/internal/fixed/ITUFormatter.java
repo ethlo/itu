@@ -29,126 +29,316 @@ import static com.ethlo.time.internal.fixed.ITUParser.SEPARATOR_UPPER;
 import static com.ethlo.time.internal.fixed.ITUParser.TIME_SEPARATOR;
 import static com.ethlo.time.internal.fixed.ITUParser.ZULU_UPPER;
 
+import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
+import com.ethlo.time.internal.DateTimeFormatException;
 import com.ethlo.time.Field;
 import com.ethlo.time.TimezoneOffset;
-import com.ethlo.time.internal.DateTimeFormatException;
+import com.ethlo.time.internal.util.DateTimeMath;
 import com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil;
 
+/**
+ * RFC-3339 formatting of an {@link OffsetDateTime}. One writer into a {@code char[]} and its mirror into a
+ * {@code byte[]} (Latin-1; the output is ASCII); the {@code String} methods allocate a scratch {@code char[]},
+ * run the writer, and wrap it. Every field comes from {@code java.time} and is in range by construction, so the
+ * digits are written unchecked from a pair table (perf-log S10.1).
+ * <p>
+ * The two writers are kept line for line in step; {@code FormatterTest} runs them differentially.
+ */
 public class ITUFormatter
 {
     public static final int MIN_YEAR = 0;
     public static final int MAX_YEAR = 9999;
+
+    /**
+     * The longest output: 19 for the date-time, 1 + 9 for the fraction, 6 for a {@code ±HH:MM} offset
+     */
+    public static final int MAX_LENGTH = 35;
+
+    private ITUFormatter()
+    {
+    }
 
     public static String finish(final char[] buf, final int length, final TimezoneOffset tz)
     {
         int tzLen = 0;
         if (tz != null)
         {
-            tzLen = writeTz(buf, length, tz);
+            tzLen = writeTz(buf, length, tz.getTotalSeconds());
         }
+        // char[] on purpose: String(char[], int, int) compresses to Latin-1 with a SIMD intrinsic, which for 20-35
+        // chars is cheaper than the Charset constructor over a byte[] (perf-log S10.2, dead end)
         return new String(buf, 0, length + tzLen);
     }
 
-    private static int writeTz(final char[] buf, final int start, final TimezoneOffset tz)
+    public static String formatUtc(final OffsetDateTime date, final int fractionDigits)
     {
-        if (tz.equals(TimezoneOffset.UTC))
+        return toString(date, ZoneOffset.UTC, Field.SECOND, fractionDigits);
+    }
+
+    public static String formatUtc(final OffsetDateTime date, final Field lastIncluded)
+    {
+        return toString(date, ZoneOffset.UTC, lastIncluded, 0);
+    }
+
+    public static String format(final OffsetDateTime date, final ZoneOffset adjustTo, final int fractionDigits)
+    {
+        return toString(date, adjustTo, Field.NANO, fractionDigits);
+    }
+
+    private static String toString(final OffsetDateTime date, final ZoneOffset adjustTo, final Field lastIncluded, final int fractionDigits)
+    {
+        final char[] buffer = new char[MAX_LENGTH];
+        final int length;
+        switch (lastIncluded)
+        {
+            case YEAR:
+            case MONTH:
+            case DAY:
+            case MINUTE:
+                length = writeUpTo(date, adjustTo, lastIncluded, buffer);
+                break;
+            default:
+                // HOUR has always rendered the full time, as SECOND does
+                length = write(date, adjustTo, fractionDigits, buffer, 0);
+        }
+        return new String(buffer, 0, length);
+    }
+
+    private static void check(final int fractionDigits, final int capacity, final int offset, final int totalSeconds)
+    {
+        assertFractionDigits(fractionDigits);
+        if (offset < 0 || offset > capacity - MAX_LENGTH)
+        {
+            throw new IndexOutOfBoundsException("The buffer must have room for " + MAX_LENGTH + " characters from offset " + offset + ", has " + (capacity - offset));
+        }
+        if (totalSeconds != 0 && totalSeconds % 60 != 0)
+        {
+            // RFC-3339 has ±HH:MM only; truncating would shift the instant by up to 59 seconds (CorrectnessRegressionTest)
+            throw new DateTimeException("Zone offset must be a whole number of minutes to be representable: " + totalSeconds + " seconds");
+        }
+    }
+
+    private static OffsetDateTime prepare(final OffsetDateTime date, final ZoneOffset adjustTo, final int fractionDigits, final int capacity, final int offset)
+    {
+        check(fractionDigits, capacity, offset, adjustTo.getTotalSeconds());
+        final OffsetDateTime adjusted = date.getOffset().equals(adjustTo) ? date : date.atZoneSameInstant(adjustTo).toOffsetDateTime();
+        assertYearRange(adjusted.getYear());
+        return adjusted;
+    }
+
+    /**
+     * The day count that {@code DateTimeMath.civilFromDaysSince0000} covers: 0000-01-01 to 9999-12-31
+     */
+    private static final int MAX_DAYS_SINCE_0000 = (int) (DateTimeMath.daysFromCivil(9999, 12, 31) + DateTimeMath.DAYS_0000_TO_1970);
+
+    /**
+     * Writes the date-time in the given offset into {@code dst} from {@code offset}, with the time down to the
+     * second, a fraction of {@code fractionDigits} digits when that is above zero, and the offset as {@code Z} or
+     * {@code ±HH:MM}. {@code [offset, offset + MAX_LENGTH)} is the writer's window; nothing outside it is touched.
+     * <p>
+     * When the input is already in the target offset its fields are written as they are. Otherwise the instant is
+     * moved with the library's own calendar arithmetic (perf-log S10.6): {@code atZoneSameInstant} built five
+     * {@code java.time} objects and ran the JDK's conversion, at 250-300 instructions.
+     *
+     * @return the number of characters written, at most {@link #MAX_LENGTH}
+     * @throws IndexOutOfBoundsException if the buffer cannot hold the longest possible output from {@code offset}
+     */
+    public static int write(final OffsetDateTime date, final ZoneOffset adjustTo, final int fractionDigits, final char[] dst, final int offset)
+    {
+        final int tz = adjustTo.getTotalSeconds();
+        check(fractionDigits, dst.length, offset, tz);
+        final int from = date.getOffset().getTotalSeconds();
+        if (from == tz)
+        {
+            assertYearRange(date.getYear());
+            return writeFields(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), date.getHour(), date.getMinute(), date.getSecond(), date.getNano(), tz, fractionDigits, dst, offset);
+        }
+        final OffsetDateTime outOfDomain = adjustOutOfDomain(date, adjustTo);
+        if (outOfDomain != null)
+        {
+            return writeFields(outOfDomain.getYear(), outOfDomain.getMonthValue(), outOfDomain.getDayOfMonth(), outOfDomain.getHour(), outOfDomain.getMinute(), outOfDomain.getSecond(), outOfDomain.getNano(), tz, fractionDigits, dst, offset);
+        }
+        final long localSecond = date.getHour() * 3_600L + date.getMinute() * 60L + date.getSecond() + tz - from;
+        final long localDay = Math.floorDiv(localSecond, 86_400L);
+        final int secondOfDay = (int) (localSecond - localDay * 86_400L);
+        final long daysSince0000 = DateTimeMath.daysFromCivil(date.getYear(), date.getMonthValue(), date.getDayOfMonth()) + DateTimeMath.DAYS_0000_TO_1970 + localDay;
+        if (daysSince0000 < 0 || daysSince0000 > MAX_DAYS_SINCE_0000)
+        {
+            assertYearRange(date.atZoneSameInstant(adjustTo).getYear());
+        }
+        final int civil = DateTimeMath.civilFromDaysSince0000((int) daysSince0000);
+        return writeFields(DateTimeMath.packedYear(civil), DateTimeMath.packedMonth(civil), DateTimeMath.packedDay(civil), DateTimeMath.hourOfDay(secondOfDay), DateTimeMath.minuteOfHour(secondOfDay), DateTimeMath.secondOfMinute(secondOfDay), date.getNano(), tz, fractionDigits, dst, offset);
+    }
+
+    /**
+     * The cold path for a source year outside the domain of {@link DateTimeMath#daysFromCivil}, whose int
+     * arithmetic wraps for years far beyond 9999 and would otherwise land back inside
+     * {@code [0, MAX_DAYS_SINCE_0000]} as an unrelated date. A year one outside 0000-9999 is kept on the fast
+     * path, since an offset adjustment can move -1 or 10000 back into range.
+     *
+     * @return the date in the target offset, converted by {@code java.time}, or {@code null} when the source
+     * year is within the domain
+     */
+    private static OffsetDateTime adjustOutOfDomain(final OffsetDateTime date, final ZoneOffset adjustTo)
+    {
+        final int year = date.getYear();
+        if (year >= MIN_YEAR - 1 && year <= MAX_YEAR + 1)
+        {
+            return null;
+        }
+        final OffsetDateTime adjusted = date.atZoneSameInstant(adjustTo).toOffsetDateTime();
+        assertYearRange(adjusted.getYear());
+        return adjusted;
+    }
+
+    /**
+     * {@link #write(OffsetDateTime, ZoneOffset, int, char[], int)} into a {@code byte[]}. Mirror of the char[]
+     * writer; keep the two in step.
+     */
+    public static int write(final OffsetDateTime date, final ZoneOffset adjustTo, final int fractionDigits, final byte[] dst, final int offset)
+    {
+        final int tz = adjustTo.getTotalSeconds();
+        check(fractionDigits, dst.length, offset, tz);
+        final int from = date.getOffset().getTotalSeconds();
+        if (from == tz)
+        {
+            assertYearRange(date.getYear());
+            return writeFields(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), date.getHour(), date.getMinute(), date.getSecond(), date.getNano(), tz, fractionDigits, dst, offset);
+        }
+        final OffsetDateTime outOfDomain = adjustOutOfDomain(date, adjustTo);
+        if (outOfDomain != null)
+        {
+            return writeFields(outOfDomain.getYear(), outOfDomain.getMonthValue(), outOfDomain.getDayOfMonth(), outOfDomain.getHour(), outOfDomain.getMinute(), outOfDomain.getSecond(), outOfDomain.getNano(), tz, fractionDigits, dst, offset);
+        }
+        final long localSecond = date.getHour() * 3_600L + date.getMinute() * 60L + date.getSecond() + tz - from;
+        final long localDay = Math.floorDiv(localSecond, 86_400L);
+        final int secondOfDay = (int) (localSecond - localDay * 86_400L);
+        final long daysSince0000 = DateTimeMath.daysFromCivil(date.getYear(), date.getMonthValue(), date.getDayOfMonth()) + DateTimeMath.DAYS_0000_TO_1970 + localDay;
+        if (daysSince0000 < 0 || daysSince0000 > MAX_DAYS_SINCE_0000)
+        {
+            assertYearRange(date.atZoneSameInstant(adjustTo).getYear());
+        }
+        final int civil = DateTimeMath.civilFromDaysSince0000((int) daysSince0000);
+        return writeFields(DateTimeMath.packedYear(civil), DateTimeMath.packedMonth(civil), DateTimeMath.packedDay(civil), DateTimeMath.hourOfDay(secondOfDay), DateTimeMath.minuteOfHour(secondOfDay), DateTimeMath.secondOfMinute(secondOfDay), date.getNano(), tz, fractionDigits, dst, offset);
+    }
+
+    /**
+     * The hot writer, kept small on purpose: fields in, no granularity branches, so that it stays under C2's
+     * inlining limits and the caller sees its constants folded (perf-log S10.5)
+     */
+    private static int writeFields(final int year, final int month, final int day, final int hour, final int minute, final int second, final int nano, final int tz, final int fractionDigits, final char[] dst, final int offset)
+    {
+        LimitedCharArrayIntegerUtil.write4(dst, offset, year);
+        dst[offset + 4] = DATE_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(dst, offset + 5, month);
+        dst[offset + 7] = DATE_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(dst, offset + 8, day);
+        dst[offset + 10] = SEPARATOR_UPPER;
+        LimitedCharArrayIntegerUtil.write2(dst, offset + 11, hour);
+        dst[offset + 13] = TIME_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(dst, offset + 14, minute);
+        dst[offset + 16] = TIME_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(dst, offset + 17, second);
+        int end = offset + 19;
+        if (fractionDigits > 0)
+        {
+            dst[end] = FRACTION_SEPARATOR;
+            LimitedCharArrayIntegerUtil.writeFraction(dst, end + 1, nano, fractionDigits);
+            end += 1 + fractionDigits;
+        }
+        return end + writeTz(dst, end, tz) - offset;
+    }
+
+    // Mirror of the char[] writer above; keep the two in step
+    private static int writeFields(final int year, final int month, final int day, final int hour, final int minute, final int second, final int nano, final int tz, final int fractionDigits, final byte[] dst, final int offset)
+    {
+        LimitedCharArrayIntegerUtil.write4(dst, offset, year);
+        dst[offset + 4] = DATE_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(dst, offset + 5, month);
+        dst[offset + 7] = DATE_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(dst, offset + 8, day);
+        dst[offset + 10] = SEPARATOR_UPPER;
+        LimitedCharArrayIntegerUtil.write2(dst, offset + 11, hour);
+        dst[offset + 13] = TIME_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(dst, offset + 14, minute);
+        dst[offset + 16] = TIME_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(dst, offset + 17, second);
+        int end = offset + 19;
+        if (fractionDigits > 0)
+        {
+            dst[end] = FRACTION_SEPARATOR;
+            LimitedCharArrayIntegerUtil.writeFraction(dst, end + 1, nano, fractionDigits);
+            end += 1 + fractionDigits;
+        }
+        return end + writeTz(dst, end, tz) - offset;
+    }
+
+    /**
+     * The granularity-limited form for {@code YEAR}, {@code MONTH}, {@code DAY} and {@code MINUTE}: the cold path
+     * behind {@link #formatUtc(OffsetDateTime, Field)}, kept out of {@link #write} so that the hot writer has no
+     * granularity branches. The other fields go through {@link #write}.
+     */
+    private static int writeUpTo(final OffsetDateTime date, final ZoneOffset adjustTo, final Field lastIncluded, final char[] dst)
+    {
+        final OffsetDateTime adjusted = prepare(date, adjustTo, 0, dst.length, 0);
+        LimitedCharArrayIntegerUtil.write4(dst, 0, adjusted.getYear());
+        if (lastIncluded == Field.YEAR)
+        {
+            return Field.YEAR.getRequiredLength();
+        }
+        dst[4] = DATE_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(dst, 5, adjusted.getMonthValue());
+        if (lastIncluded == Field.MONTH)
+        {
+            return Field.MONTH.getRequiredLength();
+        }
+        dst[7] = DATE_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(dst, 8, adjusted.getDayOfMonth());
+        if (lastIncluded == Field.DAY)
+        {
+            return Field.DAY.getRequiredLength();
+        }
+        dst[10] = SEPARATOR_UPPER;
+        LimitedCharArrayIntegerUtil.write2(dst, 11, adjusted.getHour());
+        dst[13] = TIME_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(dst, 14, adjusted.getMinute());
+        return 16 + writeTz(dst, 16, adjustTo.getTotalSeconds());
+    }
+
+    /**
+     * @return the number of characters written: 1 for {@code Z}, 6 for {@code ±HH:MM}
+     */
+    private static int writeTz(final char[] buf, final int start, final int totalSeconds)
+    {
+        if (totalSeconds == 0)
         {
             buf[start] = ZULU_UPPER;
             return 1;
         }
-        else
-        {
-            buf[start] = tz.getTotalSeconds() < 0 ? MINUS : PLUS;
-            LimitedCharArrayIntegerUtil.toString(Math.abs(tz.getHours()), buf, start + 1, 2);
-            buf[start + 3] = TIME_SEPARATOR;
-            LimitedCharArrayIntegerUtil.toString(Math.abs(tz.getMinutes()), buf, start + 4, 2);
-            return 6;
-        }
+        final int abs = Math.abs(totalSeconds);
+        buf[start] = totalSeconds < 0 ? MINUS : PLUS;
+        LimitedCharArrayIntegerUtil.write2(buf, start + 1, abs / 3600);
+        buf[start + 3] = TIME_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(buf, start + 4, abs / 60 % 60);
+        return 6;
     }
 
-    public static String formatUtc(OffsetDateTime date, int fractionDigits)
+    private static int writeTz(final byte[] buf, final int start, final int totalSeconds)
     {
-        return doFormat(date, ZoneOffset.UTC, Field.SECOND, fractionDigits);
-    }
-
-    public static String formatUtc(OffsetDateTime date, Field lastIncluded)
-    {
-        return doFormat(date, ZoneOffset.UTC, lastIncluded, 0);
-    }
-
-    public static String format(OffsetDateTime date, ZoneOffset adjustTo, final int fractionDigits)
-    {
-        return doFormat(date, adjustTo, Field.NANO, fractionDigits);
-    }
-
-    private static String doFormat(OffsetDateTime date, ZoneOffset adjustTo, Field lastIncluded, int fractionDigits)
-    {
-        assertFractionDigits(fractionDigits);
-
-        OffsetDateTime adjusted = date;
-        if (!date.getOffset().equals(adjustTo))
+        if (totalSeconds == 0)
         {
-            adjusted = date.atZoneSameInstant(adjustTo).toOffsetDateTime();
+            buf[start] = ZULU_UPPER;
+            return 1;
         }
-        final TimezoneOffset tz = TimezoneOffset.of(adjustTo);
-
-        final char[] buffer = new char[26 + fractionDigits];
-
-        assertYearRange(adjusted.getYear());
-
-        if (handleDatePart(lastIncluded, buffer, adjusted.getYear(), 0, 4, Field.YEAR))
-        {
-            return finish(buffer, Field.YEAR.getRequiredLength(), null);
-        }
-
-        buffer[4] = DATE_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, adjusted.getMonthValue(), 5, 2, Field.MONTH))
-        {
-            return finish(buffer, Field.MONTH.getRequiredLength(), null);
-        }
-
-        buffer[7] = DATE_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, adjusted.getDayOfMonth(), 8, 2, Field.DAY))
-        {
-            return finish(buffer, Field.DAY.getRequiredLength(), null);
-        }
-
-        // T separator
-        buffer[10] = SEPARATOR_UPPER;
-
-        // Time
-        LimitedCharArrayIntegerUtil.toString(adjusted.getHour(), buffer, 11, 2);
-        buffer[13] = TIME_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, adjusted.getMinute(), 14, 2, Field.MINUTE))
-        {
-            return finish(buffer, Field.MINUTE.getRequiredLength(), tz);
-        }
-        buffer[16] = TIME_SEPARATOR;
-        LimitedCharArrayIntegerUtil.toString(adjusted.getSecond(), buffer, 17, 2);
-
-        // Second fractions
-        final boolean hasFractionDigits = fractionDigits > 0;
-        if (hasFractionDigits)
-        {
-            buffer[19] = FRACTION_SEPARATOR;
-            addFractions(buffer, fractionDigits, adjusted.getNano());
-            return finish(buffer, 20 + fractionDigits, tz);
-        }
-        return finish(buffer, 19, tz);
-    }
-
-    private static boolean handleDatePart(final Field lastIncluded, final char[] buffer, final int value, final int offset, final int length, final Field field)
-    {
-        LimitedCharArrayIntegerUtil.toString(value, buffer, offset, length);
-        return lastIncluded == field;
-    }
-
-    private static void addFractions(char[] buf, int fractionDigits, int nano)
-    {
-        LimitedCharArrayIntegerUtil.toString(LimitedCharArrayIntegerUtil.scaleNanos(nano, fractionDigits), buf, 20, fractionDigits);
+        final int abs = Math.abs(totalSeconds);
+        buf[start] = (byte) (totalSeconds < 0 ? MINUS : PLUS);
+        LimitedCharArrayIntegerUtil.write2(buf, start + 1, abs / 3600);
+        buf[start + 3] = TIME_SEPARATOR;
+        LimitedCharArrayIntegerUtil.write2(buf, start + 4, abs / 60 % 60);
+        return 6;
     }
 
     /**
