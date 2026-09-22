@@ -493,6 +493,28 @@ are a feature after the rows, not a row.
 | S10.5 | 2026-09-22 | H36 | The feature and its consequences: `formatUtc`/`format` and `Duration.normalized` into a caller's `char[]`/`byte[]` (the String methods allocate a scratch `char[]` and wrap the same writer). Three things measured together because they are one shape: (1) the hot date-time writer has no granularity branches (`Field` early returns are a cold `writeUpTo`), so it inlines deterministically instead of by compile order — "already compiled into a big method" was worth 9.3 vs 6.7 ns on the same row; (2) the pair table is 256 entries and the index is masked, so C2 elides the two bounds checks per pair (16 per date-time); (3) the duration writer is split at the output so both halves are under `FreqInlineSize` (at 447 bytecodes it was "hot method too big" and became a call: +43 / +81 instr). String rows: | 269 / 13.8 | 290 / 14.9 | 384 / 17.6 | 286 / 13.7 | 463 / 22.8 | KEPT (−28% / −25% / −19% instr vs S10.4; branches 57 / 60 / 76 → 34 / 28 / 40) | |
 | S10.5b | 2026-09-22 | —  | The new `byte[]` rows (`ItuBufferFormatBenchmark`, same inputs): formatSeconds 98.5 instr / 7 br / **4.9 ns**, formatMillis 124 / 7 / **5.7**, formatNanos 173 / 7 / **8.3**, duration short 138 / 24 / **8.0**, long 355 / 43 / **17.8** | | | | | | (reference rows) | |
 | S10.6 | 2026-09-22 | H37 | Offset conversion without `java.time`: when the input's offset differs from the target, epoch seconds via `daysFromCivil` (one division), `floorDiv` by 86 400, then `civilFromDaysSince0000` and the time-of-day accessors, fed to a field-based `writeFields`; `atZoneSameInstant(...).toOffsetDateTime()` built five objects and ran the JDK's conversion. `FormatBenchmark` gains a second input, the same instant at `+06:00` (this row: the `+06:00` input; the UTC input is unchanged within noise). String: 527 / 29.2 → 390 / 26.1 · 549 / 30.5 → 423 / 25.8 · 650 / 35.0 → 519 / 28.1. `byte[]`: 390 / 23.0 → 213 / 13.8 · 424 / 27.9 → 254 / 18.1 · 482 / 29.2 → 292 / 19.3 | 265 / 15.5 | 282 / 15.0 | 279 / 33.4 (one noisy run, 0.1 misses) | — | — | KEPT (−130 / −170 instr on offset input; held to java.time over 500 random offsets) | |
+| S10.t | 2026-09-22 | —   | **`--thorough` pair on an idle machine**: 1.16.0 code from a worktree at the merge base (`20260922-101253-…-s10-ref2`) against the branch (`…-100055-…-s10-final`). String rows, UTC input: 16.2 ±0.4 / 19.3 ±0.8 / 33.8 ±0.7 → **13.9 ±0.3 / 14.8 ±0.5 / 18.0 ±0.5** (seconds / millis / nanos); `+06:00` input: 34.7 / 37.7 / 54.6 → **19.9 / 20.8 / 25.6**; durations 27.3 / 13.8 → 22.1 / 13.4. `byte[]` rows: UTC 5.9 / 6.8 / 9.5, `+06:00` 13.7 / 16.5 / 19.4, durations 17.1 / 7.6 | | | | | | KEPT | |
+
+### S10 findings
+
+- **Session result**: `String` formatting −14% / −23% / −47% on a UTC input and −43% / −45% / −53% on an offset
+  input; into a caller's `byte[]` 5.9 / 6.8 / 9.5 ns, 2.7–3.6× the 1.16.0 `String` rows. Durations: the long input
+  −19%, the short one at the `String` floor (13.4 vs `java.time`'s ~10, see S10.3 in the dead ends).
+- **The formatter is throughput-bound, the parser was latency-bound.** S7 was won by shortening dependency chains
+  while the instruction count went up; here the same move (S10.3) lost, because consecutive format calls overlap
+  in the pipeline and only the count matters. Read the listing before choosing which of the two to optimise for.
+- **`String(char[])` is not the cost it looks like**: its compress is a SIMD intrinsic (S10.2). The cost of a
+  `String`-returning API is its two allocations, and the answer to that is an overload, not a faster path.
+- **C2 inlines by size, and size is decided by compile order**: a 285-bytecode hot method compiled standalone
+  before its caller is "already compiled into a big method" and stays a call forever after; the same benchmark
+  read 6.7 or 9.3 ns depending on which happened first. The fix was making the hot writer small (no
+  granularity branches, the cold ones elsewhere) — not a JVM flag. `PrintInlining`'s "callee uses too much
+  stack" and "callee is too large" are **C1** messages (`c1_GraphBuilder.cpp`) and say nothing about the C2 code.
+- **Bounds checks on a lookup table**: with a 200-entry pair table C2 kept two checks per pair; a 256-entry
+  table and `value & 0xFF` on the index let it prove the range, −16 branches per date-time (S10.5).
+- **Reference builds for a pair need a worktree.** `git checkout <base> -- src` keeps the branch's new files, so
+  the reference build fails at test compilation and the bench silently runs whatever jar is installed. Two
+  invalid pairs this session before the worktree.
 
 ## Dead ends — do not retry without a new reason
 
