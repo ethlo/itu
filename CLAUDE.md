@@ -157,14 +157,14 @@ Two things in the generated file come from elsewhere: the `<!-- BENCH:START -->`
 date-time-wars' `report.py`, and the advertised dependency version comes from the `itu.released.version`
 property in `pom.xml` (bump on each release — `project.version` intentionally stays on `-SNAPSHOT`).
 
-## Third-party code
+## Ported algorithms
 
-Code ported from work under another license is listed in `THIRD-PARTY-LICENSES.md` at the repo root, which
-the build copies into both the binary and the sources jar as `META-INF/THIRD-PARTY-LICENSES.md` (a `<resource>`
-in `pom.xml`; profile `<resources>` append to that list, so the `readme` profile needs nothing). BSL-1.0,
-which covers Ben Joffe's date and time-of-day algorithms in `DateTimeMath`, requires its notice in every source
-copy, and the sources jar is one. Add a section there, and a pointer in the source comment, for anything else
-ported; public-domain work (Hinnant) needs only the credit in the source.
+`CREDITS.md` at the repo root names the published algorithms that `DateTimeMath` is ported from (Ben Joffe's
+date and time-of-day algorithms, Hinnant's before them) with links. A port to Java is ITU's own code and carries
+no other license — Joffe confirmed this for his in #63, after 1.16.0 had shipped a BSL-1.0 notice for them — so
+a new port needs a section in `CREDITS.md` and a pointer in the source comment, not a license file, unless its
+author says otherwise. If one ever does, the mechanism is a `<resource>` in `pom.xml` copying the notice into
+`META-INF/` of both jars (profile `<resources>` append to the main list, so the `readme` profile needs nothing).
 
 ## Releasing
 

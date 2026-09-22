@@ -446,7 +446,7 @@ mains) and is not comparable to any other session. The instruction counts are un
 throughput harness in date-time-wars (`throughput.sh`, 1 GB CSV) showed the buffer parser's share of a pipeline is
 31–35 ns against 8–13 ns in the JMH parse row, and the pipeline's next call after the parse is `toEpochSecond()`,
 which is this function: Hinnant's era arithmetic with four `long` magic divisions (400, 5, 4, 100). Candidate:
-Joffe's inverse (`to_rata_die` in `benjoffe_fast32_v2.hpp`, BSL-1.0, already carried in THIRD-PARTY-LICENSES.md):
+Joffe's inverse (`to_rata_die` in `benjoffe_fast32_v2.hpp`; credited in CREDITS.md, no license needed per #63):
 `int` throughout, one division by 100, the rest shifts and one multiply, with the month table folded into
 `(979 * month + shift) / 32`. Gate: a new JMH method `parseLenientToEpochSecond` on the buffer row
 (`perf/instr.sh 'candidates\.itu_buffer\..*'`), the parse-only method reported beside it as the floor.
