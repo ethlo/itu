@@ -351,10 +351,11 @@ public class DateTime implements TemporalAccessor
         ITUFormatter.assertYearRange(date.getYear());
 
         final TimezoneOffset tz = date.getOffset().orElse(null);
+        // Fields are validated by the constructor, so they are written unchecked (see ITUFormatter, perf-log S10.1)
         final char[] buffer = new char[35];
 
         // YEAR
-        LimitedCharArrayIntegerUtil.toString(date.getYear(), buffer, 0, 4);
+        LimitedCharArrayIntegerUtil.write4(buffer, 0, date.getYear());
         if (lastIncluded == Field.YEAR)
         {
             return finish(buffer, Field.YEAR.getRequiredLength(), null);
@@ -364,7 +365,7 @@ public class DateTime implements TemporalAccessor
         if (lastIncluded.ordinal() >= Field.MONTH.ordinal())
         {
             buffer[4] = DATE_SEPARATOR;
-            LimitedCharArrayIntegerUtil.toString(date.getMonth(), buffer, 5, 2);
+            LimitedCharArrayIntegerUtil.write2(buffer, 5, date.getMonth());
         }
         if (lastIncluded == Field.MONTH)
         {
@@ -375,7 +376,7 @@ public class DateTime implements TemporalAccessor
         if (lastIncluded.ordinal() >= Field.DAY.ordinal())
         {
             buffer[7] = DATE_SEPARATOR;
-            LimitedCharArrayIntegerUtil.toString(date.getDayOfMonth(), buffer, 8, 2);
+            LimitedCharArrayIntegerUtil.write2(buffer, 8, date.getDayOfMonth());
         }
         if (lastIncluded == Field.DAY)
         {
@@ -386,7 +387,7 @@ public class DateTime implements TemporalAccessor
         if (lastIncluded.ordinal() >= Field.HOUR.ordinal())
         {
             buffer[10] = SEPARATOR_UPPER;
-            LimitedCharArrayIntegerUtil.toString(date.getHour(), buffer, 11, 2);
+            LimitedCharArrayIntegerUtil.write2(buffer, 11, date.getHour());
         }
         if (lastIncluded == Field.HOUR)
         {
@@ -397,7 +398,7 @@ public class DateTime implements TemporalAccessor
         if (lastIncluded.ordinal() >= Field.MINUTE.ordinal())
         {
             buffer[13] = TIME_SEPARATOR;
-            LimitedCharArrayIntegerUtil.toString(date.getMinute(), buffer, 14, 2);
+            LimitedCharArrayIntegerUtil.write2(buffer, 14, date.getMinute());
         }
         if (lastIncluded == Field.MINUTE)
         {
@@ -408,7 +409,7 @@ public class DateTime implements TemporalAccessor
         if (lastIncluded.ordinal() >= Field.SECOND.ordinal())
         {
             buffer[16] = TIME_SEPARATOR;
-            LimitedCharArrayIntegerUtil.toString(date.getSecond(), buffer, 17, 2);
+            LimitedCharArrayIntegerUtil.write2(buffer, 17, date.getSecond());
         }
         if (lastIncluded == Field.SECOND)
         {
@@ -419,7 +420,7 @@ public class DateTime implements TemporalAccessor
         if (fractionDigits > 0 && lastIncluded.ordinal() >= Field.NANO.ordinal())
         {
             buffer[19] = '.';
-            LimitedCharArrayIntegerUtil.toString(LimitedCharArrayIntegerUtil.scaleNanos(date.getNano(), fractionDigits), buffer, 20, fractionDigits);
+            LimitedCharArrayIntegerUtil.writeFraction(buffer, 20, date.getNano(), fractionDigits);
         }
         return finish(buffer, 19 + (fractionDigits > 0 ? 1 : 0) + fractionDigits, tz);
     }

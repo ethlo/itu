@@ -49,6 +49,8 @@ public class ITUFormatter
         {
             tzLen = writeTz(buf, length, tz);
         }
+        // char[] on purpose: String(char[], int, int) compresses to Latin-1 with a SIMD intrinsic, which for 20-35
+        // chars is cheaper than the Charset constructor over a byte[] (perf-log S10.2, dead end)
         return new String(buf, 0, length + tzLen);
     }
 
@@ -62,9 +64,9 @@ public class ITUFormatter
         else
         {
             buf[start] = tz.getTotalSeconds() < 0 ? MINUS : PLUS;
-            LimitedCharArrayIntegerUtil.toString(Math.abs(tz.getHours()), buf, start + 1, 2);
+            LimitedCharArrayIntegerUtil.write2(buf, start + 1, Math.abs(tz.getHours()));
             buf[start + 3] = TIME_SEPARATOR;
-            LimitedCharArrayIntegerUtil.toString(Math.abs(tz.getMinutes()), buf, start + 4, 2);
+            LimitedCharArrayIntegerUtil.write2(buf, start + 4, Math.abs(tz.getMinutes()));
             return 6;
         }
     }
@@ -99,19 +101,25 @@ public class ITUFormatter
 
         assertYearRange(adjusted.getYear());
 
-        if (handleDatePart(lastIncluded, buffer, adjusted.getYear(), 0, 4, Field.YEAR))
+        // Every field below comes from java.time, so it is in range by construction and is written without the
+        // checks of LimitedCharArrayIntegerUtil.toString: pairs from a table, one division for the year and one
+        // per three fraction digits (perf-log S10.1)
+        LimitedCharArrayIntegerUtil.write4(buffer, 0, adjusted.getYear());
+        if (lastIncluded == Field.YEAR)
         {
             return finish(buffer, Field.YEAR.getRequiredLength(), null);
         }
 
         buffer[4] = DATE_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, adjusted.getMonthValue(), 5, 2, Field.MONTH))
+        LimitedCharArrayIntegerUtil.write2(buffer, 5, adjusted.getMonthValue());
+        if (lastIncluded == Field.MONTH)
         {
             return finish(buffer, Field.MONTH.getRequiredLength(), null);
         }
 
         buffer[7] = DATE_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, adjusted.getDayOfMonth(), 8, 2, Field.DAY))
+        LimitedCharArrayIntegerUtil.write2(buffer, 8, adjusted.getDayOfMonth());
+        if (lastIncluded == Field.DAY)
         {
             return finish(buffer, Field.DAY.getRequiredLength(), null);
         }
@@ -120,35 +128,24 @@ public class ITUFormatter
         buffer[10] = SEPARATOR_UPPER;
 
         // Time
-        LimitedCharArrayIntegerUtil.toString(adjusted.getHour(), buffer, 11, 2);
+        LimitedCharArrayIntegerUtil.write2(buffer, 11, adjusted.getHour());
         buffer[13] = TIME_SEPARATOR;
-        if (handleDatePart(lastIncluded, buffer, adjusted.getMinute(), 14, 2, Field.MINUTE))
+        LimitedCharArrayIntegerUtil.write2(buffer, 14, adjusted.getMinute());
+        if (lastIncluded == Field.MINUTE)
         {
             return finish(buffer, Field.MINUTE.getRequiredLength(), tz);
         }
         buffer[16] = TIME_SEPARATOR;
-        LimitedCharArrayIntegerUtil.toString(adjusted.getSecond(), buffer, 17, 2);
+        LimitedCharArrayIntegerUtil.write2(buffer, 17, adjusted.getSecond());
 
         // Second fractions
-        final boolean hasFractionDigits = fractionDigits > 0;
-        if (hasFractionDigits)
+        if (fractionDigits > 0)
         {
             buffer[19] = FRACTION_SEPARATOR;
-            addFractions(buffer, fractionDigits, adjusted.getNano());
+            LimitedCharArrayIntegerUtil.writeFraction(buffer, 20, adjusted.getNano(), fractionDigits);
             return finish(buffer, 20 + fractionDigits, tz);
         }
         return finish(buffer, 19, tz);
-    }
-
-    private static boolean handleDatePart(final Field lastIncluded, final char[] buffer, final int value, final int offset, final int length, final Field field)
-    {
-        LimitedCharArrayIntegerUtil.toString(value, buffer, offset, length);
-        return lastIncluded == field;
-    }
-
-    private static void addFractions(char[] buf, int fractionDigits, int nano)
-    {
-        LimitedCharArrayIntegerUtil.toString(LimitedCharArrayIntegerUtil.scaleNanos(nano, fractionDigits), buf, 20, fractionDigits);
     }
 
     /**

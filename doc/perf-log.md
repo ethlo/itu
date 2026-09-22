@@ -470,8 +470,33 @@ Joffe's inverse (`to_rata_die` in `benjoffe_fast32_v2.hpp`; credited in CREDITS.
   The throughput harness (date-time-wars `throughput.sh`) showed the pipeline pays the pair, which is what put the
   conversion on the path that matters. Rows should measure what a caller does next, not only the call.
 
+## Session S10 — 2026-09-22 · i9-13900H (20 threads) · JDK 25.0.4 (OpenJDK, Ubuntu 26.04) · governor: powersave · mains
+
+**Scope.** The format side, which S1–S9 never touched: `formatUtc*` (16 / 19 / 33 ns for seconds / millis / nanos
+against the JDK's 100 / 115 / 115) and `Duration.normalized()` (13.6 / 27.1 ns for `PT2H30M` /
+`-P180DT23H27M19.193964536S` against the JDK's 10 / 31 — the short one loses). Read from the code before any
+measurement: the date-time formatter's benchmark input is already UTC, so `atZoneSameInstant` is not in the 16 ns;
+what is there is six `System.arraycopy` calls of 2–4 chars from the digit table, a `char[]` scratch buffer, and
+`new String(char[])` with its compress-to-Latin-1 pass. The duration formatter always runs four serial `long`
+divisions (week, day, hour, minute) whatever the value, into a 40-char buffer, then the same compression. Gate:
+`perf/instr.sh 'candidates\.itu\.ItuFormat.*'` — five rows (three date-time resolutions, two durations), all
+reported; the String-returning API cannot go below one `String` + one `byte[]`, so the zero-allocation overloads
+are a feature after the rows, not a row.
+
+| id   | date       | hyp | change (one line)                                                        | fmtS instr / ns | fmtMs instr / ns | fmtNs instr / ns | durShort instr / ns | durLong instr / ns | verdict | where |
+|------|------------|-----|--------------------------------------------------------------------------|---:|---:|---:|---:|---:|---------|-------|
+| S10.0 | 2026-09-22 | —  | BASELINE, `main` after 1.16.0 (`5870434`) | 389 / 16.1 | 462 / 19.3 | 724 / 33.6 | 294 / 13.7 | 566 / 27.4 | — | `5870434` |
+| S10.1 | 2026-09-22 | H32 | Two-digit pair table with direct `char` stores for every 2-digit field (year as two pairs) instead of `System.arraycopy` from the 4-digit table: a 2–4 char copy is call overhead, not a copy. Expect −3 to −5 ns on all three date-time rows | 351 / 15.4 | 385 / 16.1 | 474 / 19.6 | 296 / 13.8 | 559 / 27.0 | KEPT (−38 / −77 / −250 instr; the fraction loop was a third of the nanos row) | |
+| S10.2 | 2026-09-22 | H33 | `byte[]` scratch and `new String(bytes, 0, len, ISO_8859_1)` instead of `char[]` and `new String(char[])`: no compress-to-Latin-1 pass, half the scratch. Expect −1 to −3 ns. Three runs: 322–346 / 13.9–19.8 · 416–423 / 18.1–20.9 · 489–508 / 20.7–22.5 | 322 / 13.9 | 416 / 18.1 | 489 / 20.7 | 302 / 14.2 | 558 / 27.4 | NO-GAIN (reverted; premise wrong, see dead ends) | — |
+| S10.3 | 2026-09-22 | H34 | Duration: the four unit divisions as independent divisions of the total (`/ 604800`, `/ 86400`, `/ 3600`, `/ 60`, then multiply-subtract) instead of a chain of remainders, and `int` arithmetic when the seconds fit — the time-of-day shape. Expect −2 to −3 ns on the short input | | | | | | | |
+
 ## Dead ends — do not retry without a new reason
 
+- (S10.2) A `byte[]` scratch buffer and `new String(bytes, 0, len, ISO_8859_1)` to skip the char→Latin-1 pass of
+  `new String(char[], int, int)`: on JDK 9+/x86 that pass is the `StringUTF16.compress` SIMD intrinsic and costs
+  next to nothing for 20–35 chars, while the `Charset` constructor is a non-inlined 98-byte method calling a
+  non-inlined `Arrays.copyOfRange`. +30 instructions on millis and nanos. The compress is not the cost; the two
+  allocations are, and only an overload that writes into the caller's buffer removes them.
 - (S2.1) Expecting a large win from "zero allocation" alone on this parser: the objects were cheap TLAB bumps. Zero
   allocation is still the gate for the buffer path, just not a speed-up in itself.
 - (S3.1) Unifying the String and char[] parsers by `toCharArray()` on the String side: ≈4 ns flat, 17–29% on the

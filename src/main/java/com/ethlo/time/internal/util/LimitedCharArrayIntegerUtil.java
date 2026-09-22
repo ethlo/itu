@@ -278,6 +278,162 @@ public final class LimitedCharArrayIntegerUtil
      * @param fractionDigits The number of fraction digits to keep, 1 - 9
      * @return The scaled value, which is guaranteed to fit in <code>fractionDigits</code> digits
      */
+    /**
+     * "00".."99" as consecutive pairs, so a two-digit field is two loads and two stores with no division and no
+     * call. {@link #toString(int, char[], int, int)} copies from the four-digit table with
+     * {@code System.arraycopy}, which for two characters is call overhead rather than a copy (perf-log S10.1).
+     */
+    private static final char[] PAIRS = new char[200];
+
+    static
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            PAIRS[i << 1] = (char) ('0' + i / 10);
+            PAIRS[(i << 1) + 1] = (char) ('0' + i % 10);
+        }
+    }
+
+    /**
+     * Writes a value in [0, 99] as two digits. The caller guarantees the range; a calendar field read from
+     * {@code java.time} is in it by construction.
+     */
+    public static void write2(final char[] buf, final int offset, final int value)
+    {
+        buf[offset] = PAIRS[value << 1];
+        buf[offset + 1] = PAIRS[(value << 1) + 1];
+    }
+
+    /**
+     * Writes a value in [0, 9999] as four digits: two pairs, one division.
+     */
+    public static void write4(final char[] buf, final int offset, final int value)
+    {
+        final int hi = value / 100;
+        write2(buf, offset, hi);
+        write2(buf, offset + 2, value - hi * 100);
+    }
+
+    /**
+     * Writes a value in [0, 999] as three digits: one digit and a pair.
+     */
+    private static void write3(final char[] buf, final int offset, final int value)
+    {
+        final int hi = value / 100;
+        buf[offset] = (char) ('0' + hi);
+        write2(buf, offset + 1, value - hi * 100);
+    }
+
+    private static final byte[] PAIRS_BYTES = new byte[200];
+
+    static
+    {
+        for (int i = 0; i < 200; i++)
+        {
+            PAIRS_BYTES[i] = (byte) PAIRS[i];
+        }
+    }
+
+    /**
+     * {@link #write2(char[], int, int)} into a Latin-1 {@code byte[]}, for formatting straight into a byte
+     * destination. Not for a {@code String} result: {@code String(char[], int, int)} compresses with a SIMD
+     * intrinsic and beats the {@code Charset} constructor over a {@code byte[]} (perf-log S10.2).
+     */
+    public static void write2(final byte[] buf, final int offset, final int value)
+    {
+        buf[offset] = PAIRS_BYTES[value << 1];
+        buf[offset + 1] = PAIRS_BYTES[(value << 1) + 1];
+    }
+
+    public static void write4(final byte[] buf, final int offset, final int value)
+    {
+        final int hi = value / 100;
+        write2(buf, offset, hi);
+        write2(buf, offset + 2, value - hi * 100);
+    }
+
+    private static void write3(final byte[] buf, final int offset, final int value)
+    {
+        final int hi = value / 100;
+        buf[offset] = (byte) ('0' + hi);
+        write2(buf, offset + 1, value - hi * 100);
+    }
+
+    /**
+     * {@link #writeFraction(char[], int, int, int)} into a Latin-1 {@code byte[]}.
+     */
+    public static void writeFraction(final byte[] buf, final int offset, final int nano, final int fractionDigits)
+    {
+        switch (fractionDigits)
+        {
+            case 3:
+                write3(buf, offset, nano / 1_000_000);
+                return;
+            case 6:
+            {
+                final int micros = nano / 1_000;
+                final int millis = micros / 1_000;
+                write3(buf, offset, millis);
+                write3(buf, offset + 3, micros - millis * 1_000);
+                return;
+            }
+            case 9:
+            {
+                final int millis = nano / 1_000_000;
+                final int rest = nano - millis * 1_000_000;
+                final int micros = rest / 1_000;
+                write3(buf, offset, millis);
+                write3(buf, offset + 3, micros);
+                write3(buf, offset + 6, rest - micros * 1_000);
+                return;
+            }
+            default:
+            {
+                int value = scaleNanos(nano, fractionDigits);
+                for (int i = offset + fractionDigits - 1; i >= offset; i--)
+                {
+                    buf[i] = (byte) ('0' + value % RADIX);
+                    value /= RADIX;
+                }
+            }
+        }
+    }
+
+    /**
+     * Writes the first {@code fractionDigits} digits of a nanosecond value, in [0, 999 999 999], truncating the
+     * rest. Three, six and nine digits are written as groups of three with one division each; any other count
+     * goes through the general path.
+     */
+    public static void writeFraction(final char[] buf, final int offset, final int nano, final int fractionDigits)
+    {
+        switch (fractionDigits)
+        {
+            case 3:
+                write3(buf, offset, nano / 1_000_000);
+                return;
+            case 6:
+            {
+                final int micros = nano / 1_000;
+                final int millis = micros / 1_000;
+                write3(buf, offset, millis);
+                write3(buf, offset + 3, micros - millis * 1_000);
+                return;
+            }
+            case 9:
+            {
+                final int millis = nano / 1_000_000;
+                final int rest = nano - millis * 1_000_000;
+                final int micros = rest / 1_000;
+                write3(buf, offset, millis);
+                write3(buf, offset + 3, micros);
+                write3(buf, offset + 6, rest - micros * 1_000);
+                return;
+            }
+            default:
+                toString(scaleNanos(nano, fractionDigits), buf, offset, fractionDigits);
+        }
+    }
+
     public static int scaleNanos(final int nano, final int fractionDigits)
     {
         return nano / POW10[MAX_WIDTH - fractionDigits];
