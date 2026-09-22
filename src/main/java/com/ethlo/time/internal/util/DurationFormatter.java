@@ -172,36 +172,16 @@ public class DurationFormatter
      */
     private static int appendFraction(final char[] buf, final int pos, final int nano)
     {
-        // NOTE: Milli- and microsecond precision are by far the most common, so peel off those whole
-        // groups of trailing zeros up front instead of dividing all nine digits out one at a time
-        int value = nano;
-        int digits = NANO_DIGITS;
-        if (value % 1_000_000 == 0)
-        {
-            value /= 1_000_000;
-            digits = 3;
-        }
-        else if (value % 1_000 == 0)
-        {
-            value /= 1_000;
-            digits = 6;
-        }
-
+        // All nine digits in three groups of three, one division per group, then the trailing zeros are cut:
+        // the same shape as the date-time formatter (perf-log S10.1, S10.4). A divide-and-modulo per digit was
+        // most of the long-input row
         buf[pos] = '.';
-
-        // Right-aligned, so that a value narrower than the group is zero-padded on the left
-        int end = pos + 1 + digits;
-        for (int i = end - 1; i > pos; i--)
-        {
-            buf[i] = (char) ('0' + (value % 10));
-            value /= 10;
-        }
-
+        LimitedCharArrayIntegerUtil.writeFraction(buf, pos + 1, nano, NANO_DIGITS);
+        int end = pos + 1 + NANO_DIGITS;
         while (buf[end - 1] == '0')
         {
             end--;
         }
-
         return end;
     }
 

@@ -488,10 +488,19 @@ are a feature after the rows, not a row.
 | S10.0 | 2026-09-22 | —  | BASELINE, `main` after 1.16.0 (`5870434`) | 389 / 16.1 | 462 / 19.3 | 724 / 33.6 | 294 / 13.7 | 566 / 27.4 | — | `5870434` |
 | S10.1 | 2026-09-22 | H32 | Two-digit pair table with direct `char` stores for every 2-digit field (year as two pairs) instead of `System.arraycopy` from the 4-digit table: a 2–4 char copy is call overhead, not a copy. Expect −3 to −5 ns on all three date-time rows | 351 / 15.4 | 385 / 16.1 | 474 / 19.6 | 296 / 13.8 | 559 / 27.0 | KEPT (−38 / −77 / −250 instr; the fraction loop was a third of the nanos row) | |
 | S10.2 | 2026-09-22 | H33 | `byte[]` scratch and `new String(bytes, 0, len, ISO_8859_1)` instead of `char[]` and `new String(char[])`: no compress-to-Latin-1 pass, half the scratch. Expect −1 to −3 ns. Three runs: 322–346 / 13.9–19.8 · 416–423 / 18.1–20.9 · 489–508 / 20.7–22.5 | 322 / 13.9 | 416 / 18.1 | 489 / 20.7 | 302 / 14.2 | 558 / 27.4 | NO-GAIN (reverted; premise wrong, see dead ends) | — |
-| S10.3 | 2026-09-22 | H34 | Duration: the four unit divisions as independent divisions of the total (`/ 604800`, `/ 86400`, `/ 3600`, `/ 60`, then multiply-subtract) instead of a chain of remainders, and `int` arithmetic when the seconds fit — the time-of-day shape. Expect −2 to −3 ns on the short input | | | | | | | |
+| S10.3 | 2026-09-22 | H34 | Duration: the four unit divisions as independent divisions of the total (`/ 604800`, `/ 86400`, `/ 3600`, `/ 60`, then multiply-subtract) instead of a chain of remainders, and `int` arithmetic when the seconds fit — the time-of-day shape. Expect −2 to −3 ns on the short input. Two variants: (a) four independent divisions of the total plus multiply-subtracts, int when it fits: 325 / 14.5 · 597 / 28.3; (b) int chain that skips the week/day divisions under a day: 285 / 13.8 · 597 / 28.2 | — | — | — | 285–325 / 13.8–14.5 | 597 / 28.2 | NO-GAIN (both reverted; see dead ends) | — |
+| S10.4 | 2026-09-22 | H35 | Duration fraction: all nine digits in three groups of three (`writeFraction`, one division per group) then the trailing zeros cut, instead of two modulo checks and a divide-and-modulo per digit — S10.1 applied to the duration formatter | — | — | — | 299 / 13.6 | 479 / 22.7 | KEPT (−78 instr, −17% on the long input) | |
 
 ## Dead ends — do not retry without a new reason
 
+- (S10.3) Reshaping the duration formatter's unit arithmetic — independent divisions of the total (the
+  time-of-day shape), `int` instead of `long`, skipping units above the magnitude: −13 to +40 instructions, ns flat
+  or worse. The listing (`perf/out/dis-durShort.txt`) shows why: consecutive calls overlap in the pipeline, so the
+  serial division chain is hidden and the formatter is throughput-bound on instruction count; the count is
+  dominated by `new char[40]` (zeroing), `new String(char[])` (two allocations, and for under 8 chars a *scalar*
+  compress loop, the SIMD path needs 8+) and the GC barrier, none of which the arithmetic touches. The JDK's 10 ns
+  on `PT2H30M` is `StringBuilder.toString()` copying Latin-1 bytes with no compress. Under a `String`-returning
+  API the remaining lever is the fraction writer (S10.4); past that, only an overload into the caller's buffer.
 - (S10.2) A `byte[]` scratch buffer and `new String(bytes, 0, len, ISO_8859_1)` to skip the char→Latin-1 pass of
   `new String(char[], int, int)`: on JDK 9+/x86 that pass is the `StringUTF16.compress` SIMD intrinsic and costs
   next to nothing for 20–35 chars, while the `Charset` constructor is a non-inlined 98-byte method calling a
