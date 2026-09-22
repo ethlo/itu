@@ -20,6 +20,8 @@ package com.ethlo.time.internal.util;
  * #L%
  */
 
+import java.nio.charset.StandardCharsets;
+
 import com.ethlo.time.internal.DateTimeFormatException;
 
 public final class LimitedCharArrayIntegerUtil
@@ -132,6 +134,64 @@ public final class LimitedCharArrayIntegerUtil
      * path re-parses the window as a String so the error message and index are identical to the String path,
      * with the index relative to {@code windowStart}.
      */
+    /**
+     * {@link #parse2(char[], int, int, int)} over bytes read as ISO-8859-1. The {@code & 0xFF} is not optional:
+     * a byte is signed, and without it a non-ASCII byte XORed with '0' is negative and passes {@code <= 9}.
+     */
+    public static int parse2(final byte[] s, final int start, final int windowStart, final int windowEnd)
+    {
+        if (start + 2 <= windowEnd)
+        {
+            final int d0 = (s[start] & 0xFF) ^ ZERO;
+            final int d1 = (s[start + 1] & 0xFF) ^ ZERO;
+            if (d0 <= 9 && d1 <= 9)
+            {
+                return d0 * 10 + d1;
+            }
+        }
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart, StandardCharsets.ISO_8859_1), start - windowStart, start - windowStart + 2);
+    }
+
+    public static int parse4(final byte[] s, final int start, final int windowStart, final int windowEnd)
+    {
+        if (start + 4 <= windowEnd)
+        {
+            final int d0 = (s[start] & 0xFF) ^ ZERO;
+            final int d1 = (s[start + 1] & 0xFF) ^ ZERO;
+            final int d2 = (s[start + 2] & 0xFF) ^ ZERO;
+            final int d3 = (s[start + 3] & 0xFF) ^ ZERO;
+            if (d0 <= 9 && d1 <= 9 && d2 <= 9 && d3 <= 9)
+            {
+                return d0 * 1000 + d1 * 100 + d2 * 10 + d3;
+            }
+        }
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart, StandardCharsets.ISO_8859_1), start - windowStart, start - windowStart + 4);
+    }
+
+    public static int parse2In(final byte[] s, final int base, final int rel, final int windowStart, final int windowEnd)
+    {
+        final int d0 = (s[base + rel] & 0xFF) ^ ZERO;
+        final int d1 = (s[base + rel + 1] & 0xFF) ^ ZERO;
+        if (d0 <= 9 && d1 <= 9)
+        {
+            return d0 * 10 + d1;
+        }
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart, StandardCharsets.ISO_8859_1), base + rel - windowStart, base + rel - windowStart + 2);
+    }
+
+    public static int parse4In(final byte[] s, final int base, final int rel, final int windowStart, final int windowEnd)
+    {
+        final int d0 = (s[base + rel] & 0xFF) ^ ZERO;
+        final int d1 = (s[base + rel + 1] & 0xFF) ^ ZERO;
+        final int d2 = (s[base + rel + 2] & 0xFF) ^ ZERO;
+        final int d3 = (s[base + rel + 3] & 0xFF) ^ ZERO;
+        if (d0 <= 9 && d1 <= 9 && d2 <= 9 && d3 <= 9)
+        {
+            return d0 * 1000 + d1 * 100 + d2 * 10 + d3;
+        }
+        return parsePositiveInt(new String(s, windowStart, windowEnd - windowStart, StandardCharsets.ISO_8859_1), base + rel - windowStart, base + rel - windowStart + 4);
+    }
+
     public static int parse2(final char[] s, final int start, final int windowStart, final int windowEnd)
     {
         if (start + 2 <= windowEnd)

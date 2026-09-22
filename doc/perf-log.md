@@ -516,8 +516,33 @@ are a feature after the rows, not a row.
   the reference build fails at test compilation and the bench silently runs whatever jar is installed. Two
   invalid pairs this session before the worktree.
 
+## Session S11 — 2026-09-22 · i9-13900H (20 threads) · JDK 25.0.4 (OpenJDK, Ubuntu 26.04) · governor: powersave · mains
+
+**Scope.** A `byte[]` overload of the buffer parsers (`parseLenient`, `parseEpochSecond`, `parseEpochMilli`),
+the item the 1 GB throughput harness put on the list: files and sockets are bytes, and the byte→char copy in
+the harness's pipeline was a visible share of a 10 ns parse. Two designs, measured before choosing. Gate:
+`perf/instr.sh 'candidates\.itu_buffer\.ItuBufferParseLenientBenchmark\.parseLenient(Bytes)?$'` — the new
+`parseLenientBytes` row against the `char[]` row on the same inputs.
+
+| id   | date       | hyp | change (one line)                                                        | A instr / br | B instr / br | C instr / br | A / B / C ns | verdict | where |
+|------|------------|-----|--------------------------------------------------------------------------|-------------:|-------------:|-------------:|-------------:|---------|-------|
+| S11.0 | 2026-09-22 | H38 | Widen the bytes into a scratch `char[]` held by the `MutableDateTimeBuffer` and run the `char[]` parser on it — one grammar, no third copy. `char[]` row same run: 365 / 73 · 260 / 52 · 224 / 47; 14.8 / 10.0 / 9.3 ns | 501 / 88 | 368 / 68 | 332 / 62 | 23.1 / 15.0 / 13.3 | NO-GAIN (+108–136 instr, +4–8 ns: C2 did not vectorise the 24–35-element widening loop, and the scalar loop is half a parse) | — |
+| S11.1 | 2026-09-22 | H39 | `ITUByteArrayParser`, a line-for-line mirror of the `char[]` parser (as that one mirrors `ITUParser`), plus `byte[]` twins of `parse2/parse4/parse2In/parse4In` and of the epoch `parseLong`. Every digit read is `(b & 0xFF) ^ '0'`: a byte is signed, and without the mask a non-ASCII byte passes `<= 9`. The corpus differential gained a `byte[]` leg and caught the one message site that printed a byte as a number. `char[]` row same run: 370 / 74 · 263 / 53 · 224 / 47; 17.0 / 10.5 / 9.3 | 366 / 72 | 261 / 53 | 226 / 48 | 15.6 / 10.6 / 9.6 | KEPT (identical to the `char[]` row: the mask folds into the zero-extending load) | |
+
+### S11 findings
+
+- **A `byte[]` parse costs the same as a `char[]` parse**, to the instruction. The third copy of the grammar was
+  the price, and the corpus differential is what makes three copies tolerable: it ran every entry through the new
+  one on both windows and found the single divergence (a `%s` of a raw `byte`) before any human read the code.
+- **Auto-vectorisation is not something to plan on** for a short, variable-length widening loop: C2 left it scalar,
+  and at ~3 instructions per element that is more than the parse it fed. The measurement took ten minutes and
+  saved a wrong design.
+
 ## Dead ends — do not retry without a new reason
 
+- (S11.0) Feeding the `char[]` parser from a `byte[]` through a widening copy into a scratch: +108–136
+  instructions, +4–8 ns on a 9–15 ns parse. C2 did not vectorise the loop. A `byte[]` mirror of the parser is
+  free by comparison, and the differential test keeps it honest.
 - (S10.3) Reshaping the duration formatter's unit arithmetic — independent divisions of the total (the
   time-of-day shape), `int` instead of `long`, skipping units above the magnitude: −13 to +40 instructions, ns flat
   or worse. The listing (`perf/out/dis-durShort.txt`) shows why: consecutive calls overlap in the pipeline, so the

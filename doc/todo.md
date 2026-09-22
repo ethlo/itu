@@ -14,8 +14,6 @@ row stays a shade behind `java.time.Duration.toString()` on short inputs; the bu
 
 - `ITU.isValid(String, TemporalType...)` is still parse-and-catch; `isValid(String)` got the boolean grammar walk
   in S5.7.
-- A `byte[]` overload of the buffer parsers: the throughput harness showed the byte→char copy is a real share of a
-  10 ns parse, and files and sockets are bytes.
 - The String path's mixed-shape penalty in the 1 GB harness (+55 ns against +4 for the buffer path) is
   unexplained; a shuffled-input `@Param` row would show whether it is `parseDateTime` or `OffsetDateTime`
   construction.

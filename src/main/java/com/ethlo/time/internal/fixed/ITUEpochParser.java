@@ -23,6 +23,7 @@ package com.ethlo.time.internal.fixed;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.DIGIT_9;
 import static com.ethlo.time.internal.util.LimitedCharArrayIntegerUtil.ZERO;
 
+import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeParseException;
 
 import com.ethlo.time.DateTime;
@@ -112,6 +113,137 @@ public class ITUEpochParser
         final long seconds = millisSince0000 / 1_000;
         fill(out, seconds, (int) (millisSince0000 - seconds * 1_000) * 1_000_000, Field.NANO, MILLI_FRACTION_DIGITS, length);
         return length;
+    }
+
+    // ---- byte[] mirror of the char[] path above, line for line; bytes are read as ISO-8859-1 and every digit read
+    // is masked (& 0xFF) so that a non-ASCII byte cannot pass the digit check (see ITUByteArrayParser)
+
+    public static int parseEpochSecond(final byte[] bytes, final int offset, final int length, final MutableDateTimeBuffer out)
+    {
+        sanityCheckInputParams(bytes, offset, length, out);
+        final long seconds = parseLong(bytes, offset, length, false);
+        if (seconds < MIN_EPOCH_SECOND || seconds > MAX_EPOCH_SECOND)
+        {
+            throw raiseOutOfRange(new String(bytes, offset, length, StandardCharsets.ISO_8859_1), false);
+        }
+        fill(out, seconds + SECONDS_0000_TO_1970, 0, Field.SECOND, 0, length);
+        return length;
+    }
+
+    public static int parseEpochMilli(final byte[] bytes, final int offset, final int length, final MutableDateTimeBuffer out)
+    {
+        sanityCheckInputParams(bytes, offset, length, out);
+        final long millis = parseLong(bytes, offset, length, true);
+        if (millis < MIN_EPOCH_MILLI || millis > MAX_EPOCH_MILLI)
+        {
+            throw raiseOutOfRange(new String(bytes, offset, length, StandardCharsets.ISO_8859_1), true);
+        }
+        final long millisSince0000 = millis - MIN_EPOCH_MILLI;
+        final long seconds = millisSince0000 / 1_000;
+        fill(out, seconds, (int) (millisSince0000 - seconds * 1_000) * 1_000_000, Field.NANO, MILLI_FRACTION_DIGITS, length);
+        return length;
+    }
+
+    /**
+     * As {@link #parseLong(String)} over a window. Error messages and indices are relative to the window, as the
+     * date-time {@code char[]} path reports them.
+     */
+    private static long parseLong(final byte[] bytes, final int offset, final int length, final boolean millis)
+    {
+        if (length == 0)
+        {
+            throw ErrorUtil.raiseUnexpectedEndOfText("", 0);
+        }
+        final boolean negative = bytes[offset] == '-';
+        int idx = negative ? 1 : 0;
+        if (idx == length)
+        {
+            throw ErrorUtil.raiseUnexpectedEndOfText(new String(bytes, offset, length, StandardCharsets.ISO_8859_1), idx);
+        }
+        while (length - idx > MAX_DIGITS && bytes[offset + idx] == ZERO)
+        {
+            idx++;
+        }
+        if (length - idx > MAX_DIGITS)
+        {
+            throw raiseTooLong(new String(bytes, offset, length, StandardCharsets.ISO_8859_1), idx, millis);
+        }
+        // Two independent accumulations - the leading digits in the loop, the last eight straight-line - joined at
+        // the end. The multiply-add chain of a single accumulator is the serial part of the walk (perf-log S7.6).
+        // With fewer than eight digits after the sign the loop takes them all and the straight-line block is skipped
+        final int tailStart = length - 8;
+        final int loopEnd = tailStart > idx ? tailStart : length;
+        long value = 0;
+        for (; idx < loopEnd; idx++)
+        {
+            final int d = (bytes[offset + idx] & 0xFF) ^ ZERO;
+            if (d > 9)
+            {
+                throw raiseUnexpectedCharacter(new String(bytes, offset, length, StandardCharsets.ISO_8859_1), idx, (char) (bytes[offset + idx] & 0xFF));
+            }
+            value = value * 10 + d;
+        }
+        if (loopEnd == tailStart)
+        {
+            final int base = offset + tailStart;
+            final int d0 = (bytes[base] & 0xFF) ^ ZERO;
+            final int d1 = (bytes[base + 1] & 0xFF) ^ ZERO;
+            final int d2 = (bytes[base + 2] & 0xFF) ^ ZERO;
+            final int d3 = (bytes[base + 3] & 0xFF) ^ ZERO;
+            final int d4 = (bytes[base + 4] & 0xFF) ^ ZERO;
+            final int d5 = (bytes[base + 5] & 0xFF) ^ ZERO;
+            final int d6 = (bytes[base + 6] & 0xFF) ^ ZERO;
+            final int d7 = (bytes[base + 7] & 0xFF) ^ ZERO;
+            // Eight compares, as parse4 does: OR-ing the digit values would let 8|4 = 12 fail and ':' (10) pass
+            if (d0 > 9 || d1 > 9 || d2 > 9 || d3 > 9 || d4 > 9 || d5 > 9 || d6 > 9 || d7 > 9)
+            {
+                throw raiseUnexpectedCharacter(new String(bytes, offset, length, StandardCharsets.ISO_8859_1), tailStart, bytes, offset, length);
+            }
+            final int hi = (d0 * 10 + d1) * 100 + (d2 * 10 + d3);
+            final int lo = (d4 * 10 + d5) * 100 + (d6 * 10 + d7);
+            value = value * 100_000_000 + (hi * 10_000L + lo);
+        }
+        return negative ? -value : value;
+    }
+
+    /**
+     * The straight-line block found a non-digit somewhere in its eight characters; find which for the message
+     */
+    private static DateTimeParseException raiseUnexpectedCharacter(final String text, final int from, final byte[] bytes, final int offset, final int length)
+    {
+        for (int idx = from; idx < length; idx++)
+        {
+            final char c = (char) (bytes[offset + idx] & 0xFF);
+            if (c < ZERO || c > DIGIT_9)
+            {
+                return raiseUnexpectedCharacter(text, idx, c);
+            }
+        }
+        throw new IllegalStateException("No non-digit found: " + text);
+    }
+
+    private static void sanityCheckInputParams(final byte[] bytes, final int offset, final int length, final MutableDateTimeBuffer out)
+    {
+        if (bytes == null)
+        {
+            throw new NullPointerException("bytes cannot be null");
+        }
+        if (out == null)
+        {
+            throw new NullPointerException("buffer cannot be null");
+        }
+        if (offset < 0)
+        {
+            throw new IndexOutOfBoundsException(String.format("offset cannot be negative, was %d", offset));
+        }
+        if (length < 0)
+        {
+            throw new IndexOutOfBoundsException(String.format("length cannot be negative, was %d", length));
+        }
+        if (offset + length > bytes.length)
+        {
+            throw new IndexOutOfBoundsException(String.format("offset %d plus length %d exceeds the array length of %d", offset, length, bytes.length));
+        }
     }
 
     /**

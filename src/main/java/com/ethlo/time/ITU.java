@@ -30,6 +30,7 @@ import java.time.YearMonth;
 import java.time.ZoneOffset;
 
 import com.ethlo.time.internal.ItuDurationParser;
+import com.ethlo.time.internal.fixed.ITUByteArrayParser;
 import com.ethlo.time.internal.fixed.ITUCharArrayParser;
 import com.ethlo.time.internal.fixed.ITUEpochParser;
 import com.ethlo.time.internal.fixed.ITUFormatter;
@@ -194,6 +195,32 @@ public class ITU
     }
 
     /**
+     * {@link #parseLenient(char[], int, int, MutableDateTimeBuffer)} over bytes: the same grammar, results and
+     * errors, for text that is already bytes, as in a file or a socket buffer. The bytes are read as ISO-8859-1,
+     * which is the identity for the ASCII a date-time can contain; a non-ASCII byte is reported at its index as
+     * the character it maps to. Allocates nothing.
+     *
+     * @param bytes  The bytes to parse from
+     * @param offset The index of the first byte of the date-time
+     * @param length The number of bytes to consider
+     * @param buffer The buffer to write the parsed fields into
+     * @return The number of bytes consumed
+     */
+    public static int parseLenient(final byte[] bytes, final int offset, final int length, final MutableDateTimeBuffer buffer)
+    {
+        return ITUByteArrayParser.parseLenient(bytes, offset, length, ParseConfig.DEFAULT, buffer);
+    }
+
+    /**
+     * As {@link #parseLenient(byte[], int, int, MutableDateTimeBuffer)}, with {@link ParseConfig} to control
+     * the accepted separators and the trailing-junk check.
+     */
+    public static int parseLenient(final byte[] bytes, final int offset, final int length, final ParseConfig parseConfig, final MutableDateTimeBuffer buffer)
+    {
+        return ITUByteArrayParser.parseLenient(bytes, offset, length, parseConfig, buffer);
+    }
+
+    /**
      * Parse a Unix epoch count in seconds written as a decimal integer ({@code -?[0-9]+}), such as
      * {@code 1695300000}, into a date-time at UTC with {@link Field#SECOND} granularity. The value must fall in
      * years 0000-9999.
@@ -251,6 +278,24 @@ public class ITU
     public static int parseEpochMilli(final char[] chars, final int offset, final int length, final MutableDateTimeBuffer buffer)
     {
         return ITUEpochParser.parseEpochMilli(chars, offset, length, buffer);
+    }
+
+    /**
+     * {@link #parseEpochSecond(char[], int, int, MutableDateTimeBuffer)} over bytes, read as ISO-8859-1; see
+     * {@link #parseLenient(byte[], int, int, MutableDateTimeBuffer)}.
+     */
+    public static int parseEpochSecond(final byte[] bytes, final int offset, final int length, final MutableDateTimeBuffer buffer)
+    {
+        return ITUEpochParser.parseEpochSecond(bytes, offset, length, buffer);
+    }
+
+    /**
+     * {@link #parseEpochMilli(char[], int, int, MutableDateTimeBuffer)} over bytes, read as ISO-8859-1; see
+     * {@link #parseLenient(byte[], int, int, MutableDateTimeBuffer)}.
+     */
+    public static int parseEpochMilli(final byte[] bytes, final int offset, final int length, final MutableDateTimeBuffer buffer)
+    {
+        return ITUEpochParser.parseEpochMilli(bytes, offset, length, buffer);
     }
 
     /**

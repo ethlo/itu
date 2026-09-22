@@ -32,6 +32,7 @@ import static com.ethlo.time.Field.YEAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.nio.charset.StandardCharsets;
 import java.text.ParsePosition;
 import java.time.DateTimeException;
 import java.time.Instant;
@@ -187,6 +188,23 @@ class ITUParserSamples
         assertThat(buffer.getNano()).isEqualTo(123456789);
         assertThat(buffer.getOffsetTotalSeconds()).isEqualTo(-3 * 3600);
         assertThat(buffer.toEpochMilli()).isEqualTo(1356646042123L);
+    }
+
+    /*
+    When the text arrives as bytes - a file, a socket, a JSON parser's buffer - parse the bytes directly: the same
+    grammar, results and errors as the `char[]` path, at the same cost, with no decoding step. The bytes are read as
+    ISO-8859-1, which is the identity for the ASCII a date-time can contain.
+     */
+    @Test
+    void parseBytes()
+    {
+        final byte[] bytes = "{\"ts\":\"2012-12-27T19:07:22.123Z\"}".getBytes(StandardCharsets.UTF_8);
+        final MutableDateTimeBuffer buffer = new MutableDateTimeBuffer();
+        final int consumed = ITU.parseLenient(bytes, 7, 24, buffer);
+        assertThat(consumed).isEqualTo(24);
+        assertThat(buffer).hasToString("2012-12-27T19:07:22.123Z");
+        assertThat(ITU.parseEpochMilli("1695300000123".getBytes(StandardCharsets.UTF_8), 0, 13, buffer)).isEqualTo(13);
+        assertThat(buffer.toEpochMilli()).isEqualTo(1695300000123L);
     }
 
     /*

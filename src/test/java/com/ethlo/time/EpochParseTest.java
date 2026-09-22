@@ -230,7 +230,7 @@ public class EpochParseTest
     {
         final MutableDateTimeBuffer buffer = new MutableDateTimeBuffer();
         final char[] chars = "123".toCharArray();
-        assertThrows(NullPointerException.class, () -> ITU.parseEpochSecond(null, 0, 0, buffer));
+        assertThrows(NullPointerException.class, () -> ITU.parseEpochSecond((char[]) null, 0, 0, buffer));
         assertThrows(NullPointerException.class, () -> ITU.parseEpochMilli(chars, 0, 3, null));
         assertThrows(IndexOutOfBoundsException.class, () -> ITU.parseEpochSecond(chars, -1, 3, buffer));
         assertThrows(IndexOutOfBoundsException.class, () -> ITU.parseEpochSecond(chars, 0, -1, buffer));
