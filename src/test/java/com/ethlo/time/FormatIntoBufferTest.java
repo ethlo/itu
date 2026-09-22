@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.charset.StandardCharsets;
+import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -70,6 +71,45 @@ class FormatIntoBufferTest
                 assertSame(duration.normalized(unit), duration.normalized(unit, fill(chars), OFFSET), chars, duration.normalized(unit, fill(bytes), OFFSET), bytes);
             }
         }
+    }
+
+    /**
+     * The offset conversion is the library's own arithmetic, so it is held to java.time's: every random input,
+     * moved to UTC and to a second random offset, must format as java.time renders the moved value.
+     */
+    @Test
+    void offsetConversionMatchesJavaTime()
+    {
+        final Random random = new Random(17);
+        for (final OffsetDateTime dateTime : dateTimes())
+        {
+            assertThat(ITU.formatUtc(dateTime, 9)).isEqualTo(render(dateTime.withOffsetSameInstant(ZoneOffset.UTC)));
+            final ZoneOffset target = ZoneOffset.ofTotalSeconds((random.nextInt(2 * 18 * 60 + 1) - 18 * 60) * 60);
+            final OffsetDateTime moved = dateTime.withOffsetSameInstant(target);
+            if (moved.getYear() < 0 || moved.getYear() > 9999)
+            {
+                assertThrows(DateTimeException.class, () -> ITU.format(dateTime.withOffsetSameInstant(target), 9));
+                continue;
+            }
+            assertThat(ITU.format(moved, 9)).isEqualTo(render(moved));
+            assertThat(ITU.formatUtc(moved, 9)).isEqualTo(render(dateTime.withOffsetSameInstant(ZoneOffset.UTC)));
+        }
+    }
+
+    @Test
+    void conversionAcrossTheYearRangeIsRejected()
+    {
+        assertThrows(DateTimeException.class, () -> ITU.formatUtc(OffsetDateTime.parse("9999-12-31T23:00:00-05:00"), 0));
+        assertThrows(DateTimeException.class, () -> ITU.formatUtc(OffsetDateTime.parse("0000-01-01T01:00:00+05:00"), 0));
+        assertThat(ITU.formatUtc(OffsetDateTime.parse("9999-12-31T23:00:00+05:00"), 0)).isEqualTo("9999-12-31T18:00:00Z");
+        assertThat(ITU.formatUtc(OffsetDateTime.parse("0000-01-01T01:00:00-05:00"), 0)).isEqualTo("0000-01-01T06:00:00Z");
+    }
+
+    private static String render(final OffsetDateTime dateTime)
+    {
+        final int total = dateTime.getOffset().getTotalSeconds();
+        final String tz = total == 0 ? "Z" : String.format("%s%02d:%02d", total < 0 ? "-" : "+", Math.abs(total) / 3600, Math.abs(total) / 60 % 60);
+        return String.format("%04d-%02d-%02dT%02d:%02d:%02d.%09d%s", dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond(), dateTime.getNano(), tz);
     }
 
     @Test
