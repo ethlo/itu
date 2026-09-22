@@ -16,7 +16,7 @@ with ease, and a strict subset of ISO-8601 durations.
 * [Well-documented](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
 * Aims for 100% specification compliance.
 * Parses any granularity from a year to nanoseconds, and remembers which one it got.
-* Zero-allocation parsing from `char[]` into a reusable buffer.
+* Zero-allocation parsing from `char[]` into a reusable buffer, and formatting into a `char[]` or `byte[]`.
 * Parses Unix epoch seconds and milliseconds written as text through the same API.
 * Handles leap seconds.
 * Zero dependencies.

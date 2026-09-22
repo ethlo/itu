@@ -16,7 +16,7 @@ with ease, and a strict subset of ISO-8601 durations.
 * [Well-documented](https://javadoc.io/doc/com.ethlo.time/itu/latest/com/ethlo/time/ITU.html).
 * Aims for 100% specification compliance.
 * Parses any granularity from a year to nanoseconds, and remembers which one it got.
-* Zero-allocation parsing from `char[]` into a reusable buffer.
+* Zero-allocation parsing from `char[]` into a reusable buffer, and formatting into a `char[]` or `byte[]`.
 * Parses Unix epoch seconds and milliseconds written as text through the same API.
 * Handles leap seconds.
 * Zero dependencies.
@@ -273,7 +273,7 @@ assertThat(localTime.parse("23:59:37.123456").toLocalTime()).isEqualTo(LocalTime
 
 
 #### formatRfc3339WithUTC
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L42C5-L54C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L43C5-L55C6)</smaller>
 
 The simplest and fastest way to format an RFC-3339 timestamp: in UTC, with the fraction digits chosen by the
  method name. Milliseconds is the most common choice for interchange.
@@ -286,7 +286,7 @@ assertThat(ITU.formatUtcNano(input)).isEqualTo("2012-12-27T22:07:22.123456789Z")
 ```
 
 #### formatWithOffsetAndPrecision
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L56C5-L68C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L57C5-L69C6)</smaller>
 
 `format` keeps the offset of the input instead of converting to UTC. Like `formatUtc` it defaults to whole
  seconds; both take the number of fraction digits as a parameter, and `formatUtc` can also stop at a given field.
@@ -298,8 +298,24 @@ assertThat(ITU.formatUtc(input, 6)).isEqualTo("2012-12-27T22:07:22.123456Z");
 assertThat(ITU.formatUtc(input, Field.MINUTE)).isEqualTo("2012-12-27T22:07Z");
 ```
 
+#### formatIntoBuffer
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L71C5-L87C6)</smaller>
+
+When the text is going into a buffer anyway - a socket, a file, a JSON generator - format straight into it and
+ allocate nothing. The buffer needs room for `ITU.MAX_FORMAT_LENGTH` characters from the offset; the result is
+ the first `length` of them. There are `char[]` and `byte[]` variants, and the output is ASCII, so the bytes are
+ the text in UTF-8 or any other ASCII-compatible encoding.
+```java
+final OffsetDateTime input = OffsetDateTime.of(2012, 12, 27, 19, 7, 22, 123456789, ZoneOffset.ofHoursMinutes(-3, 0));
+final byte[] bytes = new byte[ITU.MAX_FORMAT_LENGTH];
+final int length = ITU.formatUtc(input, 3, bytes, 0);
+assertThat(new String(bytes, 0, length, StandardCharsets.US_ASCII)).isEqualTo("2012-12-27T22:07:22.123Z");
+final char[] chars = new char[ITU.MAX_FORMAT_LENGTH];
+assertThat(new String(chars, 0, ITU.format(input, 0, chars, 0))).isEqualTo("2012-12-27T19:07:22-03:00");
+```
+
 #### formatWithDateTime
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L70C5-L85C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/formatting/ITUFormattingSamples.java#L89C5-L104C6)</smaller>
 
 A `DateTime` formats to the granularity it carries, or to any coarser one. With an offset the result is
  RFC-3339; without one it is the local form.
@@ -393,7 +409,7 @@ form, so a cap of `DurationUnit.DAYS` or lower keeps the output readable by the 
 
 
 #### parseDuration
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L42C5-L51C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L43C5-L52C6)</smaller>
 
 A duration parses to seconds and a nanosecond part, exact to the nanosecond.
 ```java
@@ -403,7 +419,7 @@ assertThat(duration.getNanos()).isEqualTo(678_901_234);
 ```
 
 #### parseNegativeDuration
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L53C5-L64C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L54C5-L65C6)</smaller>
 
 A negative duration is written with the sign in front of `P`. The sign lives in the seconds and the nanosecond
  part is never negative, as in `java.time.Duration`, so `-PT0.5S` is -1 second plus 500 million nanoseconds.
@@ -415,7 +431,7 @@ assertThat(duration.normalized()).isEqualTo("-PT0.5S");
 ```
 
 #### normalized
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L66C5-L76C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L67C5-L77C6)</smaller>
 
 `normalized()` renders with the largest units possible, so overflowing components are carried: 28 hours
  become a day and 4 hours. Trailing zero fractions are dropped.
@@ -426,7 +442,7 @@ assertThat(ITU.parseDuration("PT90M").normalized()).isEqualTo("PT1H30M");
 ```
 
 #### normalizedWithMaximumUnit
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L78C5-L89C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L79C5-L90C6)</smaller>
 
 `java.time.Duration.parse` does not accept weeks, so cap the largest unit at days (or lower) when the output
  has to be read back by the JDK.
@@ -438,7 +454,7 @@ assertThat(java.time.Duration.parse(duration.normalized(DurationUnit.DAYS)).getS
 ```
 
 #### arithmetic
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L91C5-L104C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L92C5-L105C6)</smaller>
 
 Durations can be built, added, subtracted and compared, and placed on the timeline from an `Instant`.
 ```java
@@ -450,8 +466,20 @@ final Instant start = Instant.parse("2024-02-28T23:00:00Z");
 assertThat(total.timeline(start)).hasToString("2024-02-29T01:29:59Z");
 ```
 
+#### normalizedIntoBuffer
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L107C5-L118C6)</smaller>
+
+`normalized` can also write into a `char[]` or `byte[]` at an offset, allocating nothing; the buffer needs
+ room for `Duration.MAX_NORMALIZED_LENGTH` characters from the offset.
+```java
+final Duration duration = ITU.parseDuration("P5W4DT6H2M1.123456S");
+final byte[] bytes = new byte[Duration.MAX_NORMALIZED_LENGTH];
+final int length = duration.normalized(DurationUnit.DAYS, bytes, 0);
+assertThat(new String(bytes, 0, length, StandardCharsets.US_ASCII)).isEqualTo("P39DT6H2M1.123456S");
+```
+
 #### parseDurationError
-<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L106C5-L116C6)</smaller>
+<smaller style="float:right;">[source &raquo;](src/test/java/samples/durationparsing/DurationParsingSamples.java#L120C5-L130C6)</smaller>
 
 Years and months are rejected because their length depends on the calendar. As for date-times, the error
  is a `DateTimeParseException` with the 0-based index of the offending character.

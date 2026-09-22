@@ -23,6 +23,7 @@ package samples.durationparsing;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 
@@ -101,6 +102,19 @@ class DurationParsingSamples
 
         final Instant start = Instant.parse("2024-02-28T23:00:00Z");
         assertThat(total.timeline(start)).hasToString("2024-02-29T01:29:59Z");
+    }
+
+    /*
+    `normalized` can also write into a `char[]` or `byte[]` at an offset, allocating nothing; the buffer needs
+    room for `Duration.MAX_NORMALIZED_LENGTH` characters from the offset.
+     */
+    @Test
+    void normalizedIntoBuffer()
+    {
+        final Duration duration = ITU.parseDuration("P5W4DT6H2M1.123456S");
+        final byte[] bytes = new byte[Duration.MAX_NORMALIZED_LENGTH];
+        final int length = duration.normalized(DurationUnit.DAYS, bytes, 0);
+        assertThat(new String(bytes, 0, length, StandardCharsets.US_ASCII)).isEqualTo("P39DT6H2M1.123456S");
     }
 
     /*
