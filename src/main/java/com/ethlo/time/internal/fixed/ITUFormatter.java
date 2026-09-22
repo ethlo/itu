@@ -156,6 +156,11 @@ public class ITUFormatter
             assertYearRange(date.getYear());
             return writeFields(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), date.getHour(), date.getMinute(), date.getSecond(), date.getNano(), tz, fractionDigits, dst, offset);
         }
+        final OffsetDateTime outOfDomain = adjustOutOfDomain(date, adjustTo);
+        if (outOfDomain != null)
+        {
+            return writeFields(outOfDomain.getYear(), outOfDomain.getMonthValue(), outOfDomain.getDayOfMonth(), outOfDomain.getHour(), outOfDomain.getMinute(), outOfDomain.getSecond(), outOfDomain.getNano(), tz, fractionDigits, dst, offset);
+        }
         final long localSecond = date.getHour() * 3_600L + date.getMinute() * 60L + date.getSecond() + tz - from;
         final long localDay = Math.floorDiv(localSecond, 86_400L);
         final int secondOfDay = (int) (localSecond - localDay * 86_400L);
@@ -166,6 +171,27 @@ public class ITUFormatter
         }
         final int civil = DateTimeMath.civilFromDaysSince0000((int) daysSince0000);
         return writeFields(DateTimeMath.packedYear(civil), DateTimeMath.packedMonth(civil), DateTimeMath.packedDay(civil), DateTimeMath.hourOfDay(secondOfDay), DateTimeMath.minuteOfHour(secondOfDay), DateTimeMath.secondOfMinute(secondOfDay), date.getNano(), tz, fractionDigits, dst, offset);
+    }
+
+    /**
+     * The cold path for a source year outside the domain of {@link DateTimeMath#daysFromCivil}, whose int
+     * arithmetic wraps for years far beyond 9999 and would otherwise land back inside
+     * {@code [0, MAX_DAYS_SINCE_0000]} as an unrelated date. A year one outside 0000-9999 is kept on the fast
+     * path, since an offset adjustment can move -1 or 10000 back into range.
+     *
+     * @return the date in the target offset, converted by {@code java.time}, or {@code null} when the source
+     * year is within the domain
+     */
+    private static OffsetDateTime adjustOutOfDomain(final OffsetDateTime date, final ZoneOffset adjustTo)
+    {
+        final int year = date.getYear();
+        if (year >= MIN_YEAR - 1 && year <= MAX_YEAR + 1)
+        {
+            return null;
+        }
+        final OffsetDateTime adjusted = date.atZoneSameInstant(adjustTo).toOffsetDateTime();
+        assertYearRange(adjusted.getYear());
+        return adjusted;
     }
 
     /**
@@ -181,6 +207,11 @@ public class ITUFormatter
         {
             assertYearRange(date.getYear());
             return writeFields(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), date.getHour(), date.getMinute(), date.getSecond(), date.getNano(), tz, fractionDigits, dst, offset);
+        }
+        final OffsetDateTime outOfDomain = adjustOutOfDomain(date, adjustTo);
+        if (outOfDomain != null)
+        {
+            return writeFields(outOfDomain.getYear(), outOfDomain.getMonthValue(), outOfDomain.getDayOfMonth(), outOfDomain.getHour(), outOfDomain.getMinute(), outOfDomain.getSecond(), outOfDomain.getNano(), tz, fractionDigits, dst, offset);
         }
         final long localSecond = date.getHour() * 3_600L + date.getMinute() * 60L + date.getSecond() + tz - from;
         final long localDay = Math.floorDiv(localSecond, 86_400L);
