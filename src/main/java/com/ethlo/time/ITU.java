@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 
 import com.ethlo.time.internal.ItuDurationParser;
 import com.ethlo.time.internal.fixed.ITUCharArrayParser;
@@ -273,6 +274,57 @@ public class ITU
     public static String formatUtc(OffsetDateTime offsetDateTime, int fractionDigits)
     {
         return ITUFormatter.formatUtc(offsetDateTime, fractionDigits);
+    }
+
+    /**
+     * The most characters {@link #formatUtc(OffsetDateTime, int, char[], int)} or
+     * {@link #format(OffsetDateTime, int, char[], int)} can write: a date-time with nine fraction digits and a
+     * {@code ±HH:MM} offset
+     */
+    public static final int MAX_FORMAT_LENGTH = ITUFormatter.MAX_LENGTH;
+
+    /**
+     * {@link #formatUtc(OffsetDateTime, int)} written into {@code dst} from {@code offset}, allocating nothing.
+     * The buffer must have room for {@link #MAX_FORMAT_LENGTH} characters from {@code offset}; that window is the
+     * writer's scratch, and the first {@code length} characters of it are the result. Nothing outside the window
+     * is touched.
+     *
+     * @param offsetDateTime The date-time to format
+     * @param fractionDigits The number of fraction digits in the second field, 0-9
+     * @param dst            The buffer to write into
+     * @param offset         The index to write from
+     * @return The number of characters written
+     * @throws IndexOutOfBoundsException if the buffer cannot hold the longest possible output from {@code offset}
+     */
+    public static int formatUtc(final OffsetDateTime offsetDateTime, final int fractionDigits, final char[] dst, final int offset)
+    {
+        return ITUFormatter.write(offsetDateTime, ZoneOffset.UTC, fractionDigits, dst, offset);
+    }
+
+    /**
+     * {@link #formatUtc(OffsetDateTime, int, char[], int)} into a {@code byte[]}; the output is ASCII, so the
+     * bytes are the text in any ASCII-compatible encoding, UTF-8 included.
+     */
+    public static int formatUtc(final OffsetDateTime offsetDateTime, final int fractionDigits, final byte[] dst, final int offset)
+    {
+        return ITUFormatter.write(offsetDateTime, ZoneOffset.UTC, fractionDigits, dst, offset);
+    }
+
+    /**
+     * {@link #format(OffsetDateTime, int)} written into {@code dst} from {@code offset}, allocating nothing: the
+     * date-time in its own offset. See {@link #formatUtc(OffsetDateTime, int, char[], int)} for the contract.
+     */
+    public static int format(final OffsetDateTime offsetDateTime, final int fractionDigits, final char[] dst, final int offset)
+    {
+        return ITUFormatter.write(offsetDateTime, offsetDateTime.getOffset(), fractionDigits, dst, offset);
+    }
+
+    /**
+     * {@link #format(OffsetDateTime, int, char[], int)} into a {@code byte[]}.
+     */
+    public static int format(final OffsetDateTime offsetDateTime, final int fractionDigits, final byte[] dst, final int offset)
+    {
+        return ITUFormatter.write(offsetDateTime, offsetDateTime.getOffset(), fractionDigits, dst, offset);
     }
 
     /**

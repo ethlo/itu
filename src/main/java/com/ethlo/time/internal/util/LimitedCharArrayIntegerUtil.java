@@ -283,7 +283,12 @@ public final class LimitedCharArrayIntegerUtil
      * call. {@link #toString(int, char[], int, int)} copies from the four-digit table with
      * {@code System.arraycopy}, which for two characters is call overhead rather than a copy (perf-log S10.1).
      */
-    private static final char[] PAIRS = new char[200];
+    private static final int PAIR_MASK = 0xFF;
+    /**
+     * Sized to the mask, not to 100 entries: with the index masked to [0, 255] C2 can prove both loads in range
+     * and drops the two bounds checks per pair that a 200-entry table costs (perf-log S10.5)
+     */
+    private static final char[] PAIRS = new char[(PAIR_MASK + 1) << 1];
 
     static
     {
@@ -300,8 +305,9 @@ public final class LimitedCharArrayIntegerUtil
      */
     public static void write2(final char[] buf, final int offset, final int value)
     {
-        buf[offset] = PAIRS[value << 1];
-        buf[offset + 1] = PAIRS[(value << 1) + 1];
+        final int index = (value & PAIR_MASK) << 1;
+        buf[offset] = PAIRS[index];
+        buf[offset + 1] = PAIRS[index + 1];
     }
 
     /**
@@ -324,11 +330,11 @@ public final class LimitedCharArrayIntegerUtil
         write2(buf, offset + 1, value - hi * 100);
     }
 
-    private static final byte[] PAIRS_BYTES = new byte[200];
+    private static final byte[] PAIRS_BYTES = new byte[PAIRS.length];
 
     static
     {
-        for (int i = 0; i < 200; i++)
+        for (int i = 0; i < PAIRS.length; i++)
         {
             PAIRS_BYTES[i] = (byte) PAIRS[i];
         }
@@ -341,8 +347,9 @@ public final class LimitedCharArrayIntegerUtil
      */
     public static void write2(final byte[] buf, final int offset, final int value)
     {
-        buf[offset] = PAIRS_BYTES[value << 1];
-        buf[offset + 1] = PAIRS_BYTES[(value << 1) + 1];
+        final int index = (value & PAIR_MASK) << 1;
+        buf[offset] = PAIRS_BYTES[index];
+        buf[offset + 1] = PAIRS_BYTES[index + 1];
     }
 
     public static void write4(final byte[] buf, final int offset, final int value)
