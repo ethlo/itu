@@ -79,19 +79,21 @@ public final class DateTimeValidator
         if (second == LEAP_SECOND_SECONDS)
         {
             // Do not fall over trying to parse leap seconds
-            final YearMonth needle = YearMonth.of(year, month);
+            final int offsetSeconds = hasOffset ? offsetTotalSeconds : 0;
+            final OffsetDateTime beforeLeap = OffsetDateTime.of(year, month, day, hour, minute, 59, nanos, ZoneOffset.ofTotalSeconds(offsetSeconds));
+            // The leap second occurs at the same instant in every offset. Normalize the complete date-time,
+            // since a positive offset can move the local date into July or the next year.
+            final OffsetDateTime utc = beforeLeap.withOffsetSameInstant(ZoneOffset.UTC);
+            final YearMonth needle = YearMonth.from(utc);
             final boolean isValidLeapYearMonth = leapSecondHandler.isValidLeapSecondDate(needle);
             if (isValidLeapYearMonth || needle.isAfter(leapSecondHandler.getLastKnownLeapSecond()))
             {
-                final int offsetSeconds = hasOffset ? offsetTotalSeconds : 0;
-                final int utcHour = hour - offsetSeconds / 3_600;
-                final int utcMinute = minute - (offsetSeconds % 3_600) / 60;
-                if (((month == Month.DECEMBER.getValue() && day == 31) || (month == Month.JUNE.getValue() && day == 30))
-                        && utcHour == 23
-                        && utcMinute == 59)
+                if (((utc.getMonth() == Month.DECEMBER && utc.getDayOfMonth() == 31) || (utc.getMonth() == Month.JUNE && utc.getDayOfMonth() == 30))
+                        && utc.getHour() == 23
+                        && utc.getMinute() == 59)
                 {
                     // Consider it a leap second
-                    final OffsetDateTime nearest = OffsetDateTime.of(year, month, day, hour, minute, 59, nanos, ZoneOffset.ofTotalSeconds(offsetSeconds)).plusSeconds(1);
+                    final OffsetDateTime nearest = beforeLeap.plusSeconds(1);
                     throw new LeapSecondException(nearest, second, isValidLeapYearMonth);
                 }
             }
