@@ -86,16 +86,16 @@ public final class DateTimeValidator
             final OffsetDateTime utc = beforeLeap.withOffsetSameInstant(ZoneOffset.UTC);
             final YearMonth needle = YearMonth.from(utc);
             final boolean isValidLeapYearMonth = leapSecondHandler.isValidLeapSecondDate(needle);
-            if (isValidLeapYearMonth || needle.isAfter(leapSecondHandler.getLastKnownLeapSecond()))
+            final int utcMonth = utc.getMonthValue();
+            final int utcDay = utc.getDayOfMonth();
+            if ((isValidLeapYearMonth || needle.isAfter(leapSecondHandler.getLastKnownLeapSecond()))
+                    && ((utcMonth == Month.DECEMBER.getValue() && utcDay == 31) || (utcMonth == Month.JUNE.getValue() && utcDay == 30))
+                    && utc.getHour() == 23
+                    && utc.getMinute() == 59)
             {
-                if (((utc.getMonth() == Month.DECEMBER && utc.getDayOfMonth() == 31) || (utc.getMonth() == Month.JUNE && utc.getDayOfMonth() == 30))
-                        && utc.getHour() == 23
-                        && utc.getMinute() == 59)
-                {
-                    // Consider it a leap second
-                    final OffsetDateTime nearest = beforeLeap.plusSeconds(1);
-                    throw new LeapSecondException(nearest, second, isValidLeapYearMonth);
-                }
+                // Consider it a leap second
+                final OffsetDateTime nearest = beforeLeap.plusSeconds(1);
+                throw new LeapSecondException(nearest, second, isValidLeapYearMonth);
             }
         }
     }

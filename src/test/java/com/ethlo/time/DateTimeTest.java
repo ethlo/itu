@@ -61,9 +61,15 @@ public class DateTimeTest
     void leapSecondPreservesOffsetAndNanos(final String beforeLeapText)
     {
         final OffsetDateTime beforeLeap = OffsetDateTime.parse(beforeLeapText);
+        final int year = beforeLeap.getYear();
+        final int month = beforeLeap.getMonthValue();
+        final int day = beforeLeap.getDayOfMonth();
+        final int hour = beforeLeap.getHour();
+        final int minute = beforeLeap.getMinute();
+        final int nanos = beforeLeap.getNano();
+        final TimezoneOffset offset = TimezoneOffset.of(beforeLeap.getOffset());
         final LeapSecondException exception = assertThrows(LeapSecondException.class, () -> DateTime.of(
-                beforeLeap.getYear(), beforeLeap.getMonthValue(), beforeLeap.getDayOfMonth(),
-                beforeLeap.getHour(), beforeLeap.getMinute(), 60, beforeLeap.getNano(), TimezoneOffset.of(beforeLeap.getOffset()), 9));
+                year, month, day, hour, minute, 60, nanos, offset, 9));
 
         assertThat(exception.getNearestDateTime()).isEqualTo(beforeLeap.plusSeconds(1));
         assertThat(exception.getNearestDateTime().getOffset()).isEqualTo(beforeLeap.getOffset());
