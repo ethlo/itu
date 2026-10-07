@@ -21,9 +21,14 @@ package com.ethlo.time;
  */
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.time.OffsetDateTime;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @Tag("CorrectnessTest")
 public class DateTimeTest
@@ -49,5 +54,26 @@ public class DateTimeTest
     {
         System.out.println(a);
         assertThat(a.hashCode()).isEqualTo(-309185068);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"2017-01-01T05:29:59.123456789+05:30", "2016-12-31T20:29:59.123456789-03:30"})
+    void leapSecondPreservesOffsetAndNanos(final String beforeLeapText)
+    {
+        final OffsetDateTime beforeLeap = OffsetDateTime.parse(beforeLeapText);
+        final int year = beforeLeap.getYear();
+        final int month = beforeLeap.getMonthValue();
+        final int day = beforeLeap.getDayOfMonth();
+        final int hour = beforeLeap.getHour();
+        final int minute = beforeLeap.getMinute();
+        final int nanos = beforeLeap.getNano();
+        final TimezoneOffset offset = TimezoneOffset.of(beforeLeap.getOffset());
+        final LeapSecondException exception = assertThrows(LeapSecondException.class, () -> DateTime.of(
+                year, month, day, hour, minute, 60, nanos, offset, 9));
+
+        assertThat(exception.getNearestDateTime()).isEqualTo(beforeLeap.plusSeconds(1));
+        assertThat(exception.getNearestDateTime().getOffset()).isEqualTo(beforeLeap.getOffset());
+        assertThat(exception.getNearestDateTime().getNano()).isEqualTo(beforeLeap.getNano());
+        assertThat(exception.isVerifiedValidLeapYearMonth()).isTrue();
     }
 }

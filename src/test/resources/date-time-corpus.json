@@ -814,6 +814,52 @@
         "leap_second": {"nearest": "2032-07-01T00:00:00Z", "verified": false}
     },
     {
+        "input": "2017-01-01T00:29:60+00:30",
+        "note": "A sub-hour positive offset also crosses the UTC date boundary",
+        "error": "Leap second detected in input",
+        "leap_second": {"nearest": "2017-01-01T00:00:00Z", "verified": true}
+    },
+    {
+        "input": "2016-12-31T23:29:60-00:30",
+        "note": "A sub-hour negative offset must still detect the same known leap second",
+        "error": "Leap second detected in input",
+        "leap_second": {"nearest": "2017-01-01T00:00:00Z", "verified": true}
+    },
+    {
+        "input": "2017-01-01T00:59:60+01:00",
+        "note": "A positive offset moves the known December leap second into the next local year",
+        "error": "Leap second detected in input",
+        "leap_second": {"nearest": "2017-01-01T00:00:00Z", "verified": true}
+    },
+    {
+        "input": "2017-01-01T05:29:60+05:30",
+        "note": "UTC normalization must carry offset minutes across the hour",
+        "error": "Leap second detected in input",
+        "leap_second": {"nearest": "2017-01-01T00:00:00Z", "verified": true}
+    },
+    {
+        "input": "2015-07-01T08:59:60+09:00",
+        "note": "A June leap second is still verified when the local date is in July",
+        "error": "Leap second detected in input",
+        "leap_second": {"nearest": "2015-07-01T00:00:00Z", "verified": true}
+    },
+    {
+        "input": "2032-07-01T05:29:60+05:30",
+        "note": "Future possible leap seconds use the UTC boundary and remain unverified",
+        "error": "Leap second detected in input",
+        "leap_second": {"nearest": "2032-07-01T00:00:00Z", "verified": false}
+    },
+    {
+        "input": "2016-07-01T08:59:60+09:00",
+        "note": "UTC normalization must not mark an unknown historical leap second as valid",
+        "error": "Invalid value for SecondOfMinute (valid values 0 - 59): 60"
+    },
+    {
+        "input": "2032-06-30T23:59:60+01:00",
+        "note": "The end of a local June day is not enough: the UTC minute must be 23:59",
+        "error": "Invalid value for SecondOfMinute (valid values 0 - 59): 60"
+    },
+    {
         "input": "2011-10-02T22:00:60.003",
         "note": "Second 60 outside a possible leap second boundary is just out of range",
         "lenient": true,
