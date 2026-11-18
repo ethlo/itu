@@ -4,7 +4,7 @@
 
 #### {{method.name}}
 
-<smaller style="float:right;">[source &raquo;]({{class.path}}/{{class.name}}.java#L{{method.range.begin.line}}C{{method.range.begin.column}}-L{{method.range.end.line}}C{{method.range.end.column + 1}})</smaller>
+<smaller style="float:right;">[source &raquo;]({{method.link}})</smaller>
 
 {{method.description | trim | raw }}
 
