@@ -155,7 +155,9 @@ So: change a sample by editing the sample test, change prose by editing `src/sit
 
 Two things in the generated file come from elsewhere: the `<!-- BENCH:START -->` table is produced by
 date-time-wars' `report.py`, and the advertised dependency version comes from the `itu.released.version`
-property in `pom.xml` (bump on each release — `project.version` intentionally stays on `-SNAPSHOT`).
+property in `pom.xml` (`project.version` intentionally stays on `-SNAPSHOT`). The release workflow's `update-readme`
+job sets that property to the tag's version and regenerates and commits `README.md` on `main` after each release;
+pre-releases and versions older than the current one are skipped.
 
 ## Ported algorithms
 
