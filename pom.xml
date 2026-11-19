@@ -23,7 +23,7 @@ limitations under the License.
     <groupId>com.ethlo.time</groupId>
     <packaging>bundle</packaging>
     <artifactId>itu</artifactId>
-    <version>1.17.0-SNAPSHOT</version>
+    <version>0-SNAPSHOT</version>
     <name>Internet Time Utility</name>
     <description>Extremely fast date-time parser and formatter - RFC 3339 (ISO 8601 profile) and W3C format
     </description>
@@ -235,13 +235,6 @@ limitations under the License.
                 </configuration>
             </plugin>
         </plugins>
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh</artifactId>
-                <version>3.5.3</version>
-            </extension>
-        </extensions>
     </build>
     <scm>
         <url>https://github.com/ethlo/itu</url>
@@ -252,7 +245,7 @@ limitations under the License.
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <gpg.skip>true</gpg.skip>
         <!-- Version advertised in the generated README. Kept separate from project.version, which stays
-             on -SNAPSHOT because the release version comes from the git tag. Bump on each release. -->
+             0-SNAPSHOT because the release version comes from the git tag. The release workflow updates it. -->
         <itu.released.version>1.17.0</itu.released.version>
     </properties>
     <profiles>
