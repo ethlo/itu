@@ -155,7 +155,7 @@ So: change a sample by editing the sample test, change prose by editing `src/sit
 
 Two things in the generated file come from elsewhere: the `<!-- BENCH:START -->` table is produced by
 date-time-wars' `report.py`, and the advertised dependency version comes from the `itu.released.version`
-property in `pom.xml` (`project.version` intentionally stays on `-SNAPSHOT`). The release workflow's `update-readme`
+property in `pom.xml` (`project.version` intentionally stays `0-SNAPSHOT`). The release workflow's `update-readme`
 job sets that property to the tag's version and regenerates and commits `README.md` on `main` after each release;
 pre-releases and versions older than the current one are skipped.
 
@@ -170,7 +170,7 @@ author says otherwise. If one ever does, the mechanism is a `<resource>` in `pom
 
 ## Releasing
 
-`project.version` stays `-SNAPSHOT` on `main`. Pushing a `v*.*.*` tag triggers
+`project.version` stays `0-SNAPSHOT` on `main`; the real version only ever comes from the tag. Pushing a `v*.*.*` tag triggers
 `.github/workflows/release.yml`, which derives the version from the tag, runs `versions:set`, and
 `mvn -Dgpg.skip=false clean deploy` to Central Portal on JDK 21 (chosen so the `proguard` profile is active).
 `gpg.skip` is `true` by default so local builds don't need a signing key.
